@@ -7,12 +7,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ### Added
 
 - Kernel ARAH: 11 agentes operacionais, 18 skills, coreografia, checklists, hooks Cursor
-- CLI: `init`, `update`, `doctor`, `sync-check`, `domain sync`, `export-graph`
+- CLI: `init`, `install`, `update`, `doctor`, `sync-check`, `domain sync`, `export-graph`
 - `domain sync` — gera `.agents/domain/` e `choreography.domains.yaml` a partir de `arah.config.yaml`
 - Agent Graph: `export-agent-graph.ps1`, `validate-agent-graph.ps1`, schema YAML
 - Overlay `choreography*.yaml` — regras locais sem perder `arah update`
 - Template CI `agents-validate.yml` instalado no `init`
-- Documentação: METHOD, MARKET_REFERENCE, BOOTSTRAP, MIGRATION_FROM_ARAH
+- Documentação: METHOD, MARKET_REFERENCE, BOOTSTRAP, MIGRATION_FROM_ARAH, INSTALL
 - Self-test script e workflow CI do próprio harness
 
 ### Fixed

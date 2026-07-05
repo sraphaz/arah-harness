@@ -60,28 +60,34 @@ flowchart TB
   CFG -->|domain sync| OVERLAY
 ```
 
-## Quick start
+## Instalar em outro repositório
 
 ```powershell
-git clone https://github.com/sraphaz/arah-harness.git
-cd meu-projeto
+# Clone (uma vez)
+git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\arah-harness
 
-powershell -ExecutionPolicy Bypass -File path\to\arah-harness\cli\arah.ps1 init -ProjectName "meu-app"
+# No repo-alvo
+cd C:\caminho\para\meu-projeto
+powershell -ExecutionPolicy Bypass -File $env:USERPROFILE\arah-harness\cli\arah.ps1 install -ProjectName "meu-projeto"
 ```
 
-Edite `arah.config.yaml` (testes, domínios de negócio):
+Guia completo: **[docs/INSTALL.md](docs/INSTALL.md)**
+
+Após editar `arah.config.yaml` (testes + domínios):
 
 ```powershell
-powershell -File path\to\arah-harness\cli\arah.ps1 domain sync
+$HARNESS = if ($env:ARAH_HARNESS_PATH) { $env:ARAH_HARNESS_PATH } else { "$env:USERPROFILE\arah-harness" }
+powershell -File $HARNESS\cli\arah.ps1 domain sync
 powershell -File .\scripts\agents\validate-manifests.ps1
-powershell -File path\to\arah-harness\cli\arah.ps1 export-graph
-powershell -File path\to\arah-harness\cli\arah.ps1 doctor
+powershell -File $HARNESS\cli\arah.ps1 export-graph
+powershell -File $HARNESS\cli\arah.ps1 doctor
 ```
 
 ## CLI
 
 | Comando | Descrição |
 |---------|-----------|
+| `install` | `init` + `doctor` + próximos passos (recomendado) |
 | `init` | Instala kernel + templates + workflow CI |
 | `domain sync` | Gera agentes de domínio + `choreography.domains.yaml` |
 | `export-graph` | Exporta Agent Graph (JSON + Mermaid) |
@@ -119,6 +125,7 @@ arah-harness/
 |-----|----------|
 | [docs/METHOD.md](docs/METHOD.md) | Método ARAH completo |
 | [docs/MARKET_REFERENCE.md](docs/MARKET_REFERENCE.md) | Referências e decisões |
+| [docs/INSTALL.md](docs/INSTALL.md) | Instalar em qualquer repo |
 | [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-init |
 | [docs/MIGRATION_FROM_ARAH.md](docs/MIGRATION_FROM_ARAH.md) | Migrar repo Arah existente |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Como contribuir |

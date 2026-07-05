@@ -1,6 +1,6 @@
-# Bootstrap — checklist pós-init
+# Bootstrap — checklist pós-install
 
-Após `pwsh path/to/arah-harness/cli/arah.ps1 init`:
+Após `powershell -File path/to/arah-harness/cli/arah.ps1 install` (ou `init`):
 
 ## 1. Configurar projeto
 
@@ -10,29 +10,29 @@ Edite `arah.config.yaml`:
 - `tests.backend`, `tests.frontend` com comandos reais
 - `domains[]` com agentes consultivos de negócio
 
-## 2. Validar instalação
-
-```powershell
-pwsh ./scripts/agents/validate-manifests.ps1
-pwsh path/to/arah-harness/cli/arah.ps1 doctor
-```
-
-## 6. Domínio de negócio
-
-Edite `domains` em `arah.config.yaml`, depois:
+## 2. Gerar domínios
 
 ```powershell
 powershell -File path/to/arah-harness/cli/arah.ps1 domain sync
 powershell -File path/to/arah-harness/cli/arah.ps1 export-graph
 ```
 
+## 3. Validar instalação
+
+```powershell
+powershell -File ./scripts/agents/validate-manifests.ps1
+powershell -File path/to/arah-harness/cli/arah.ps1 doctor
+```
+
 ## 4. Stack e CI
 
-- Adicione workflow `.github/workflows/agents-validate.yml` que rode:
-  - `validate-manifests.ps1`
-  - `arah sync-check` (drift do kernel)
-  - `validate-specs.ps1` (se usar SDD)
-- Configure branch protection em `main`.
+O workflow `.github/workflows/agents-validate.yml` vem no `init`. Confirme que roda:
+
+- `validate-manifests.ps1`
+- `validate-agent-graph.ps1` (via export ou CI)
+- `validate-specs.ps1` (se usar SDD)
+
+Configure branch protection em `main`.
 
 ## 5. Documentação mínima
 
@@ -49,16 +49,18 @@ Crie se não existir:
 
 ## 7. Novo projeto vs repo existente
 
-**Greenfield**: init → config → primeiro spec → primeira fase.
+**Greenfield**: `install` → config → `domain sync` → primeiro spec → primeira fase.
 
-**Brownfield**: init com cuidado (não sobrescrever AGENTS.md/README sem backup);
-use `-Force` só quando intencional; rode `doctor` após merge manual.
+**Brownfield**: `install` sem `-Force` (não sobrescreve `AGENTS.md`/`README` existentes);
+mescle manualmente a seção ARAH; rode `doctor` após merge.
 
 ## 8. Manter kernel atualizado
 
 ```powershell
-pwsh path/to/arah-harness/cli/arah.ps1 update -Force
-pwsh path/to/arah-harness/cli/arah.ps1 sync-check
+powershell -File path/to/arah-harness/cli/arah.ps1 update -Force
+powershell -File path/to/arah-harness/cli/arah.ps1 sync-check
 ```
 
 Commit `.arah-version` após update.
+
+Veja também: [INSTALL.md](INSTALL.md)

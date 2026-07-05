@@ -5,7 +5,7 @@
 #>
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('init', 'update', 'doctor', 'sync-check', 'domain', 'export-graph', 'help')]
+    [ValidateSet('init', 'install', 'update', 'doctor', 'sync-check', 'domain', 'export-graph', 'help')]
     [string]$Command = 'help',
     [Parameter(Position = 1)]
     [ValidateSet('sync')]
@@ -25,6 +25,11 @@ switch ($Command) {
         $args = @{ Target = $targetPath; Force = $Force }
         if ($ProjectName) { $args.ProjectName = $ProjectName }
         & (Join-Path $CliDir 'init.ps1') @args
+    }
+    'install' {
+        $args = @{ Target = $targetPath; Force = $Force }
+        if ($ProjectName) { $args.ProjectName = $ProjectName }
+        & (Join-Path $CliDir 'install.ps1') @args
     }
     'update' {
         & (Join-Path $CliDir 'update.ps1') -Target $targetPath -Force:$Force
@@ -60,6 +65,7 @@ switch ($Command) {
         Write-Host @"
 ARAH Harness CLI
 
+  powershell -File cli/arah.ps1 install [-Target path] [-ProjectName name] [-Force]
   powershell -File cli/arah.ps1 init [-Target path] [-ProjectName name] [-Force]
   powershell -File cli/arah.ps1 update [-Target path] [-Force]
   powershell -File cli/arah.ps1 doctor [-Target path]
