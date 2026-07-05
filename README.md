@@ -1,91 +1,143 @@
 # ARAH Harness
 
-**ARAH** (*Agent Runtime Autonomous Harness*) é o kernel reutilizável extraído do ecossistema [Arah](https://github.com/sraphaz/arah). Ele instala, em qualquer repositório, a camada que hoje vocês copiam manualmente: agentes, skills, coreografia, gates, harness SDD, agent graph, hooks e scripts de orquestração.
+[![CI](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](VERSION)
 
-O repositório de produto fica enxuto; o método ARAH fica versionado aqui e chega via `init` / `update`.
+**ARAH** — *Agent Runtime Autonomous Harness*
 
-## Problema que resolve
+Kernel open-source para bootstrap de repositórios **gerenciados por agentes**: multi-agente coreografado, auditável, observável, com economia de tokens — sem copiar `.agents/`, scripts e gates em cada projeto novo.
 
-Cada projeto novo exigia replicar:
+> Extraído e generalizado do ecossistema [Arah](https://github.com/sraphaz/arah). Validado em produção interna e no monorepo **IAutos** (legaltech).
 
-- manifests YAML (`.agents/`, `.skills/`)
-- coreografia path-based (`choreography.yaml`)
-- scripts PowerShell (`scripts/agents/`, `scripts/harness/`)
-- hooks Cursor, rules escopadas, workflows CI
-- specs SDD, gates, Definition of Done
+---
 
-Com ARAH Harness, isso vira **uma instalação + configuração de domínio**, não um copy-paste.
+## Por que existe
 
-## O que o mercado faz vs o que ARAH traz
+Cada repo novo exigia replicar manualmente:
 
-| Referência | Distribuição | Multi-agente | Coreografia por paths | Domínio consultivo | Gates + evidência |
-|---|---|---|---|---|---|
-| GitHub Spec Kit | CLI `specify init` | ❌ | ❌ | ❌ | parcial |
-| BMAD-METHOD | npm / clone | ✅ (21+ roles) | ❌ | ❌ | parcial |
-| autonomous-sdlc | `sdlc init` | ✅ (40 agents) | ❌ | ❌ | ✅ |
-| harnessforge | `harness init` | ❌ | ❌ | ❌ | drift-check |
-| **ARAH Harness** | `arah init` / `update` | ✅ | ✅ | ✅ | ✅ |
+- Manifests YAML (`.agents/`, `.skills/`)
+- Coreografia path-based (`choreography.yaml`)
+- Scripts PowerShell (`scripts/agents/`, `scripts/harness/`)
+- Hooks Cursor, rules escopadas, workflows CI
+- Specs SDD, gates, Definition of Done, Agent Graph
 
-ARAH combina o que nenhum scaffold genérico oferece hoje: **coreografia path-based**, **agentes de domínio consultivos** (parecer sem PR), **agent graph auditável** e **economia de tokens** (contexto sob demanda).
+**ARAH Harness** versiona isso uma vez. Seu produto recebe via `init` + `arah.config.yaml`.
+
+## Diferencial vs mercado
+
+| Capacidade | Spec Kit | BMAD | autonomous-sdlc | harnessforge | **ARAH** |
+|---|:---:|:---:|:---:|:---:|:---:|
+| CLI bootstrap | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Multi-agente SDLC | ❌ | ✅ | ✅ | ❌ | ✅ |
+| Coreografia por paths | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Agentes de domínio consultivos | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Agent Graph auditável | ❌ | parcial | parcial | ❌ | ✅ |
+| Drift-check (`sync-check`) | ❌ | ❌ | parcial | ✅ | ✅ |
+| Comunicação passiva (tokens) | parcial | ❌ | parcial | ✅ | ✅ |
+
+## Arquitetura
+
+```mermaid
+flowchart TB
+  subgraph harness["arah-harness (este repo)"]
+    CLI[cli/arah.ps1]
+    KERNEL[kernel/]
+    TPL[templates/]
+  end
+  subgraph target["seu repositório"]
+    CFG[arah.config.yaml]
+    AGENTS[.agents/]
+    SKILLS[.skills/]
+    SCRIPTS[scripts/agents/]
+    OVERLAY[choreography.*.yaml]
+  end
+  CLI -->|init / update| KERNEL
+  KERNEL --> AGENTS
+  KERNEL --> SKILLS
+  KERNEL --> SCRIPTS
+  TPL --> CFG
+  CFG -->|domain sync| OVERLAY
+```
 
 ## Quick start
 
 ```powershell
-# Clonar o harness (ou usar como submodule)
 git clone https://github.com/sraphaz/arah-harness.git
+cd meu-projeto
 
-# Instalar no seu projeto
-cd C:\path\to\meu-projeto
-pwsh C:\path\to\arah-harness\cli\arah.ps1 init
-
-# Validar instalação
-pwsh .\scripts\agents\validate-manifests.ps1
-pwsh C:\path\to\arah-harness\cli\arah.ps1 doctor
+powershell -ExecutionPolicy Bypass -File path\to\arah-harness\cli\arah.ps1 init -ProjectName "meu-app"
 ```
 
-Depois de `init`, edite `arah.config.yaml` (nome, stack, comandos de teste, domínios) e rode:
+Edite `arah.config.yaml` (testes, domínios de negócio):
 
 ```powershell
-powershell -File path/to/arah-harness/cli/arah.ps1 domain sync
-powershell -File ./scripts/agents/validate-manifests.ps1
-powershell -File path/to/arah-harness/cli/arah.ps1 export-graph
+powershell -File path\to\arah-harness\cli\arah.ps1 domain sync
+powershell -File .\scripts\agents\validate-manifests.ps1
+powershell -File path\to\arah-harness\cli\arah.ps1 export-graph
+powershell -File path\to\arah-harness\cli\arah.ps1 doctor
 ```
 
-## Estrutura deste repositório
+## CLI
+
+| Comando | Descrição |
+|---------|-----------|
+| `init` | Instala kernel + templates + workflow CI |
+| `domain sync` | Gera agentes de domínio + `choreography.domains.yaml` |
+| `export-graph` | Exporta Agent Graph (JSON + Mermaid) |
+| `update [-Force]` | Reaplica kernel (preserva config/overlays) |
+| `sync-check` | Detecta drift vs kernel (ideal no CI) |
+| `doctor` | Valida instalação |
+
+## Estrutura
 
 ```
 arah-harness/
-├── kernel/           # Camada copiada para projetos-alvo (versionada)
-│   ├── .agents/
-│   ├── .skills/
-│   ├── .cursor/
-│   └── scripts/
-├── templates/        # Templates renderizados no init (domínio, AGENTS.md, specs)
-├── cli/              # arah init | update | doctor | sync-check | domain add
-└── docs/             # METHOD.md, MARKET_REFERENCE.md, BOOTSTRAP.md
+├── kernel/              # Copiado para projetos-alvo (versionado)
+│   ├── .agents/         # 11 operacionais + schema agent-graph
+│   ├── .skills/         # 18 skills executáveis
+│   ├── .cursor/         # hooks passivos
+│   └── scripts/         # orquestração, gates, export graph
+├── cli/                 # init | update | doctor | domain sync | …
+├── templates/           # arah.config.yaml, AGENTS.md, CI
+├── docs/                # METHOD, mercado, bootstrap, migração
+└── scripts/self-test.ps1
 ```
 
-## Princípios (herdados do Arah, generalizados)
+## Princípios
 
-1. **Humano comanda, agente executa** — merge sempre humano.
-2. **Tudo via Pull Request** — sem commit direto em `main`.
-3. **Escopo mínimo** — cada agente só toca paths permitidos.
-4. **Spec-before-code** — fases exigem spec em `docs/specs/` e `Spec-Id:` no PR.
-5. **Contexto sob demanda** — regras/skills carregadas quando relevantes; comunicação entre agentes é passiva (arquivo + CI).
-6. **Kernel imutável localmente** — customizações vão em `arah.config.yaml` e `.agents/domain/`, não editando scripts do kernel sem override explícito.
+1. **Humano comanda, agente executa** — merge sempre humano
+2. **Tudo via Pull Request**
+3. **Escopo mínimo** por manifest
+4. **Spec-before-code** quando aplicável
+5. **Contexto sob demanda** — pareceres passivos (arquivo + CI), sem turnos extras
+6. **Kernel imutável** — customização em `arah.config.yaml` e overlays `choreography.*.yaml`
 
 ## Documentação
 
-- [docs/METHOD.md](docs/METHOD.md) — método ARAH completo
-- [docs/MARKET_REFERENCE.md](docs/MARKET_REFERENCE.md) — referências de mercado e decisões
-- [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) — checklist pós-init para projetos novos
-- [docs/MIGRATION_FROM_ARAH.md](docs/MIGRATION_FROM_ARAH.md) — migrar o repo Arah para consumir o harness
-- [kernel/.agents/README.md](kernel/.agents/README.md) — catálogo de agentes do kernel
+| Doc | Conteúdo |
+|-----|----------|
+| [docs/METHOD.md](docs/METHOD.md) | Método ARAH completo |
+| [docs/MARKET_REFERENCE.md](docs/MARKET_REFERENCE.md) | Referências e decisões |
+| [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-init |
+| [docs/MIGRATION_FROM_ARAH.md](docs/MIGRATION_FROM_ARAH.md) | Migrar repo Arah existente |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Como contribuir |
+| [CHANGELOG.md](CHANGELOG.md) | Histórico de versões |
 
-## Origem
+## Exemplo real
 
-Extraído e generalizado a partir de `CursorRepos/arah` (validação vs mercado em `docs/ops/AGENT_STRATEGY_VALIDATION.md` no repo Arah).
+**IAutos** ([sraphaz/iautos](https://github.com/sraphaz/iautos)) — monorepo legaltech white-label:
+
+- 6 domínios consultivos (`core-cases`, `compliance`, `auth-tenant`, …)
+- Overlay `choreography.iautos.yaml` para `packages/**` e `apps/web/**`
+- Separação clara: ARAH SDLC (repo) vs agentes runtime (`packages/ai-orchestrator/agents/`)
+
+## Desenvolvimento deste repo
+
+```powershell
+./scripts/self-test.ps1
+```
 
 ## Licença
 
-MIT — ver [LICENSE](LICENSE).
+[MIT](LICENSE) — Copyright (c) 2026 Raphael / Arah contributors

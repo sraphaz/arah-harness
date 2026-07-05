@@ -1,0 +1,30 @@
+name: Bug report
+description: Algo quebrou no init, domain sync, doctor ou CI
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Versão ARAH Harness
+      placeholder: "0.2.0 ou conteúdo de .arah-version"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      placeholder: powershell -File cli/arah.ps1 init ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamento observado
+    validations:
+      required: true

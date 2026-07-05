@@ -1,0 +1,28 @@
+name: Feature request
+description: Melhoria no kernel, CLI ou documentação
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou oportunidade
+      description: O que você está tentando fazer que o harness ainda não suporta bem?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - CLI (init/update/doctor)
+        - Kernel (agentes/skills/coreografia)
+        - Agent Graph
+        - Domain sync
+        - CI / templates
+        - Documentação
