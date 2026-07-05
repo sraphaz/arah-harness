@@ -126,9 +126,9 @@ function Get-GraphFingerprint {
 
 $exportScript = Join-Path $Root 'scripts/agents/export-agent-graph.ps1'
 if (-not (Test-Path $GraphJson)) {
-    $warnings += "artefato ausente: docs/_meta/agent-graph.generated.json (rode scripts/agents/export-agent-graph.ps1)"
+    $warnings += 'missing artifact: docs/_meta/agent-graph.generated.json (run scripts/agents/export-agent-graph.ps1)'
 } elseif (-not (Test-Path $exportScript)) {
-    $warnings += "export script ausente: scripts/agents/export-agent-graph.ps1 — não foi possível checar defasagem"
+    $warnings += 'missing export script: scripts/agents/export-agent-graph.ps1'
 } else {
     try {
         $committed = Get-Content $GraphJson -Raw | ConvertFrom-Json
@@ -137,10 +137,10 @@ if (-not (Test-Path $GraphJson)) {
         $committedFp = Get-GraphFingerprint -Graph $committed
         $freshFp = Get-GraphFingerprint -Graph $fresh
         if ($committedFp -ne $freshFp) {
-            $warnings += "artefato defasado: docs/_meta/agent-graph.generated.json difere do grafo regenerado (nós/arestas mudaram) — rode scripts/agents/export-agent-graph.ps1"
+            $warnings += 'stale artifact: docs/_meta/agent-graph.generated.json differs from regenerated graph - run export-agent-graph.ps1'
         }
     } catch {
-        $errors += "artefato inválido: falha ao ler/regenerar o grafo — $($_.Exception.Message)"
+        $errors += ('invalid artifact: failed to read/regenerate graph - {0}' -f $_.Exception.Message)
     }
 }
 
@@ -182,10 +182,10 @@ if (Test-Path $GraphJson) {
         }
         $dangling = @($dangling | Select-Object -Unique)
         if ($dangling.Count -gt 0) {
-            $errors += "arestas órfãs (endpoint sem nó): $($dangling -join '; ')"
+            $errors += ('dangling edges (missing node): {0}' -f ($dangling -join '; '))
         }
     } catch {
-        $errors += "integridade de arestas: falha ao analisar o grafo — $($_.Exception.Message)"
+        $errors += ('edge integrity: failed to analyze graph - {0}' -f $_.Exception.Message)
     }
 }
 
@@ -204,7 +204,7 @@ foreach ($f in $agentFiles) {
 }
 foreach ($sid in ($skillIds | Sort-Object)) {
     if ((-not $referencedSkills.Contains($sid)) -and (-not $selfActivated.Contains($sid))) {
-        $warnings += "skill órfã: '$sid' não é referenciada por rule/manifest nem declara 'activation'"
+        $warnings += ('orphan skill: ''{0}'' not referenced by rule/manifest' -f $sid)
     }
 }
 
@@ -224,7 +224,7 @@ foreach ($f in $agentFiles) {
     if ($aid -eq 'orchestrator') { continue }
     if ($referencedAgents.Contains($aid)) { continue }
     if ($orchRaw -match ("(?m)\b" + [regex]::Escape($aid) + "\b")) { continue }
-    $warnings += "agente órfão: '$aid' não é acionado por rule, consult ou roteamento do orchestrator"
+    $warnings += ('orphan agent: ''{0}'' not activated by rule, consult, or orchestrator routing' -f $aid)
 }
 
 # --- Resultado ---------------------------------------------------------------
@@ -239,12 +239,12 @@ if ($Json) {
         warnings = @($warnings)
     } | ConvertTo-Json -Depth 6
 } else {
-    Write-Host "Agent graph validation — rules=$($rules.Count) skills=$($skillIds.Count)"
+    Write-Host "Agent graph validation - rules=$($rules.Count) skills=$($skillIds.Count)"
     foreach ($w in $warnings) { Write-Warning $w }
     if ($errors.Count -gt 0) {
         foreach ($e in $errors) { Write-Error $e -ErrorAction Continue }
     } else {
-        Write-Host "OK — no critical inconsistencies."
+        Write-Host "OK - no critical inconsistencies."
     }
 }
 

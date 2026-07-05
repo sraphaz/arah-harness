@@ -1,0 +1,2 @@
+# Ensure PowerShell 5.1 on Windows reads UTF-8 scripts correctly
+*.ps1 text eol=crlf working-tree-encoding=UTF-8
