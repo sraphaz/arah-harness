@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  self-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ARAH Harness self-test
+        shell: pwsh
+        run: ./scripts/self-test.ps1
+
+  kernel-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate kernel manifests (syntax)
+        shell: pwsh
+        run: |
+          $k = Join-Path $PWD 'kernel'
+          $agents = (Get-ChildItem $k/.agents -Recurse -Filter '*.agent.yaml').Count
+          $skills = (Get-ChildItem $k/.skills -Filter '*.skill.yaml').Count
+          if ($agents -lt 10) { throw "expected >= 10 agent manifests, got $agents" }
+          if ($skills -lt 15) { throw "expected >= 15 skills, got $skills" }
+          Write-Host "kernel OK: $agents agents, $skills skills"
