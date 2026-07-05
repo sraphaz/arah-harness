@@ -167,8 +167,12 @@ if (Test-Path $GraphJson) {
             @{ ns = 'gate';      items = $graph.nodes.review_gates; key = 'id' }
         )
         foreach ($spec in $nodeSpecs) {
+            $prop = $spec.key
             foreach ($n in @($spec.items)) {
-                if ($null -ne $n) { [void]$nodeIds.Add("$($spec.ns):$($n.$($spec.key))") }
+                if ($null -ne $n) {
+                    $val = $n.$prop
+                    [void]$nodeIds.Add(('{0}:{1}' -f $spec.ns, $val))
+                }
             }
         }
         $dangling = @()
