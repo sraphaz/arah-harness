@@ -177,8 +177,8 @@ if (Test-Path $GraphJson) {
         }
         $dangling = @()
         foreach ($e in @($graph.edges)) {
-            if (-not $nodeIds.Contains([string]$e.from)) { $dangling += "$($e.type): from '$($e.from)'" }
-            if (-not $nodeIds.Contains([string]$e.to))   { $dangling += "$($e.type): to '$($e.to)'" }
+            if (-not $nodeIds.Contains([string]$e.from)) { $dangling += ('{0}: from ''{1}''' -f $e.type, $e.from) }
+            if (-not $nodeIds.Contains([string]$e.to))   { $dangling += ('{0}: to ''{1}''' -f $e.type, $e.to) }
         }
         $dangling = @($dangling | Select-Object -Unique)
         if ($dangling.Count -gt 0) {
