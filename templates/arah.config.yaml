@@ -31,7 +31,7 @@ domains:
     references:
       - docs/README.md
 
-# Stack specialists — optional
+# Stack specialists — optional; domain sync gera rules em choreography.domains.yaml
 specialists: []
 # Example:
 #   - id: dotnet
@@ -39,3 +39,9 @@ specialists: []
 #     stack: dotnet
 #     paths:
 #       - backend/**
+
+# Agentes runtime da solução (execução por caso/advogado) — validate-runtime
+# runtime:
+#   path: packages/ai-orchestrator/agents
+#   choreography: choreography.yaml
+#   autonomy: autonomy.yaml

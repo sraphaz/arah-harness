@@ -81,7 +81,7 @@ foreach ($rule in $rules) {
     $matchedRules += $rule.id
 
     foreach ($a in $rule.agents) {
-        if ($a.type -eq 'domain') {
+        if ($a.type -eq 'domain' -or $a.type -eq 'specialist') {
             if ($domainConsults -notcontains $a.id) { $domainConsults += $a.id }
         } else {
             if ($operational -notcontains $a.id) { $operational += $a.id }
@@ -100,6 +100,19 @@ if ($routePrimary -and $routePrimary -ne 'orchestrator' -and $operational -notco
 foreach ($c in $routeCo) {
     if ($c -and $operational -notcontains $c) { $operational += $c }
 }
+
+# co_activation: parceiros declarados na coreografia (ex.: draft-writer + compliance-guard)
+$coPairs = Get-AllChoreographyCoActivationFromRoot -Root $Root
+$expanded = @($operational)
+foreach ($op in $operational) {
+    foreach ($pair in $coPairs) {
+        if ($pair.primary -ne $op) { continue }
+        foreach ($w in @($pair.with)) {
+            if ($w -and $expanded -notcontains $w) { $expanded += $w }
+        }
+    }
+}
+$operational = @($expanded | Select-Object -Unique)
 
 $executedSkills = @()
 if ($ExecuteAutonomy -and $skillRuns.Count -gt 0) {

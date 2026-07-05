@@ -5,7 +5,7 @@
 #>
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('init', 'install', 'update', 'doctor', 'sync-check', 'domain', 'export-graph', 'help')]
+    [ValidateSet('init', 'install', 'update', 'doctor', 'sync-check', 'domain', 'export-graph', 'validate-runtime', 'help')]
     [string]$Command = 'help',
     [Parameter(Position = 1)]
     [ValidateSet('sync')]
@@ -61,6 +61,15 @@ switch ($Command) {
         Push-Location $targetPath
         try { & $script } finally { Pop-Location }
     }
+    'validate-runtime' {
+        $script = Join-Path $targetPath 'scripts/harness/validate-solution-choreography.ps1'
+        if (-not (Test-Path $script)) {
+            Write-Error "validate-solution-choreography not found — run arah update"
+            exit 1
+        }
+        Push-Location $targetPath
+        try { & $script } finally { Pop-Location }
+    }
     default {
         Write-Host @"
 ARAH Harness CLI
@@ -72,6 +81,7 @@ ARAH Harness CLI
   powershell -File cli/arah.ps1 sync-check [-Target path]
   powershell -File cli/arah.ps1 domain sync [-Target path] [-DryRun]
   powershell -File cli/arah.ps1 export-graph [-Target path]
+  powershell -File cli/arah.ps1 validate-runtime [-Target path]
 "@
     }
 }

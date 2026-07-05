@@ -224,6 +224,14 @@ foreach ($f in $agentFiles) {
     if ($aid -eq 'orchestrator') { continue }
     if ($referencedAgents.Contains($aid)) { continue }
     if ($orchRaw -match ("(?m)\b" + [regex]::Escape($aid) + "\b")) { continue }
+    # Specialists acionados por path rules (specialist-*) contam como referenciados
+    $isSpecialist = (Test-Path (Join-Path $AgentsDir "specialists/$aid.agent.yaml"))
+    if ($isSpecialist) {
+        $inSpecialistRule = @($rules | Where-Object {
+            $_.id -like 'specialist-*' -and @($_.agents | ForEach-Object { $_.id }) -contains $aid
+        }).Count -gt 0
+        if ($inSpecialistRule) { continue }
+    }
     $warnings += ('orphan agent: ''{0}'' not activated by rule, consult, or orchestrator routing' -f $aid)
 }
 

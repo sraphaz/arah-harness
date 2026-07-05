@@ -90,6 +90,8 @@ powershell -File $HARNESS\cli\arah.ps1 doctor
 | `install` | `init` + `doctor` + próximos passos (recomendado) |
 | `init` | Instala kernel + templates + workflow CI |
 | `domain sync` | Gera agentes de domínio + `choreography.domains.yaml` |
+| `validate-runtime` | Valida coreografia de agentes runtime (`runtime:` em `arah.config.yaml`) |
+| `export-graph` | Gera `docs/_meta/agent-graph.generated.json` |
 | `export-graph` | Exporta Agent Graph (JSON + Mermaid) |
 | `update [-Force]` | Reaplica kernel (preserva config/overlays) |
 | `sync-check` | Detecta drift vs kernel (ideal no CI) |

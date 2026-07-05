@@ -21,6 +21,12 @@ if ($ok) {
     try {
         & (Join-Path $Target 'scripts/agents/validate-manifests.ps1')
         if ($LASTEXITCODE -ne 0 -and $null -ne $LASTEXITCODE) { $ok = $false }
+
+        $runtimeScript = Join-Path $Target 'scripts/harness/validate-solution-choreography.ps1'
+        if (Test-Path $runtimeScript) {
+            & $runtimeScript
+            if ($LASTEXITCODE -ne 0 -and $null -ne $LASTEXITCODE) { $ok = $false }
+        }
     } catch {
         $ok = $false
     } finally {

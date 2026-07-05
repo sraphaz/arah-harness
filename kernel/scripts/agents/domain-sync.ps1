@@ -136,12 +136,25 @@ foreach ($d in @($config.domains)) {
     $rulesYaml += '        autonomy: [consult_post]'
 }
 
+foreach ($s in @($config.specialists)) {
+    if (-not $s.id -or -not $s.paths -or $s.paths.Count -eq 0) { continue }
+    $rulesYaml += "  - id: specialist-$($s.id)"
+    $rulesYaml += '    paths:'
+    foreach ($p in $s.paths) { $rulesYaml += "      - $p" }
+    $rulesYaml += '    agents:'
+    $rulesYaml += "      - id: $($s.id)"
+    $rulesYaml += '        type: specialist'
+    $rulesYaml += '        autonomy: [consult_post]'
+}
+
 $choreoContent = ($rulesYaml -join "`n") + "`n"
 if ($DryRun) {
     Write-Host "[dry-run] would write $choreoDomains"
 } else {
     Set-Content -Path $choreoDomains -Value $choreoContent -Encoding UTF8
-    Write-Host "choreography: .agents/choreography.domains.yaml ($($config.domains.Count) domain rules)"
+    $ruleCount = @($config.domains | Where-Object { $_.paths -and $_.paths.Count -gt 0 }).Count
+    $ruleCount += @($config.specialists | Where-Object { $_.paths -and $_.paths.Count -gt 0 }).Count
+    Write-Host "choreography: .agents/choreography.domains.yaml ($ruleCount rules: domains + specialists)"
 }
 
 Write-Host "domain-sync complete ($($written.Count) manifests)"

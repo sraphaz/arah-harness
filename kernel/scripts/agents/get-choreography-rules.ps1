@@ -22,3 +22,13 @@ function Get-AllChoreographyRules {
         }
     return @($rules)
 }
+
+function Get-AllChoreographyCoActivationFromRoot {
+    param([string]$Root)
+    $parser = Join-Path $PSScriptRoot 'choreography-parser.ps1'
+    if (-not (Test-Path $parser)) {
+        $parser = Join-Path $Root 'scripts/agents/choreography-parser.ps1'
+    }
+    . $parser
+    return Get-AllChoreographyCoActivation -Root $Root
+}

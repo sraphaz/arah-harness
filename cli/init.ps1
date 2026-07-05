@@ -12,14 +12,15 @@
 param(
     [string]$Target = (Get-Location).Path,
     [string]$ProjectName = '',
-    [switch]$Force
+    [switch]$Force,
+    [switch]$KernelOnly
 )
 
 $ErrorActionPreference = 'Stop'
 $HarnessRoot = Split-Path $PSScriptRoot -Parent
 $KernelRoot = Join-Path $HarnessRoot 'kernel'
 $TemplatesRoot = Join-Path $HarnessRoot 'templates'
-$Version = '0.2.0'
+$Version = '0.2.1'
 
 if (-not (Test-Path $KernelRoot)) {
     Write-Error "Kernel not found at $KernelRoot"
@@ -59,7 +60,9 @@ Copy-Tree -From (Join-Path $KernelRoot 'scripts') -To (Join-Path $Target 'script
 # Templates
 $configTpl = Join-Path $TemplatesRoot 'arah.config.yaml'
 $configDest = Join-Path $Target 'arah.config.yaml'
-if (-not (Test-Path $configDest) -or $Force) {
+if ($KernelOnly) {
+    if (Test-Path $configDest) { Write-Host "  preserve: arah.config.yaml" }
+} elseif (-not (Test-Path $configDest) -or $Force) {
     $cfg = Get-Content $configTpl -Raw
     $cfg = $cfg -replace '\{\{PROJECT_NAME\}\}', $ProjectName
     Set-Content -Path $configDest -Value $cfg -Encoding UTF8
@@ -68,7 +71,9 @@ if (-not (Test-Path $configDest) -or $Force) {
 
 $agentsTpl = Join-Path $TemplatesRoot 'AGENTS.md.tpl'
 $agentsDest = Join-Path $Target 'AGENTS.md'
-if (-not (Test-Path $agentsDest) -or $Force) {
+if ($KernelOnly) {
+    if (Test-Path $agentsDest) { Write-Host "  preserve: AGENTS.md" }
+} elseif (-not (Test-Path $agentsDest) -or $Force) {
     $md = Get-Content $agentsTpl -Raw
     $md = $md -replace '\{\{PROJECT_NAME\}\}', $ProjectName
     $md = $md -replace '\{\{HARNESS_VERSION\}\}', $Version

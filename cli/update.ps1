@@ -4,5 +4,5 @@ param(
     [switch]$Force
 )
 $ErrorActionPreference = 'Stop'
-& (Join-Path $PSScriptRoot 'init.ps1') -Target $Target -Force:$Force
+& (Join-Path $PSScriptRoot 'init.ps1') -Target $Target -Force:$Force -KernelOnly
 Write-Host "update: re-applied kernel (customize via arah.config.yaml and .agents/domain/)"

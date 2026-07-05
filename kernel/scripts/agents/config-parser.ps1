@@ -63,11 +63,10 @@ function Get-ArahObjectList {
             if ($val) { $obj[$f] = $val }
         }
         foreach ($lk in $ListFields.Keys) {
-            $li = ' ' * $ListFields[$lk]
-            $pattern = '(?m)^' + (' ' * $ListFields[$lk]) + '-\s+(.+)$'
-            if ($block -match "(?ms)^    $([regex]::Escape($lk)):[ \t]*\r?\n((?:      - [^\r\n]+\r?\n?)+?)(?=^    [a-z]|\z)") {
-                $obj[$lk] = [regex]::Matches($Matches[1], '^\s+-\s+(.+)$', 'Multiline') |
-                    ForEach-Object { $_.Groups[1].Value.Trim().Trim('"').Trim("'") }
+            $keyIndent = if ($ListFields[$lk] -ge 4) { 4 } else { $ListFields[$lk] }
+            $parsed = @(Get-ArahListBlock -Raw $block -Key $lk -Indent $keyIndent)
+            if ($parsed.Count -gt 0) {
+                $obj[$lk] = $parsed
             } else {
                 $obj[$lk] = @()
             }
@@ -91,6 +90,18 @@ function Get-ArahObjectList {
     return @($items)
 }
 
+function Get-ArahRuntimeBlock {
+    param([string]$Raw)
+    if ($Raw -notmatch '(?ms)^runtime:\s*\r?\n(.*?)(?=^[a-z][\w-]*:\s*|\z)') {
+        return @{ path = $null; choreography = $null; autonomy = $null }
+    }
+    $block = $Matches[1]
+    $path = if ($block -match '(?m)^  path:\s+(.+)$') { $Matches[1].Trim().Trim('"').Trim("'") } else { $null }
+    $choreo = if ($block -match '(?m)^  choreography:\s+(.+)$') { $Matches[1].Trim().Trim('"').Trim("'") } else { 'choreography.yaml' }
+    $autonomy = if ($block -match '(?m)^  autonomy:\s+(.+)$') { $Matches[1].Trim().Trim('"').Trim("'") } else { $null }
+    return @{ path = $path; choreography = $choreo; autonomy = $autonomy }
+}
+
 function Get-ArahProjectConfig {
     param([string]$Root)
     $raw = Get-ArahConfigRaw -Root $Root
@@ -105,5 +116,6 @@ function Get-ArahProjectConfig {
         }
         domains     = @(Get-ArahObjectList -Raw $raw -Key 'domains' -Indent 0 -ScalarFields @('id', 'name', 'description') -ListFields @{ paths = 6 })
         specialists = @(Get-ArahObjectList -Raw $raw -Key 'specialists' -Indent 0 -ScalarFields @('id', 'name', 'stack') -ListFields @{ paths = 6 })
+        runtime     = (Get-ArahRuntimeBlock -Raw $raw)
     }
 }
