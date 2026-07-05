@@ -1,0 +1,78 @@
+# Coreografia de agentes — kernel ARAH (genérico)
+# Regras de domínio são mescladas no init a partir de arah.config.yaml
+version: 2
+updated: 2026-07-04
+policy: |
+  Regras aplicadas após roteamento do orquestrador. Agentes de domínio (negócio)
+  publicam parecer consultivo; operacionais ativam checklist + skills.
+
+rules:
+  - id: specs-sdd
+    paths:
+      - docs/specs/**
+      - scripts/harness/**
+    agents:
+      - id: spec-steward
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [spec-validate, harness-run]
+
+  - id: architecture-docs
+    paths:
+      - docs/architecture/**
+      - docs/design/**
+    agents:
+      - id: solutions-architect
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [architecture-review, craft-review]
+
+  - id: craft-backend
+    paths:
+      - backend/**
+      - src/**/api/**
+      - services/**
+    agents:
+      - id: backend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [craft-review]
+      - id: solutions-architect
+        type: operational
+        autonomy: [consult_post, invoke_skill]
+        skills: [craft-review]
+
+  - id: craft-frontend
+    paths:
+      - frontend/**
+      - apps/web/**
+      - apps/mobile/**
+    agents:
+      - id: frontend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [craft-review]
+
+  - id: infra-deploy
+    paths:
+      - .github/workflows/**
+      - infrastructure/**
+      - docker-compose*.yml
+      - Dockerfile
+    agents:
+      - id: release
+        type: operational
+        autonomy: [activate]
+
+  - id: pr-always
+    paths:
+      - "**"
+    when: pull_request
+    agents:
+      - id: qa
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [craft-review]
+      - id: pr-steward
+        type: operational
+        autonomy: [activate]
