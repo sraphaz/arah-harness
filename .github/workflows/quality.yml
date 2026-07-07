@@ -1,0 +1,17 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder quality gate
+        run: echo "Configure tests/lint for arah-harness"

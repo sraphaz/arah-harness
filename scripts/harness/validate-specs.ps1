@@ -72,3 +72,4 @@ if (Test-Path $LibPath) {
 
 if ($failures.Count -gt 0) { $failures | ForEach-Object { Write-Host $_ }; exit 1 }
 Write-Host "OK $($specs.Count) specs + harness-model válidos em $Target"
+exit 0

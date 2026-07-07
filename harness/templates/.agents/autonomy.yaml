@@ -1,0 +1,53 @@
+# Autonomy levels — ARAH Harness
+version: "1.0"
+
+levels:
+  observe:
+    rank: 0
+    description: Read session, specs, choreography — no writes
+  consult:
+    rank: 1
+    description: Domain advisory — no artifact changes
+  route:
+    rank: 2
+    description: Suggest handoff and options — orchestrator
+  activate:
+    rank: 3
+    description: Write manifests, specs, docs in scope
+  invoke_skill:
+    rank: 4
+    description: Run skills/scripts (run-tests, spec-validate, etc.)
+  side_effect:
+    rank: 5
+    description: Release, deploy hooks, external registry
+  public:
+    rank: 6
+    description: Public release — always requires explicit human gate
+
+agent_defaults:
+  orchestrator: route
+  planner: activate
+  spec-steward: invoke_skill
+  pr-steward: activate
+  architecture-documenter: consult
+  clean-craft-advisor: consult
+  test-architect: consult
+
+human_gates:
+  spec_before_work:
+    required_before: [invoke_skill, side_effect]
+    approval_stage: spec_before_work
+  proposal_before_implementation:
+    required_before: [activate, invoke_skill]
+    approval_stage: proposal_before_implementation
+  handoff_acceptance:
+    required_before: [side_effect]
+    approval_stage: handoff_acceptance
+
+actions:
+  - session.read
+  - domain.consult
+  - skill.invoke
+  - pr.comment
+  - human.gate.approved
+  - human.gate.denied

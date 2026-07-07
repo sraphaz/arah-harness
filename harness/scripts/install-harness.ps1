@@ -27,7 +27,8 @@ $ErrorActionPreference = 'Stop'
 $HarnessRoot   = Split-Path $PSScriptRoot -Parent
 $MarkerBegin   = '# >>> ara-harness managed block: {0} >>>'
 $MarkerEnd     = '# <<< ara-harness managed block: {0} <<<'
-$HarnessVersion = (Get-Content "$HarnessRoot/VERSION" -ErrorAction SilentlyContinue) ?? '0.1.0'
+$verContent = Get-Content "$HarnessRoot/VERSION" -ErrorAction SilentlyContinue | Select-Object -First 1
+$HarnessVersion = if ($verContent) { $verContent.ToString().Trim() } else { '0.1.0' }
 
 function Assert-GitRepo([string] $Path) {
   if (-not (Test-Path (Join-Path $Path '.git'))) {
@@ -138,21 +139,18 @@ $chain = Resolve-ProfileChain $Profile
 Write-Host "Instalando profile '$Profile' (cadeia: $($chain.id -join ' → ')) em $Target"
 
 foreach ($p in $chain) {
-  $templates = Select-String -Path $p.file -Pattern '^\s+-\s+([\w./-]+\.(md|yml|yaml|template))\s*$' |
+  $templates = Select-String -Path $p.file -Pattern '^\s+-\s+([\w./-]+\.(md|yml|yaml|ps1|template))\s*$' |
                ForEach-Object { $_.Matches[0].Groups[1].Value }
   foreach ($t in $templates) { Install-Template $t }
-  $agents = Select-String -Path $p.file -Pattern '^\s+-\s+([\w-]+)\s*$' -Context 0,0 |
-            Where-Object { $_.Line -match 'agents:' -or $_.Context.PreContext -match 'agents:' } |
-            ForEach-Object { $_.Matches[0].Groups[1].Value }
-  if (-not $agents) {
-    $inAgents = $false
-    Get-Content $p.file | ForEach-Object {
-      if ($_ -match '^\s*agents:\s*$') { $inAgents = $true; return }
-      if ($inAgents -and $_ -match '^\s+-\s+([\w-]+)\s*$') { $agents += $Matches[1] }
-      if ($inAgents -and $_ -match '^\w') { $inAgents = $false }
-    }
+  $agentIds = @()
+  $inAgents = $false
+  foreach ($line in (Get-Content $p.file)) {
+    if ($line -match '^\s*agents:\s*$') { $inAgents = $true; continue }
+    if ($inAgents -and $line -match '^\s+-\s+([\w-]+)\s*$') { $agentIds += $Matches[1]; continue }
+    if ($inAgents -and $line -match '^\S') { $inAgents = $false }
   }
-  if ($agents) { Install-DomainAgents -AgentIds $agents }
+  $domainAgents = $agentIds | Where-Object { $_ -in @('clean-craft-advisor','test-architect','architecture-documenter') }
+  if ($domainAgents.Count -gt 0) { Install-DomainAgents -AgentIds @($domainAgents) }
 }
 
 $leaf = $chain[-1]

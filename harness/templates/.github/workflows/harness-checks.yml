@@ -1,0 +1,35 @@
+name: Harness Checks
+
+on:
+  pull_request:
+    paths:
+      - 'harness-profile.yaml'
+      - 'docs/specs/**'
+      - 'docs/governance/**'
+      - '.agents/**'
+      - 'scripts/harness/**'
+  push:
+    branches: [main, master]
+    paths:
+      - 'harness-profile.yaml'
+      - 'docs/specs/**'
+      - 'docs/governance/**'
+
+permissions:
+  contents: read
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Doctor (requires ARAH_HARNESS_PATH)
+        shell: pwsh
+        env:
+          ARAH_HARNESS_PATH: ${{ vars.ARAH_HARNESS_PATH }}
+        run: |
+          if (-not $env:ARAH_HARNESS_PATH -or -not (Test-Path "$env:ARAH_HARNESS_PATH/harness/scripts/doctor-harness.ps1")) {
+            Write-Host "SKIP: configure vars.ARAH_HARNESS_PATH in GitHub repo settings"
+            exit 0
+          }
+          & "$env:ARAH_HARNESS_PATH/harness/scripts/doctor-harness.ps1" -Target $PWD

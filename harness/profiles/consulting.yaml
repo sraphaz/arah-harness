@@ -41,7 +41,9 @@ installs:
     - docs/specs/README.md
     - docs/governance/DEFINITION_OF_DONE.md
     - docs/ops/AGENT_OPERATION.md
+    - .agents/autonomy.yaml
     - .agents/pr-steward.yaml
+    - scripts/agents/record-agent-event.ps1
     - .github/workflows/validate-specs.yml
     - .github/workflows/harness-checks.yml
   agents:

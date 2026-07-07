@@ -110,7 +110,8 @@ function Test-HarnessModelCompleteness {
     # --- model block in harness-profile ---
     if ($tier -and $tier -ne 'minimal') {
         foreach ($section in @('domain_agents', 'governance', 'observability', 'audit')) {
-            if ($hpRaw -notmatch ('(?m)^' + [regex]::Escape($section) + ':')) {
+            $hasSection = ($hpRaw -match ('(?ms)^model:\s*\n.*?(?m)^\s+' + [regex]::Escape($section) + ':'))
+            if (-not $hasSection -and $hpRaw -notmatch ('(?m)^' + [regex]::Escape($section) + ':')) {
                 $failures += "FAIL harness-profile.yaml: seção '$section' ausente (first-class model)"
             }
         }
@@ -149,16 +150,21 @@ function Test-HarnessModelCompleteness {
                     $warnings += "WARN governance: autonomy level '$lvl' not declared"
                 }
             }
-            if ($hpRaw -match '(?m)^governance:' -and $hpRaw -notmatch '(?m)^\s*blocked_actions:') {
+            if ($hpRaw -match '(?ms)^model:\s*\n.*?^\s+governance:') {
+                if ($hpRaw -notmatch '(?m)blocked_actions:') {
+                    $failures += 'FAIL governance: blocked_actions not declared in harness-profile.yaml'
+                }
+            } elseif ($hpRaw -match '(?m)^governance:' -and $hpRaw -notmatch '(?m)blocked_actions:') {
                 $failures += 'FAIL governance: blocked_actions not declared in harness-profile.yaml'
             }
         }
     }
 
     # --- observability paths ---
-    if ($hpRaw -match '(?m)^observability:') {
+    $hasObsBlock = ($hpRaw -match '(?m)^observability:') -or ($hpRaw -match '(?ms)^model:\s*\n.*?(?m)^\s+observability:')
+    if ($hasObsBlock) {
         foreach ($key in @('diagnostics', 'session_traces', 'metrics_summary')) {
-            if ($hpRaw -notmatch ('(?m)^\s+' + [regex]::Escape($key) + ':')) {
+            if ($hpRaw -notmatch ('(?m)\s+' + [regex]::Escape($key) + ':')) {
                 $failures += "FAIL observability: '$key' path not declared in harness-profile.yaml"
             }
         }
@@ -168,12 +174,14 @@ function Test-HarnessModelCompleteness {
 
     # --- audit ---
     if ($tier -in @('consulting', 'product', 'enterprise', 'open-source')) {
-        if ($hpRaw -notmatch '(?m)^audit:') {
+        $hasAudit = ($hpRaw -match '(?ms)^model:\s*\n.*?(?m)^\s+audit:') -or ($hpRaw -match '(?m)^audit:')
+        if (-not $hasAudit) {
             $failures += 'FAIL audit block missing from harness-profile.yaml'
         } else {
-            if ($hpRaw -notmatch '(?m)^\s*ledger_path:') { $failures += 'FAIL audit: ledger_path not declared' }
-            if ($hpRaw -notmatch '(?m)^\s*event_schema:') { $failures += 'FAIL audit: event_schema not declared' }
-            if ($hpRaw -notmatch '(?m)^\s*retention_policy:') { $failures += 'FAIL audit: retention_policy not declared' }
+            $auditBlock = if ($hpRaw -match '(?ms)^model:\s*\n.*?^\s+audit:\s*\n(.*?)(?=^\S|\Z)') { $Matches[1] } else { $hpRaw }
+            if ($auditBlock -notmatch '(?m)^\s*ledger_path:') { $failures += 'FAIL audit: ledger_path not declared' }
+            if ($auditBlock -notmatch '(?m)^\s*event_schema:') { $failures += 'FAIL audit: event_schema not declared' }
+            if ($auditBlock -notmatch '(?m)^\s*retention_policy:') { $failures += 'FAIL audit: retention_policy not declared' }
         }
         $recordScript = Join-Path $Target 'scripts/agents/record-agent-event.ps1'
         if (-not (Test-Path $recordScript)) {

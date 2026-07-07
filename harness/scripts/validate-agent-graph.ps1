@@ -83,3 +83,4 @@ if (Test-Path $LibPath) {
 
 if ($failures.Count -gt 0) { $failures | ForEach-Object { Write-Host $_ }; exit 1 }
 Write-Host "OK agent graph + harness-model válidos ($($agentIds.Count) agentes)"
+exit 0

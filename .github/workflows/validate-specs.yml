@@ -1,0 +1,37 @@
+name: Validate Specs
+
+on:
+  pull_request:
+    paths:
+      - 'docs/specs/**'
+      - 'harness-profile.yaml'
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.py'
+  push:
+    branches: [main, master]
+    paths:
+      - 'docs/specs/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-specs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate specs + harness model
+        shell: pwsh
+        env:
+          ARAH_HARNESS_PATH: ${{ vars.ARAH_HARNESS_PATH }}
+        run: |
+          $script = if ($env:ARAH_HARNESS_PATH -and (Test-Path "$env:ARAH_HARNESS_PATH/harness/scripts/validate-specs.ps1")) {
+            "$env:ARAH_HARNESS_PATH/harness/scripts/validate-specs.ps1"
+          } elseif (Test-Path "./scripts/harness/validate-specs.ps1") {
+            "./scripts/harness/validate-specs.ps1"
+          } else {
+            Write-Error "validate-specs.ps1 not found"; exit 1
+          }
+          & $script -Target $PWD

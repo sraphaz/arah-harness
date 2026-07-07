@@ -40,6 +40,8 @@ installs:
     - AGENTS.md
     - docs/specs/README.md
     - docs/governance/DEFINITION_OF_DONE.md
+    - .agents/autonomy.yaml
+    - scripts/agents/record-agent-event.ps1
     - .github/PULL_REQUEST_TEMPLATE.md
     - .github/workflows/harness-checks.yml
   agents: []

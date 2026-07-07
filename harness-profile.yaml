@@ -1,12 +1,10 @@
 harness:
-  version: "0.2.3"
+  version: 0.2.3
   profile: product
-  installed_at: 2026-07-06T22:00:00-03:00
-  installed_by: arah-harness-self
-
+  installed_at: 2026-07-06T22:43:16.7220066-03:00
+  installed_by: rapha
 project:
   name: arah-harness
-  owner: sraphaz
 
 model:
   domain_agents:
@@ -40,7 +38,8 @@ model:
 
 managed_blocks:
   - AGENTS.md
+  - docs/governance/
+  - .github/workflows/harness-*
   - .agents/
-  - .skills/
-  - scripts/
-  - docs/_meta/
+  - .agents/autonomy.yaml
+  - scripts/agents/record-agent-event.ps1
