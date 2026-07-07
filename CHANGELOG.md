@@ -2,6 +2,36 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.2.3] - 2026-07-06
+
+### Added
+
+- **harness-model.schema.yaml** — domain agents, governance, observability e audit como first-class
+- Domain agents: `clean-craft-advisor`, `test-architect`, `architecture-documenter`
+- `.agents/autonomy.yaml` — níveis 0–6 e gates humanos
+- Scripts de auditoria: `record-agent-event.ps1`, `check-autonomy.ps1`
+- `harness-model-lib.ps1` — validação compartilhada em validate-specs e validate-agent-graph
+- Docs: GOVERNANCE.md, OBSERVABILITY.md, AUDIT.md, HARNESS_PROFILES.md, MODEL.md
+- `schemas/arah-harness/` — schemas canônicos incluindo audit-event e harness-model
+
+### Changed
+
+- Profiles declaram `model:` com domain agents e autonomia por tier
+- validate-specs.ps1 e validate-agent-graph.ps1 rejeitam repos incompletos para o tier
+- install-harness.ps1 escreve harness-profile.yaml com bloco model completo
+
+## [0.2.2] - 2026-07-05
+
+### Added
+
+- **ARAH Live Session** — telemetria em `.cursor/arah-live/` (`state.json`, `events.jsonl`)
+- Hooks Cursor expandidos: `sessionStart`, `sessionEnd`, `subagentStart`, `subagentStop`, `postToolUse` (Task), `afterFileEdit`, `turn-stop`
+- `session-telemetry.ps1` — resolve coreografia ao vivo via `choreograph-agents.ps1`
+- Extensão `extension/arah-live/` — painel lateral Cursor/VS Code com agentes pulsando em tempo real
+- Extensão v0.1.1: grafo SVG com arestas regra→agente, lane specialists, status bar
+- VSIX empacotável: `npm run package` em `extension/arah-live/`
+- [docs/LIVE_SESSION.md](docs/LIVE_SESSION.md)
+
 ## [0.2.1] - 2026-07-05
 
 ### Added

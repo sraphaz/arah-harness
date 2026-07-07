@@ -1,0 +1,16 @@
+﻿id: extension-live
+name: Extensão ARAH Live
+mode: consult
+enrich: |
+    Webview + hooks session-telemetry. Empacotar com vsce.
+validate: |
+    npm run compile; painel reflete .cursor/arah-live/state.json.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - extension/**
+
+guardrails:
+  no_merge: true
+  consult_only: true

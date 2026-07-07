@@ -1,0 +1,102 @@
+{
+  "name": "arah-live",
+  "displayName": "ARAH Live Session",
+  "description": "Visualização em tempo real da coreografia ARAH — agentes, regras e subagentes no Cursor/VS Code.",
+  "version": "0.2.15",
+  "publisher": "sraphaz",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sraphaz/arah-harness.git",
+    "directory": "extension/arah-live"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "arah",
+    "agents",
+    "cursor",
+    "harness",
+    "multi-agent"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:arah.liveSession",
+    "workspaceContains:arah.config.yaml",
+    "workspaceContains:.arah-version",
+    "workspaceContains:.agents/choreography.yaml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "arah-live",
+          "title": "ARAH",
+          "icon": "media/arah-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "arah-live": [
+        {
+          "type": "webview",
+          "id": "arah.liveSession",
+          "name": "Live Session",
+          "icon": "media/arah-icon.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "arah.live.refresh",
+        "title": "ARAH: Atualizar Live Session",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "arah.live.focus",
+        "title": "ARAH: Abrir Live Session",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "arah.live.showLog",
+        "title": "ARAH: Abrir log de diagnóstico",
+        "icon": "$(output)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "arah.live.refresh",
+          "when": "view == arah.liveSession",
+          "group": "navigation"
+        },
+        {
+          "command": "arah.live.showLog",
+          "when": "view == arah.liveSession",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.24.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.11.1"
+  }
+}

@@ -1,0 +1,29 @@
+﻿# Coreografia de domínio — gerada por domain-sync.ps1 (não editar à mão)
+version: 1
+updated: 2026-07-05
+rules:
+  - id: domain-kernel
+    paths:
+      - kernel/**
+      - .agents/**
+      - .skills/**
+      - scripts/**
+    agents:
+      - id: kernel
+        type: domain
+        autonomy: [consult_post]
+  - id: domain-extension-live
+    paths:
+      - extension/**
+    agents:
+      - id: extension-live
+        type: domain
+        autonomy: [consult_post]
+  - id: domain-cli
+    paths:
+      - cli/**
+    agents:
+      - id: cli
+        type: domain
+        autonomy: [consult_post]
+

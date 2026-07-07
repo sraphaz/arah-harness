@@ -104,8 +104,9 @@ arah-harness/
 ├── kernel/              # Copiado para projetos-alvo (versionado)
 │   ├── .agents/         # 11 operacionais + schema agent-graph
 │   ├── .skills/         # 18 skills executáveis
-│   ├── .cursor/         # hooks passivos
-│   └── scripts/         # orquestração, gates, export graph
+│   ├── .cursor/         # hooks (domain review + live session)
+│   └── scripts/         # orquestração, gates, export graph, telemetria
+├── extension/arah-live/ # Extensão Cursor/VS Code — painel ao vivo
 ├── cli/                 # init | update | doctor | domain sync | …
 ├── templates/           # arah.config.yaml, AGENTS.md, CI
 ├── docs/                # METHOD, mercado, bootstrap, migração
@@ -129,7 +130,7 @@ arah-harness/
 | [docs/MARKET_REFERENCE.md](docs/MARKET_REFERENCE.md) | Referências e decisões |
 | [docs/INSTALL.md](docs/INSTALL.md) | Instalar em qualquer repo |
 | [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-init |
-| [docs/MIGRATION_FROM_ARAH.md](docs/MIGRATION_FROM_ARAH.md) | Migrar repo Arah existente |
+| [docs/LIVE_SESSION.md](docs/LIVE_SESSION.md) | Extensão ARAH Live + telemetria |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Como contribuir |
 | [CHANGELOG.md](CHANGELOG.md) | Histórico de versões |
 

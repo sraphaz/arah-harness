@@ -1,0 +1,53 @@
+# destino: arah-harness/profiles/enterprise.yaml
+# Cliente corporativo: compliance, dados e auditoria. Herda model de product.
+
+id: enterprise
+name: "Enterprise"
+extends: product
+description: "LGPD checklist, threat model, audit log, gates fortes e scan reforçado."
+
+model:
+  audit:
+    event_schema: arah-harness/audit-event
+    ledger_path: .arah/audit/events.jsonl
+    retention_policy: contractual
+    record_script: scripts/agents/record-agent-event.ps1
+  governance:
+    human_gates: [spec_before_work, release_approval, production_deploy_approval, data_change_approval]
+    blocked_actions: [merge, approve, force_push, release.cut, deploy.production, schema.migrate]
+
+installs:
+  templates:
+    - docs/compliance/LGPD_CHECKLIST.md
+    - docs/compliance/RELEASE_CHECKLIST.md
+    - docs/security/THREAT_MODEL.md
+    - docs/security/AUDIT_LOG_CONVENTION.md
+    - .github/workflows/secrets-deep-scan.yml
+    - .github/workflows/harness-checks.yml
+  agents:
+    - pr-steward
+
+pr_checks:
+  - no-direct-main
+  - no-secrets
+  - agent-scope
+  - spec-before-work
+  - adr-for-structure
+  - lgpd-checklist-on-data
+  - audit-log-convention
+
+approval_gates:
+  - release_approval
+  - production_deploy_approval
+  - data_change_approval
+
+options:
+  secrets_scan: deep
+  audit_retention: "definir com o cliente (contrato)"
+  external_validation_required: ["LGPD", "retenção de dados", "cláusulas de auditoria"]
+
+definition_of_done:
+  - "tudo do product"
+  - "checklist LGPD para features com dado pessoal"
+  - "threat model atualizado em release maior"
+  - "trilha de auditoria preservada (retention contractual)"

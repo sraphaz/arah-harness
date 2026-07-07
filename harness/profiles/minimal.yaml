@@ -1,0 +1,66 @@
+# destino: arah-harness/profiles/minimal.yaml
+# Base de todos os profiles. Repos pequenos que ainda assim merecem governança.
+
+id: minimal
+name: "Minimal"
+description: "AGENTS.md, specs básicas, PR template, CI simples e Definition of Done."
+
+model:
+  domain_agents:
+    - id: architecture-documenter
+      required: true
+      max_autonomy: consult
+      skills: [architecture-review, register-adr]
+    - id: clean-craft-advisor
+      required: false
+      max_autonomy: consult
+      skills: [craft-review]
+    - id: test-architect
+      required: false
+      max_autonomy: consult
+      skills: [test-strategy]
+  governance:
+    autonomy_source: .agents/autonomy.yaml
+    autonomy_levels: [observe, consult, route, activate, invoke_skill, side_effect, public]
+    human_gates: []
+    blocked_actions: [merge, approve, force_push, delete_branch]
+  observability:
+    diagnostics: .cursor/arah-live/diagnostics.jsonl
+    session_traces: .cursor/arah-live/sessions/
+    metrics_summary: .arah/observability/summary.yaml
+    agent_graph: docs/_meta/agent-graph.generated.json
+  audit:
+    event_schema: arah-harness/audit-event
+    ledger_path: .arah/audit/events.jsonl
+    retention_policy: local_dev
+    record_script: scripts/agents/record-agent-event.ps1
+
+installs:
+  templates:
+    - AGENTS.md
+    - docs/specs/README.md
+    - docs/governance/DEFINITION_OF_DONE.md
+    - .github/PULL_REQUEST_TEMPLATE.md
+    - .github/workflows/harness-checks.yml
+  agents: []
+
+pr_checks:
+  - no-direct-main
+  - no-secrets
+  - agent-scope
+
+approval_gates: []
+
+options:
+  spec_before_work: false
+  block_direct_main: true
+  secrets_scan: true
+  require_adr: false
+
+definition_of_done:
+  - "revisão humana registrada no PR"
+  - "checks do CI verdes"
+  - "sem segredos no diff"
+  - "mudança descrita no PR (o quê e por quê)"
+
+upgrade_path: "qualquer outro profile (upgrade preserva specs e ADRs existentes)"

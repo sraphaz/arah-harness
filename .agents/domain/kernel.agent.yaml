@@ -1,0 +1,20 @@
+﻿id: kernel
+name: Kernel ARAH
+mode: consult
+enrich: |
+    Kernel versionado — impacta todos os projetos derivados.
+    Bump VERSION + CHANGELOG em releases.
+validate: |
+    self-test.ps1 verde; diff em kernel/ revisado.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - kernel/**
+    - .agents/**
+    - .skills/**
+    - scripts/**
+
+guardrails:
+  no_merge: true
+  consult_only: true

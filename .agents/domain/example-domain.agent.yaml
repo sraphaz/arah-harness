@@ -1,0 +1,16 @@
+﻿id: example-domain
+name: Example Domain
+mode: consult
+enrich: |
+    Regras de negócio e contexto que agentes devem respeitar neste domínio.
+validate: |
+    Verificar invariantes de negócio antes do merge.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - src/**/example/**
+
+guardrails:
+  no_merge: true
+  consult_only: true

@@ -1,0 +1,75 @@
+# destino: arah-harness/profiles/open-source.yaml
+# Projeto público: contribuição, governança visível e conduta.
+
+id: open-source
+name: "Open Source"
+extends: minimal
+description: "Contribution guide, governança pública, roadmap aberto, domain agents parciais."
+
+model:
+  domain_agents:
+    - id: architecture-documenter
+      required: true
+      max_autonomy: consult
+      skills: [architecture-review, register-adr]
+    - id: clean-craft-advisor
+      required: true
+      max_autonomy: consult
+      skills: [craft-review]
+    - id: test-architect
+      required: false
+      max_autonomy: consult
+      skills: [test-strategy]
+  governance:
+    autonomy_source: .agents/autonomy.yaml
+    autonomy_levels: [observe, consult, route, activate, invoke_skill, side_effect, public]
+    human_gates: [release_approval]
+    blocked_actions: [merge, approve, force_push]
+  observability:
+    diagnostics: .cursor/arah-live/diagnostics.jsonl
+    session_traces: .cursor/arah-live/sessions/
+    metrics_summary: .arah/observability/summary.yaml
+    agent_graph: docs/_meta/agent-graph.generated.json
+  audit:
+    event_schema: arah-harness/audit-event
+    ledger_path: .arah/audit/events.jsonl
+    retention_policy: project_default
+    record_script: scripts/agents/record-agent-event.ps1
+
+installs:
+  templates:
+    - CONTRIBUTING.md
+    - GOVERNANCE.md
+    - CODE_OF_CONDUCT.md
+    - LICENSE.template
+    - docs/ROADMAP.md
+    - .github/ISSUE_TEMPLATE/bug.yml
+    - .github/ISSUE_TEMPLATE/proposal.yml
+    - .github/PULL_REQUEST_TEMPLATE.md
+    - .github/workflows/harness-checks.yml
+  agents:
+    - pr-steward
+    - architecture-documenter
+    - clean-craft-advisor
+
+pr_checks:
+  - no-direct-main
+  - no-secrets
+  - agent-scope
+  - license-headers
+  - dco-or-cla
+
+approval_gates:
+  - release_approval
+
+options:
+  spec_before_work: false
+  block_direct_main: true
+  secrets_scan: true
+  require_adr: true
+  agent_transparency: true
+
+definition_of_done:
+  - "tudo do minimal"
+  - "docs públicas coerentes"
+  - "licença respeitada em arquivos novos"

@@ -1,0 +1,46 @@
+harness:
+  version: "0.2.3"
+  profile: product
+  installed_at: 2026-07-06T22:00:00-03:00
+  installed_by: arah-harness-self
+
+project:
+  name: arah-harness
+  owner: sraphaz
+
+model:
+  domain_agents:
+    - id: clean-craft-advisor
+      required: true
+      max_autonomy: consult
+      skills: [craft-review]
+    - id: test-architect
+      required: true
+      max_autonomy: consult
+      skills: [test-strategy, run-tests]
+    - id: architecture-documenter
+      required: true
+      max_autonomy: consult
+      skills: [architecture-review, register-adr, doc-taxonomy]
+  governance:
+    autonomy_source: .agents/autonomy.yaml
+    autonomy_levels: [observe, consult, route, activate, invoke_skill, side_effect, public]
+    human_gates: [spec_before_work, release_approval]
+    blocked_actions: [merge, approve, force_push, release.cut, deploy.production]
+  observability:
+    diagnostics: .cursor/arah-live/diagnostics.jsonl
+    session_traces: .cursor/arah-live/sessions/
+    metrics_summary: .arah/observability/summary.yaml
+    agent_graph: docs/_meta/agent-graph.generated.json
+  audit:
+    event_schema: arah-harness/audit-event
+    ledger_path: .arah/audit/events.jsonl
+    retention_policy: project_default
+    record_script: scripts/agents/record-agent-event.ps1
+
+managed_blocks:
+  - AGENTS.md
+  - .agents/
+  - .skills/
+  - scripts/
+  - docs/_meta/

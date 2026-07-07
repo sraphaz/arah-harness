@@ -1,34 +1,57 @@
-# AGENTS.md — ARAH Harness (este repositório)
+﻿# AGENTS.md — Manual de operação por agentes (ARAH)
 
-**Repo**: `sraphaz/arah-harness` · **Versão**: ver [VERSION](VERSION)
+**Projeto**: arah-harness
+**Harness**: ARAH 0.2.2
 
-Este repositório **distribui** o método ARAH; não é um app de produto. O kernel vive em `kernel/`; projetos-alvo recebem cópia via `cli/arah.ps1 init`.
+Fonte de verdade para agentes (Cursor, CI). Procedimentos em `.skills/`; regras em `.cursor/rules/`; operação completa em `docs/ops/AGENT_OPERATION.md` (crie se necessário).
 
-## Escopo de edição
+## Princípios
 
-| Área | Pode alterar | Notas |
-|------|--------------|-------|
-| `kernel/` | Sim | Bump `VERSION` + `CHANGELOG.md` em releases |
-| `cli/` | Sim | Comandos init/update/doctor/sync-check/domain/export-graph |
-| `templates/` | Sim | arah.config.yaml, AGENTS.md.tpl, workflows |
-| `docs/` | Sim | METHOD, mercado, bootstrap, migração |
-| `scripts/self-test.ps1` | Sim | CI e validação local |
+1. **Humano comanda, agente executa** — merge sempre humano.
+2. **Tudo via Pull Request** — sem commit direto em `main`.
+3. **Escopo mínimo** — cada agente só toca paths permitidos (`.agents/*.agent.yaml`).
+4. **Doc como código** — documentação atualizada no mesmo PR.
+5. **Spec-before-code** — fases S0+ exigem spec em `docs/specs/` e `Spec-Id:` no PR.
+6. **Contexto sob demanda** — comunicação entre agentes é passiva (arquivo + CI).
 
-## Antes de PR neste repo
+## Fluxo
 
-1. `./scripts/self-test.ps1` — verde
-2. Diff em `kernel/` revisado (impacta todos os projetos derivados)
-3. `CHANGELOG.md` atualizado se release
-4. `VERSION` alinhado com `cli/init.ps1` e `templates/arah.config.yaml`
+```
+Intenção (humano) → Orquestrador → Agente + skills → PR → CI + PR Steward → ready-for-merge → Merge (humano)
+```
 
-## Comandos
+## Catálogo
+
+Operacionais: ver [`.agents/README.md`](.agents/README.md).
+
+Consultivos de domínio: `.agents/domain/` (gerados via `arah.config.yaml`).
+
+Coreografia: [`.agents/choreography.yaml`](.agents/choreography.yaml).
+
+## Skills
 
 ```powershell
-./scripts/self-test.ps1
-powershell -File cli/arah.ps1 help
+./scripts/agents/invoke-skill.ps1 -Skill <nome> [-Area backend|frontend]
+./scripts/agents/validate-manifests.ps1
 ```
+
+## Configuração
+
+Edite [`arah.config.yaml`](arah.config.yaml) para comandos de teste, domínios e especialistas.
+
+## Harness profiles (Onda 2)
+
+Profiles instaláveis em `harness/profiles/` — ver `harness/profiles/consulting.yaml` e [ARAH_HARNESS_EXTRACTION_PLAN.md](docs/_meta/ARAH_HARNESS_EXTRACTION_PLAN.md).
+
+```powershell
+./harness/scripts/doctor-harness.ps1 -Target <repo-path>
+```
+
+Schemas: `docs/schemas/`
 
 ## Referências
 
-- [docs/METHOD.md](docs/METHOD.md)
-- [README.md](README.md)
+- [ARAH Harness](https://github.com/sraphaz/arah-harness) — kernel e método
+- `docs/specs/` — specs SDD
+- `docs/governance/DEFINITION_OF_DONE.md` — crie conforme necessidade
+

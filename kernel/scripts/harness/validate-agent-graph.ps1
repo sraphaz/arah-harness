@@ -56,7 +56,7 @@ function Test-AgentManifestExists {
 }
 
 # --- Fontes ------------------------------------------------------------------
-if (-not (Test-Path (Join-Path $Root '.agents/choreography.yaml'))) {
+if (-not (Test-Path $ChoreoPath)) {
     Write-Error "Missing .agents/choreography.yaml"
     exit 1
 }
@@ -233,6 +233,15 @@ foreach ($f in $agentFiles) {
         if ($inSpecialistRule) { continue }
     }
     $warnings += ('orphan agent: ''{0}'' not activated by rule, consult, or orchestrator routing' -f $aid)
+}
+
+# --- Harness-model (domain agents, governance, audit, observability) ---------
+$libPath = Join-Path $PSScriptRoot 'harness-model-lib.ps1'
+if (Test-Path $libPath) {
+    . $libPath
+    $modelResult = Test-HarnessModelCompleteness -Target $Root -Strict:$Strict
+    foreach ($w in $modelResult.warnings) { $warnings += $w }
+    foreach ($f in $modelResult.failures) { $errors += $f.Replace('FAIL ', '') }
 }
 
 # --- Resultado ---------------------------------------------------------------

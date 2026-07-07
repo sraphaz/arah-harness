@@ -1,0 +1,63 @@
+# Coreografia arah-harness — overlay local
+version: 1
+updated: 2026-07-05
+
+rules:
+  - id: harness-kernel
+    paths:
+      - kernel/**
+      - scripts/**
+    agents:
+      - id: release
+        type: operational
+        autonomy: [activate]
+      - id: docs-steward
+        type: operational
+        autonomy: [activate]
+
+  - id: harness-extension
+    paths:
+      - extension/**
+    agents:
+      - id: frontend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [craft-review]
+      - id: docs-steward
+        type: operational
+        autonomy: [activate]
+
+  - id: harness-cli
+    paths:
+      - cli/**
+    agents:
+      - id: release
+        type: operational
+        autonomy: [activate]
+
+  - id: harness-docs
+    paths:
+      - docs/**
+      - README.md
+      - CHANGELOG.md
+      - AGENTS.md
+    agents:
+      - id: docs-steward
+        type: operational
+        autonomy: [activate]
+
+  - id: harness-arah-sdlc
+    paths:
+      - .cursor/**
+      - arah.config.yaml
+      - .arah-version
+    agents:
+      - id: release
+        type: operational
+        autonomy: [activate]
+      - id: docs-steward
+        type: operational
+        autonomy: [activate]
+      - id: extension-live
+        type: domain
+        autonomy: [consult_post]

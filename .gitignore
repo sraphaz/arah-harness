@@ -7,3 +7,8 @@ dist/
 TestResults/
 .copilot/
 .claude/
+.cursor/arah-live/
+extension/arah-live/out/
+extension/arah-live/node_modules/
+.arah/audit/
+.arah/observability/

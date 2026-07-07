@@ -1,0 +1,59 @@
+﻿# ARAH Harness — self-hosted (o próprio repo usa o método)
+version: 1
+harness:
+  source: sraphaz/arah-harness
+  version: "0.2.2"
+  repository: https://github.com/sraphaz/arah-harness
+  release: v0.2.2
+
+project:
+  name: arah-harness
+  stack: docs
+
+tests:
+  all: "powershell -File ./scripts/self-test.ps1"
+
+domains:
+  - id: kernel
+    name: Kernel ARAH
+    description: Agentes, skills, scripts e hooks distribuídos via init/update
+    paths:
+      - kernel/**
+      - .agents/**
+      - .skills/**
+      - scripts/**
+    enrich: |
+      Kernel versionado — impacta todos os projetos derivados.
+      Bump VERSION + CHANGELOG em releases.
+    validate: |
+      self-test.ps1 verde; diff em kernel/ revisado.
+    references:
+      - AGENTS.md
+      - CHANGELOG.md
+
+  - id: extension-live
+    name: Extensão ARAH Live
+    description: Painel Cursor/VS Code — telemetria ao vivo
+    paths:
+      - extension/**
+    enrich: |
+      Webview + hooks session-telemetry. Empacotar com vsce.
+    validate: |
+      npm run compile; painel reflete .cursor/arah-live/state.json.
+    references:
+      - extension/arah-live/README.md
+      - docs/LIVE_SESSION.md
+
+  - id: cli
+    name: CLI ARAH
+    description: init, update, doctor, domain sync, export-graph
+    paths:
+      - cli/**
+    enrich: |
+      Entry point arah.ps1 — não quebrar compat PS 5.1.
+    validate: |
+      self-test.ps1 cobre init + domain sync + export-graph.
+    references:
+      - README.md
+
+specialists: []
