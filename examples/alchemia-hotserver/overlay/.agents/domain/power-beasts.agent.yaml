@@ -1,0 +1,19 @@
+id: power-beasts
+name: Avatar / Power Beasts
+mode: consult
+enrich: |
+  Seleção = instância; ativação real via Animagis/Fusio Bestialis/legs.
+  USE_NATIVE_AVATAR_FIELD_ITEMS=false: sem field persistente com dano nativo.
+validate: |
+  Sem dano duplicado no walking field.
+  Sprite/familiar/walking effect coerentes.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - canary-3.4.1/data/scripts/creaturescripts/others/power_beasts.lua
+    - canary-3.4.1/data/scripts/**/*power*beast*
+    - canary-3.4.1/data/scripts/**/*avatar*
+guardrails:
+  no_merge: true
+  consult_only: true

@@ -1,0 +1,18 @@
+id: monsters-spawns
+name: Monsters & Spawns
+mode: consult
+enrich: |
+  Loot/exp/skills alinhados à progressão Alchemia.
+  Spawns honestos — sem farm quebrado sem decisão documentada.
+validate: |
+  XML bem formado; spawn referencia monster existente.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - canary-3.4.1/data/monster/**
+    - canary-3.4.1/data/world/**
+    - canary-3.4.1/data/scripts/creaturescripts/**
+guardrails:
+  no_merge: true
+  consult_only: true

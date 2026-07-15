@@ -1,0 +1,19 @@
+id: client-ux
+name: OTClient UX
+mode: consult
+enrich: |
+  Magical Archive é fonte de preview de magia custom.
+  Mudanças só Lua/OTUI: reload — sem rebuild C++.
+validate: |
+  loadfile nos módulos tocados.
+  Sem artefactos Codex/build em client_run.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - client_run/modules/**
+    - client_run/**/*.otui
+    - client_run/**/*.lua
+guardrails:
+  no_merge: true
+  consult_only: true

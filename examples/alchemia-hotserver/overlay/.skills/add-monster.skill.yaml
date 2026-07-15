@@ -1,0 +1,5 @@
+id: add-monster
+description: Checklist guiado para novo monster XML + spawn (quando aplicável).
+run:
+  script: scripts/agents/alchemia/add-monster.ps1
+success: exit_code == 0

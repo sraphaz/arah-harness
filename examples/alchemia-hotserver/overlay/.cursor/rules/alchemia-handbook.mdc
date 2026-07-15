@@ -1,0 +1,18 @@
+---
+description: Handbook-first e higiene Alchemia HotServer
+globs:
+  - canary-3.4.1/**
+  - client_run/**
+  - "coisas do codex/**"
+alwaysApply: false
+---
+
+Antes de sistemas grandes, balanceamento ou regressão: ler
+`coisas do codex/ALCHEMIA_ENGINEERING_HANDBOOK_V2_0.txt`.
+Conflitos/rollback/backup: também o Manual Mestre.
+
+items.xml: capítulo 19 + planilha em `coisas do codex` antes de editar.
+
+Artefactos Codex/build/PDB/log: nunca em `canary-3.4.1` ou `client_run`.
+
+Ver [AGENTS.md](../../AGENTS.md) e [docs/arah/ALCHEMIA_ARAH.md](../../docs/arah/ALCHEMIA_ARAH.md).

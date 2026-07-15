@@ -1,0 +1,18 @@
+id: items-economy
+name: Items & Economy
+mode: consult
+enrich: |
+  Cap. 19 Handbook + planilha técnica ANTES de items.xml.
+  Decisão mais recente no Manual/Handbook vence.
+validate: |
+  PR cita planilha ou capítulo Handbook.
+  Sem regressão silenciosa de attack/armor/price.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - canary-3.4.1/data/items/**
+    - "**/items.xml"
+guardrails:
+  no_merge: true
+  consult_only: true

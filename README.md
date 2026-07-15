@@ -142,6 +142,12 @@ arah-harness/
 - Overlay `choreography.iautos.yaml` para `packages/**` e `apps/web/**`
 - Separação clara: ARAH SDLC (repo) vs agentes runtime (`packages/ai-orchestrator/agents/`)
 
+**Alchemia HotServer** (OpenTibia / Canary) — pacote zipável em [`examples/alchemia-hotserver/`](examples/alchemia-hotserver/):
+
+- Domínios de jogo (`combat-magic`, `power-beasts`, `items-economy`, …)
+- Skills OT (`add-spell`, `lua-validate`, `balance-pass`, …)
+- Instalador: `Install-AlchemiaArah.ps1 -Target "D:\SERVIDOR NO D"`
+
 ## Desenvolvimento deste repo
 
 ```powershell
