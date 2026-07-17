@@ -1,11 +1,11 @@
-# organism.schema.yaml — manifesto do biocomponente ARAH no repositório
+# organism.schema.yaml — manifesto TechOrganism no repositório
 schema: arah-harness/organism
 version: 0.1.0
 
 description: |
-  Manifesto ontogênico: células (agentes), tecidos (grupos), vias de sinalização
-  e papéis. Gerado no bootstrap e atualizado por propostas de evolução
-  (nunca mutação silenciosa do kernel).
+  Manifesto ontogênico do TechOrganism: células (agentes), tecidos (grupos),
+  vias de sinalização e papéis. Gerado no bootstrap e atualizado por propostas
+  de evolução (nunca mutação silenciosa do kernel).
 
 fields:
   schema:
@@ -23,7 +23,7 @@ fields:
   metaphor:
     type: string
     default: |
-      Harness = organismo. Agentes = células. Grupos = tecidos.
+      TechOrganism = organismo tecnológico no repo. Agentes = células. Grupos = tecidos.
       Sinais tipados = comunicação química auditável. Evolução = seleção via PR.
   cells:
     type: list<cell>

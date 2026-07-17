@@ -1,7 +1,7 @@
 ﻿# AGENTS.md — Operação por agentes (ARAH)
 
 **Projeto:** arah-harness  
-**Harness:** ARAH **0.3.0** · Biocomponente ativo
+**Harness:** ARAH **0.3.0** · TechOrganism ativo
 
 Fonte de verdade para agentes (Cursor, CI). Procedimentos em `.skills/`; operação profunda em `docs/ops/` (crie se necessário).
 
@@ -45,7 +45,7 @@ discover → organism bootstrap → sinais → evolve → regenerate → PR
 | Coreografia | [`.agents/choreography.yaml`](.agents/choreography.yaml) |
 | Organismo | [`docs/_meta/organism.manifest.yaml`](docs/_meta/organism.manifest.yaml) |
 
-Dimensão viva: **[docs/BIOCOMPONENT.md](docs/BIOCOMPONENT.md)**
+Dimensão viva: **[docs/TECHORGANISM.md](docs/TECHORGANISM.md)**
 
 ---
 
@@ -56,7 +56,7 @@ Dimensão viva: **[docs/BIOCOMPONENT.md](docs/BIOCOMPONENT.md)**
 ./scripts/agents/validate-manifests.ps1
 ```
 
-Biocomponente: `discover-repo` · `evolve-harness` · `regenerate-harness`
+TechOrganism: `discover-repo` · `evolve-harness` · `regenerate-harness`
 
 ---
 
@@ -91,7 +91,7 @@ Schemas: `schemas/arah-harness/` · `docs/schemas/`
 
 | Doc | Uso |
 |-----|-----|
-| [docs/BIOCOMPONENT.md](docs/BIOCOMPONENT.md) | Organismo, sinais, evolução |
+| [docs/TECHORGANISM.md](docs/TECHORGANISM.md) | Organismo, sinais, evolução |
 | [docs/METHOD.md](docs/METHOD.md) | Método completo |
 | [docs/GOVERNANCE.md](docs/GOVERNANCE.md) | Autonomia e gates |
 | [docs/specs/](docs/specs/) | Specs SDD |

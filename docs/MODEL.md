@@ -4,7 +4,7 @@
 
 O **harness-model** define o que todo repo governado declara — domain agents, governança, observabilidade e auditoria são **first-class**, não add-ons opcionais.
 
-A dimensão **biocomponente** (discovery, organism, signals, evolution) estende esse modelo com artefatos por repositório — ver [BIOCOMPONENT.md](BIOCOMPONENT.md).
+A dimensão **TechOrganism** (discovery, organism, signals, evolution) estende esse modelo com artefatos por repositório — ver [TECHORGANISM.md](TECHORGANISM.md).
 
 Schema: [`schemas/arah-harness/harness-model.schema.yaml`](../schemas/arah-harness/harness-model.schema.yaml)
 
@@ -86,7 +86,7 @@ Ver [AUDIT.md](AUDIT.md).
 
 Ambos invocam `harness-model-lib.ps1` — rejeitam repos incompletos para o tier instalado.
 
-## Biocomponente (extensão do modelo)
+## TechOrganism (extensão do modelo)
 
 Desde v0.3 o harness declara também artefatos de organismo (fora do profile tier, por repo):
 
@@ -97,10 +97,10 @@ Desde v0.3 o harness declara também artefatos de organismo (fora do profile tie
 | `.arah/bus/signals.jsonl` | arah-harness/signal |
 | `docs/_meta/evolution.proposed.yaml` | arah-harness/evolution |
 
-Ver [BIOCOMPONENT.md](BIOCOMPONENT.md).
+Ver [TECHORGANISM.md](TECHORGANISM.md).
 
 ## Referências
 
 - [HARNESS_PROFILES.md](HARNESS_PROFILES.md)
 - [GOVERNANCE.md](GOVERNANCE.md)
-- [BIOCOMPONENT.md](BIOCOMPONENT.md)
+- [TECHORGANISM.md](TECHORGANISM.md)

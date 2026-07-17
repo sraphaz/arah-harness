@@ -16,7 +16,7 @@ Em `arah.config.yaml`:
 
 ## 2. Descobrir e declarar domínio
 
-**Opção A — biocomponente (recomendada)**
+**Opção A — TechOrganism (recomendada)**
 
 ```powershell
 arah discover
@@ -65,7 +65,7 @@ arah doctor
 - [ ] `docs/governance/DEFINITION_OF_DONE.md`
 - [ ] `docs/ops/AGENT_OPERATION.md` (detalhes além do `AGENTS.md`)
 - [ ] `docs/specs/README.md` (+ registry se profile consulting)
-- [ ] Link para [BIOCOMPONENT.md](BIOCOMPONENT.md) no README do produto (opcional)
+- [ ] Link para [TECHORGANISM.md](TECHORGANISM.md) no README do produto (opcional)
 
 ---
 
@@ -114,6 +114,6 @@ Commit `.arah-version` após update.
 ## Referências
 
 - [INSTALL.md](INSTALL.md) — instalação completa  
-- [BIOCOMPONENT.md](BIOCOMPONENT.md) — dimensão viva  
+- [TECHORGANISM.md](TECHORGANISM.md) — dimensão viva  
 - [METHOD.md](METHOD.md) — método  
 - [GOVERNANCE.md](GOVERNANCE.md) — autonomia  

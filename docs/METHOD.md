@@ -3,7 +3,7 @@
 **ARAH** — *Agent Runtime Autonomous Harness*  
 **Versão do método** alinhada ao harness **0.3.0**
 
-Framework de bootstrap para repositórios gerenciados por agentes: autonomia coreografada, auditável, observável, com economia de tokens — e dimensão **biocomponente** para discovery, organização e evolução contínua.
+Framework de bootstrap para repositórios gerenciados por agentes: autonomia coreografada, auditável, observável, com economia de tokens — e dimensão **TechOrganism** para discovery, organização e evolução contínua.
 
 ---
 
@@ -14,7 +14,7 @@ Um humano define a intenção. O organismo ARAH roteia, co-ativa, implementa, va
 ```text
 Intenção → Orquestrador → Célula + skills → PR → CI + gates → ready-for-merge → Merge (humano)
                 │
-                └── biocomponente: discover · organism · signals · evolve · regenerate
+                └── TechOrganism: discover · organism · signals · evolve · regenerate
 ```
 
 ---
@@ -27,7 +27,7 @@ Intenção → Orquestrador → Célula + skills → PR → CI + gates → ready
 ├──────────────────────────────────────────────────────────┤
 │  Domínio — .agents/domain/, specialists, overlays        │  ← negócio / stack
 ├──────────────────────────────────────────────────────────┤
-│  Organismo — docs/_meta/*, .arah/bus, evolution          │  ← biocomponente v0.3
+│  Organismo — docs/_meta/*, .arah/bus, evolution          │  ← TechOrganism v0.3
 ├──────────────────────────────────────────────────────────┤
 │  Kernel ARAH — operacionais, .skills, scripts, hooks     │  ← versionado
 ├──────────────────────────────────────────────────────────┤
@@ -39,7 +39,7 @@ Intenção → Orquestrador → Célula + skills → PR → CI + gates → ready
 |--------|-------------|--------------|
 | Kernel | `arah update` / `regenerate -UpdateKernel` | Pin `.arah-version` |
 | Config | Humano (+ Apply revisável) | Git |
-| Organismo | Biocomponente (propostas) + PR | `docs/_meta/` versionado |
+| Organismo | TechOrganism (propostas) + PR | `docs/_meta/` versionado |
 | Domínio | `domain sync` a partir da config | `.agents/domain/` gerado |
 | Produto | Agentes operacionais em PR | Código da app |
 
@@ -94,11 +94,11 @@ ARAH privilegia **contexto sob demanda**, não chat entre agentes:
 
 Sinais (`attract`, `consult`, `propose`, `coalesce`, `evolve`, …) são artefatos append-only — não um swarm conversacional.
 
-Detalhe: [BIOCOMPONENT.md](BIOCOMPONENT.md).
+Detalhe: [TECHORGANISM.md](TECHORGANISM.md).
 
 ---
 
-## Biocomponente
+## TechOrganism
 
 Capacidade que diferencia a v0.3: o harness **observa**, **organiza** e **evolui** o próprio arranjo de agentes.
 
@@ -155,14 +155,14 @@ Grafo exportável: agentes ↔ skills ↔ paths ↔ gates.
 |--------|-------|
 | v0.1 | Kernel + CLI init/update/sync-check |
 | v0.2 | Domain sync, agent graph, Live Session, harness-model |
-| **v0.3** | **Biocomponente** — discover, organism, signal bus, evolve, regenerate |
+| **v0.3** | **TechOrganism** — discover, organism, signal bus, evolve, regenerate |
 | v1.0 | Produto Arah consome harness como dependência (prova real) |
 
 ---
 
 ## Referências rápidas
 
-- [BIOCOMPONENT.md](BIOCOMPONENT.md) — dimensão viva  
+- [TECHORGANISM.md](TECHORGANISM.md) — dimensão viva  
 - [GOVERNANCE.md](GOVERNANCE.md) — autonomia e gates  
 - [MODEL.md](MODEL.md) — contratos first-class  
 - [INSTALL.md](INSTALL.md) — instalação  

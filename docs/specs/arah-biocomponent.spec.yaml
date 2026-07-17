@@ -1,5 +1,5 @@
 id: arah-biocomponent
-title: Dimensão biocomponente — discovery, organismo, sinais e evolução
+title: TechOrganism — discovery, organismo, sinais e evolução
 status: active
 owner: spec-steward
 version: 1
@@ -21,6 +21,7 @@ covers:
   - schemas/arah-harness/discovery.schema.yaml
   - schemas/arah-harness/evolution.schema.yaml
   - schemas/arah-harness/signal.schema.yaml
+  - docs/TECHORGANISM.md
   - docs/BIOCOMPONENT.md
   - docs/METHOD.md
   - docs/MARKET_REFERENCE.md
@@ -33,11 +34,12 @@ covers:
   - kernel/.skills/regenerate-harness.skill.yaml
 
 description: |
-  Evolui o ARAH Harness de kernel determinístico para biocomponente tecnológico:
+  Evolui o ARAH Harness de kernel determinístico para TechOrganism:
   observa o repositório (domínio + stack), propõe células (agentes), define
   comunicação tipada entre elas, e evolui definições/skills/coreografia a cada
   ciclo — sempre via artefatos auditáveis e merge humano.
 
+  Brand: TechOrganism (nome de produto). Spec-Id legado: arah-biocomponent.
   Princípio de governança: agentes PROPOEM; humanos APLICAM.
   Não há criação silenciosa de agentes (anti-padrão de mercado mantido,
   reinterpretado como loop de proposta + gate).

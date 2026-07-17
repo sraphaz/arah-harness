@@ -2,7 +2,7 @@
 
 Síntese das referências usadas para desenhar o ARAH Harness e o posicionamento vs o ecossistema Arah e o mercado agentic (2026).
 
-**Leitura complementar:** [BIOCOMPONENT.md](BIOCOMPONENT.md) — como a v0.3 traduz autonomia sem perder auditoria.
+**Leitura complementar:** [TECHORGANISM.md](TECHORGANISM.md) — como a v0.3 traduz autonomia sem perder auditoria.
 
 ## Referências principais
 
@@ -56,7 +56,7 @@ Síntese das referências usadas para desenhar o ARAH Harness e o posicionamento
 | SDD + harness | ✅ | parcial | ✅ | ❌ | ✅ |
 | Drift check | ❌ | ❌ | parcial | ✅ | ✅ |
 | Economia tokens | parcial | ❌ | parcial | ✅ | ✅ |
-| Discovery + evolve (biocomponente) | ❌ | parcial | parcial | ❌ | ✅ |
+| Discovery + evolve (TechOrganism) | ❌ | parcial | parcial | ❌ | ✅ |
 
 ## Validação no Arah (repo origem)
 
@@ -71,7 +71,7 @@ O ARAH Harness generaliza esse modelo para qualquer stack/projeto.
 - **Merge automático**: contraria "humano comanda".
 - **Agentes que criam agentes em silêncio**: degrada contexto e auditabilidade.
 
-### Reinterpretação (v0.3 biocomponente)
+### Reinterpretação (v0.3 TechOrganism)
 
 ARAH **não** permite spawn livre de agentes. Em vez disso:
 

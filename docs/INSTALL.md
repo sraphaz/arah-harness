@@ -1,6 +1,6 @@
 # Instalar ARAH Harness
 
-Guia premium para adicionar o kernel ARAH a **qualquer repositório** — greenfield ou brownfield — e ativar a dimensão biocomponente.
+Guia premium para adicionar o kernel ARAH a **qualquer repositório** — greenfield ou brownfield — e ativar a dimensão TechOrganism.
 
 **Upstream:** [sraphaz/arah-harness](https://github.com/sraphaz/arah-harness) · **Release:** **v0.3.0**
 
@@ -52,7 +52,7 @@ powershell -ExecutionPolicy Bypass -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 ins
 | Artefato | Descrição |
 |----------|-----------|
 | `.agents/` | 11 operacionais + domain advisors + coreografia |
-| `.skills/` | Skills executáveis (incl. biocomponente) |
+| `.skills/` | Skills executáveis (incl. TechOrganism) |
 | `scripts/agents/` · `scripts/harness/` | Orquestração, gates, discover/evolve/regenerate |
 | `.cursor/hooks.json` | Domain review + live session |
 | `arah.config.yaml` | Config do projeto (**edite**) |
@@ -94,7 +94,7 @@ domains:
       Invariantes a verificar no PR.
 ```
 
-### Deixar o biocomponente propor
+### Deixar o TechOrganism propor
 
 ```powershell
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 discover -Target .
@@ -104,7 +104,7 @@ powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 domain sync -Target .
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 organism bootstrap -Target .
 ```
 
-Detalhe: [BIOCOMPONENT.md](BIOCOMPONENT.md).
+Detalhe: [TECHORGANISM.md](TECHORGANISM.md).
 
 ---
 
@@ -171,6 +171,6 @@ O workflow `agents-validate.yml` vem no `init`. Para drift-check opcional:
 
 1. Checklist: [BOOTSTRAP.md](BOOTSTRAP.md)  
 2. Método: [METHOD.md](METHOD.md)  
-3. Biocomponente: [BIOCOMPONENT.md](BIOCOMPONENT.md)  
+3. TechOrganism: [TECHORGANISM.md](TECHORGANISM.md)  
 4. Migração Arah legado: [MIGRATION_FROM_ARAH.md](MIGRATION_FROM_ARAH.md)  
 5. Exemplo real: [sraphaz/iautos](https://github.com/sraphaz/iautos)  

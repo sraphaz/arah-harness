@@ -137,7 +137,7 @@ $sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine("generated_at: $ts")
 [void]$sb.AppendLine("project: $project")
 [void]$sb.AppendLine('metaphor: |')
-[void]$sb.AppendLine('  Harness = organismo. Agentes = células. Grupos = tecidos.')
+[void]$sb.AppendLine('  TechOrganism = organismo tecnológico. Agentes = células. Grupos = tecidos.')
 [void]$sb.AppendLine('  Sinais tipados = comunicação química auditável. Evolução = seleção via PR.')
 [void]$sb.AppendLine("discovery: $discoveryNote")
 [void]$sb.AppendLine('cells:')

@@ -93,6 +93,7 @@ rules:
       - docs/_meta/discovery.proposed.yaml
       - docs/_meta/organism.manifest.yaml
       - docs/_meta/evolution.proposed.yaml
+      - docs/TECHORGANISM.md
       - docs/BIOCOMPONENT.md
       - schemas/arah-harness/discovery.schema.yaml
       - schemas/arah-harness/organism.schema.yaml

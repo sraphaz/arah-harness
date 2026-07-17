@@ -2,4 +2,4 @@
 
 | Spec-Id | Title | Status |
 |---------|-------|--------|
-| arah-biocomponent | Dimensão biocomponente — discovery, organismo, sinais e evolução | active |
+| arah-biocomponent | TechOrganism — discovery, organismo, sinais e evolução | active |

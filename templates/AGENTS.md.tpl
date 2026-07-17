@@ -54,7 +54,7 @@ discover → organism bootstrap → sinais → evolve → regenerate → PR
 ./scripts/agents/validate-manifests.ps1
 ```
 
-Biocomponente: `discover-repo` · `evolve-harness` · `regenerate-harness`
+TechOrganism: `discover-repo` · `evolve-harness` · `regenerate-harness`
 
 ---
 
@@ -70,7 +70,7 @@ arah evolve
 arah regenerate -UpdateKernel
 ```
 
-Documentação do biocomponente: no repositório upstream `docs/BIOCOMPONENT.md`.
+Documentação do TechOrganism: no repositório upstream `docs/TECHORGANISM.md`.
 
 ---
 
