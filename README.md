@@ -2,11 +2,11 @@
 
 [![CI](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](VERSION)
 
 **ARAH** — *Agent Runtime Autonomous Harness*
 
-Kernel open-source para bootstrap de repositórios **gerenciados por agentes**: multi-agente coreografado, auditável, observável, com economia de tokens — sem copiar `.agents/`, scripts e gates em cada projeto novo.
+Kernel open-source para bootstrap de repositórios **gerenciados por agentes**: multi-agente coreografado, auditável, observável, com economia de tokens — e, desde **v0.3**, dimensão **biocomponente** (discovery, organismo, sinais, evolução) — sem copiar `.agents/`, scripts e gates em cada projeto novo.
 
 > Extraído e generalizado do ecossistema [Arah](https://github.com/sraphaz/arah). Validado em produção interna e no monorepo **IAutos** (legaltech).
 
@@ -35,6 +35,7 @@ Cada repo novo exigia replicar manualmente:
 | Agent Graph auditável | ❌ | parcial | parcial | ❌ | ✅ |
 | Drift-check (`sync-check`) | ❌ | ❌ | parcial | ✅ | ✅ |
 | Comunicação passiva (tokens) | parcial | ❌ | parcial | ✅ | ✅ |
+| Biocomponente (discover/evolve) | ❌ | parcial | parcial | ❌ | ✅ |
 
 ## Arquitetura
 
@@ -73,12 +74,16 @@ powershell -ExecutionPolicy Bypass -File $env:USERPROFILE\arah-harness\cli\arah.
 
 Guia completo: **[docs/INSTALL.md](docs/INSTALL.md)**
 
-Após editar `arah.config.yaml` (testes + domínios):
+Após editar `arah.config.yaml` (testes + domínios) — ou deixe o biocomponente propor:
 
 ```powershell
 $HARNESS = if ($env:ARAH_HARNESS_PATH) { $env:ARAH_HARNESS_PATH } else { "$env:USERPROFILE\arah-harness" }
+powershell -File $HARNESS\cli\arah.ps1 regenerate -Target . -UpdateKernel
+# ou passo a passo:
+powershell -File $HARNESS\cli\arah.ps1 discover
 powershell -File $HARNESS\cli\arah.ps1 domain sync
-powershell -File .\scripts\agents\validate-manifests.ps1
+powershell -File $HARNESS\cli\arah.ps1 organism bootstrap
+powershell -File $HARNESS\cli\arah.ps1 evolve
 powershell -File $HARNESS\cli\arah.ps1 export-graph
 powershell -File $HARNESS\cli\arah.ps1 doctor
 ```
@@ -91,11 +96,17 @@ powershell -File $HARNESS\cli\arah.ps1 doctor
 | `init` | Instala kernel + templates + workflow CI |
 | `domain sync` | Gera agentes de domínio + `choreography.domains.yaml` |
 | `validate-runtime` | Valida coreografia de agentes runtime (`runtime:` em `arah.config.yaml`) |
-| `export-graph` | Gera `docs/_meta/agent-graph.generated.json` |
 | `export-graph` | Exporta Agent Graph (JSON + Mermaid) |
 | `update [-Force]` | Reaplica kernel (preserva config/overlays) |
 | `sync-check` | Detecta drift vs kernel (ideal no CI) |
 | `doctor` | Valida instalação |
+| `discover [-Apply]` | Observa stack/domínio → propostas |
+| `organism bootstrap` | Ritual ontogênico (células + tecidos) |
+| `organism signal` | Emite sinal tipado no bus |
+| `evolve [-Apply]` | Self-learning → propostas de evolução |
+| `regenerate [-UpdateKernel]` | Homeostase completa no consumidor |
+
+Dimensão biocomponente: **[docs/BIOCOMPONENT.md](docs/BIOCOMPONENT.md)**
 
 ## Estrutura
 

@@ -84,7 +84,21 @@ Ver [AUDIT.md](AUDIT.md).
 
 Ambos invocam `harness-model-lib.ps1` — rejeitam repos incompletos para o tier instalado.
 
+## Biocomponente (extensão do modelo)
+
+Desde v0.3 o harness declara também artefatos de organismo (fora do profile tier, por repo):
+
+| Artefato | Schema |
+|----------|--------|
+| `docs/_meta/discovery.proposed.yaml` | arah-harness/discovery |
+| `docs/_meta/organism.manifest.yaml` | arah-harness/organism |
+| `.arah/bus/signals.jsonl` | arah-harness/signal |
+| `docs/_meta/evolution.proposed.yaml` | arah-harness/evolution |
+
+Ver [BIOCOMPONENT.md](BIOCOMPONENT.md).
+
 ## Referências
 
 - [HARNESS_PROFILES.md](HARNESS_PROFILES.md)
 - [GOVERNANCE.md](GOVERNANCE.md)
+- [BIOCOMPONENT.md](BIOCOMPONENT.md)

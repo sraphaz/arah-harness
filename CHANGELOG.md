@@ -2,6 +2,25 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.3.0] - 2026-07-17
+
+### Added
+
+- **Biocomponente ARAH** — harness como organismo instalado no repositório
+- `arah discover` — observa stack/domínio → `docs/_meta/discovery.proposed.yaml`
+- `arah organism bootstrap|status|signal` — ritual ontogênico + barramento tipado
+- `arah evolve` — self-learning a partir de audit/sinais/telemetria → `evolution.proposed.yaml`
+- `arah regenerate` — homeostase: update + domain sync + discover + organism + evolve + graph + doctor
+- Schemas: `discovery`, `organism`, `signal`, `evolution` em `schemas/arah-harness/`
+- Skills: `discover-repo`, `evolve-harness`, `regenerate-harness`
+- Docs: [BIOCOMPONENT.md](docs/BIOCOMPONENT.md); spec `arah-biocomponent`
+
+### Changed
+
+- Princípio de mercado: “agentes que criam agentes” → **proposta + Apply + PR** (sem spawn silencioso)
+- CLI e METHOD documentam ciclo biocomponente
+- Consumidores atualizam com `regenerate -UpdateKernel` para receber a dimensão
+
 ## [0.2.3] - 2026-07-06
 
 ### Added

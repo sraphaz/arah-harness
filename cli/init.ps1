@@ -20,7 +20,7 @@ $ErrorActionPreference = 'Stop'
 $HarnessRoot = Split-Path $PSScriptRoot -Parent
 $KernelRoot = Join-Path $HarnessRoot 'kernel'
 $TemplatesRoot = Join-Path $HarnessRoot 'templates'
-$Version = '0.2.2'
+$Version = '0.3.0'
 
 if (-not (Test-Path $KernelRoot)) {
     Write-Error "Kernel not found at $KernelRoot"

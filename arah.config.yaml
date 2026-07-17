@@ -2,9 +2,9 @@
 version: 1
 harness:
   source: sraphaz/arah-harness
-  version: "0.2.3"
+  version: "0.3.0"
   repository: https://github.com/sraphaz/arah-harness
-  release: v0.2.3
+  release: v0.3.0
 
 project:
   name: arah-harness

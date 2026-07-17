@@ -12,13 +12,16 @@ Fonte de verdade para agentes (Cursor, CI). Procedimentos em `.skills/`; regras 
 3. **Escopo mínimo** — cada agente só toca paths permitidos (`.agents/*.agent.yaml`).
 4. **Doc como código** — documentação atualizada no mesmo PR.
 5. **Spec-before-code** — fases S0+ exigem spec em `docs/specs/` e `Spec-Id:` no PR.
-6. **Contexto sob demanda** — comunicação entre agentes é passiva (arquivo + CI).
+6. **Contexto sob demanda** — comunicação passiva (arquivo + CI) e sinais tipados no bus.
+7. **Agentes propõem; humanos aplicam** — discovery/evolve nunca spawnam células em silêncio.
 
 ## Fluxo
 
 ```
 Intenção (humano) → Orquestrador → Agente + skills → PR → CI + PR Steward → ready-for-merge → Merge (humano)
 ```
+
+Biocomponente: `arah discover` → `organism bootstrap` → `evolve` → `regenerate` (ver docs do harness).
 
 ## Catálogo
 

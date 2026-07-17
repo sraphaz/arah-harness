@@ -92,13 +92,20 @@ domains:
       Invariantes a verificar no PR.
 ```
 
-### 3. Gerar agentes de domínio
+### 3. Gerar agentes de domínio (ou deixar o biocomponente propor)
 
 ```powershell
+# Manual:
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 domain sync -Target .
+
+# Ou discovery + homeostase (v0.3+):
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 discover -Target .
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 organism bootstrap -Target .
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 domain sync -Target .
 ```
 
 Cria `.agents/domain/*.agent.yaml` e `.agents/choreography.domains.yaml`.
+Propostas ficam em `docs/_meta/discovery.proposed.yaml` — ver [BIOCOMPONENT.md](BIOCOMPONENT.md).
 
 ### 4. Overlay local (opcional, recomendado)
 
@@ -116,7 +123,7 @@ powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 doctor -Target .
 
 ```powershell
 git add .agents .skills scripts .cursor arah.config.yaml .arah-version .github AGENTS.md docs
-git commit -m "chore: bootstrap ARAH Harness v0.2.0"
+git commit -m "chore: bootstrap ARAH Harness v0.3.0"
 ```
 
 ---
@@ -124,11 +131,17 @@ git commit -m "chore: bootstrap ARAH Harness v0.2.0"
 ## Manutenção
 
 ```powershell
-# Reaplicar kernel (preserva arah.config.yaml e overlays choreography.*.yaml locais)
+# Homeostase completa (recomendado a partir de v0.3)
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 regenerate -Target . -UpdateKernel -Force
+
+# Ou só reaplicar kernel (preserva arah.config.yaml e overlays)
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 update -Target . -Force
 
 # Detectar drift vs upstream
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 sync-check -Target .
+
+# Ciclo de autoaprendizado
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 evolve -Target .
 ```
 
 ---

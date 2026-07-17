@@ -54,6 +54,7 @@ Síntese das referências usadas para desenhar o ARAH Harness e posicionamento v
 | SDD + harness | ✅ | parcial | ✅ | ❌ | ✅ |
 | Drift check | ❌ | ❌ | parcial | ✅ | ✅ |
 | Economia tokens | parcial | ❌ | parcial | ✅ | ✅ |
+| Discovery + evolve (biocomponente) | ❌ | parcial | parcial | ❌ | ✅ |
 
 ## Validação no Arah (repo origem)
 
@@ -66,4 +67,14 @@ O ARAH Harness generaliza esse modelo para qualquer stack/projeto.
 
 - **Tessl spec-as-source** (código 100% gerado): não determinístico para domínios críticos.
 - **Merge automático**: contraria "humano comanda".
-- **Agentes que criam agentes**: degrada contexto e auditabilidade.
+- **Agentes que criam agentes em silêncio**: degrada contexto e auditabilidade.
+
+### Reinterpretação (v0.3 biocomponente)
+
+ARAH **não** permite spawn livre de agentes. Em vez disso:
+
+1. `discover` / `evolve` **propõem** células, skills e coreografia em `docs/_meta/*.proposed.yaml`
+2. `-Apply` só mescla candidaturas revisáveis em `arah.config.yaml`
+3. Humano abre PR → CI → merge
+
+Isso dá autonomia de descoberta sem perder o ledger auditável — alinhado a Thread AI (superfície determinística) e oposto a hierarquias opacas.
