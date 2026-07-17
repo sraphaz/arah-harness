@@ -1,5 +1,5 @@
 harness:
-  version: 0.2.3
+  version: 0.3.0
   profile: product
   installed_at: 2026-07-06T22:43:16.7220066-03:00
   installed_by: rapha

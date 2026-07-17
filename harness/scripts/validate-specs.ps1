@@ -24,7 +24,9 @@ if (-not (Test-Path $SpecsDir)) {
 }
 
 $required = @('id','title','status','owner','covers','updated_at')
-$specs = Get-ChildItem $SpecsDir -Filter '*.md' -Recurse | Where-Object { $_.Name -ne 'README.md' }
+$specs = Get-ChildItem $SpecsDir -Filter '*.md' -Recurse | Where-Object {
+  $_.Name -ne 'README.md' -and $_.Name -ne 'REGISTRY.md'
+}
 
 foreach ($spec in $specs) {
   $raw = Get-Content $spec.FullName -Raw

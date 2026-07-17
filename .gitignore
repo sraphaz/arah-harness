@@ -12,3 +12,5 @@ extension/arah-live/out/
 extension/arah-live/node_modules/
 .arah/audit/
 .arah/observability/
+.arah/bus/
+.arah/organism/

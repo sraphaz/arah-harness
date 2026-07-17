@@ -1,0 +1,43 @@
+# signal.schema.yaml — mensagem tipada no bus do organismo
+schema: arah-harness/signal
+version: 0.1.0
+
+description: |
+  Sinal append-only entre células. Metáfora biológica (attract/consult/propose)
+  com ledger auditável. Comunicação permanece econômico-passiva por default;
+  sinais ativos são propostas, não comandos.
+
+fields:
+  ts:
+    type: string
+    required: true
+  signal_id:
+    type: string
+    required: true
+  type:
+    type: enum[attract, consult, propose, acknowledge, coalesce, evolve, status]
+    required: true
+  from:
+    type: string
+    required: true
+  to:
+    type: string
+    description: cell id, tissue id, ou '*'
+  topic:
+    type: string
+  payload:
+    type: object
+  correlation_id:
+    type: string
+  autonomy_level:
+    type: enum[observe, consult, route, activate, invoke_skill, side_effect, public]
+    default: consult
+
+signal_semantics:
+  attract: "Solicita co-ativação / atenção de outra célula ou tecido"
+  consult: "Pedido ou entrega de parecer consultivo"
+  propose: "Proposta de mudança (config, skill, coreografia, célula) — requer Apply humano"
+  acknowledge: "Confirma recebimento de sinal"
+  coalesce: "Formação ou reforço de tecido (grupo) em torno de um tópico"
+  evolve: "Gatilho de ciclo de autoaprendizado (gera evolution.proposed)"
+  status: "Heartbeat / estado de homeostase"

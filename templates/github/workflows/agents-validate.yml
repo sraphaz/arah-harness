@@ -48,7 +48,7 @@ jobs:
         run: ./scripts/agents/export-agent-graph.ps1
       - name: Validate Agent Graph
         shell: pwsh
-        run: ./scripts/harness/validate-agent-graph.ps1
+        run: ./scripts/harness/validate-agent-graph.ps1 -Target .
 
   harness-sync-check:
     runs-on: ubuntu-latest

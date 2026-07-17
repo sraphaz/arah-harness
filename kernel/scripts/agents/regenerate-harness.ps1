@@ -1,0 +1,144 @@
+﻿#Requires -Version 5.1
+<#
+.SYNOPSIS
+  Homeostase do biocomponente - regenera o harness no repositorio consumidor.
+.DESCRIPTION
+  Pipeline unificado:
+    1) update kernel (opcional, via -UpdateKernel / harness path)
+    2) domain sync
+    3) discover
+    4) organism bootstrap
+    5) evolve
+    6) export-graph
+    7) doctor
+  Sugestoes ficam em docs/_meta/*.proposed.yaml para o repositorio evoluir.
+.EXAMPLE
+  ./regenerate-harness.ps1
+  ./regenerate-harness.ps1 -UpdateKernel -HarnessRoot C:\arah-harness -Force
+#>
+param(
+    [string]$HarnessRoot = '',
+    [switch]$UpdateKernel,
+    [switch]$Force,
+    [switch]$ApplyDiscovery,
+    [switch]$SkipDoctor,
+    [switch]$DryRun
+)
+
+$ErrorActionPreference = 'Stop'
+$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+$Agents = $PSScriptRoot
+$PwshExe = if (Get-Command pwsh -ErrorAction SilentlyContinue) { 'pwsh' } else { 'powershell' }
+
+Write-Host "regenerate: organism homeostasis -> $Root"
+
+function Invoke-Step {
+    param([string]$Name, [scriptblock]$Block)
+    Write-Host ""
+    Write-Host "==> $Name"
+    if ($DryRun) {
+        Write-Host "[dry-run] $Name"
+        return
+    }
+    & $Block
+    if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+        throw "regenerate step failed: $Name (exit $LASTEXITCODE)"
+    }
+}
+
+# 1) Kernel update (optional - requires harness clone)
+if ($UpdateKernel) {
+    Invoke-Step 'update kernel' {
+        if (-not $HarnessRoot) {
+            if ($env:ARAH_HARNESS_PATH) { $script:HarnessRoot = $env:ARAH_HARNESS_PATH }
+        }
+        if (-not $HarnessRoot) {
+            Write-Warning 'UpdateKernel skipped: set -HarnessRoot or ARAH_HARNESS_PATH'
+            return
+        }
+        $cli = Join-Path $HarnessRoot 'cli'
+        $cli = Join-Path $cli 'arah.ps1'
+        if (-not (Test-Path $cli)) { throw "Harness CLI not found: $cli" }
+        & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $cli update -Target $Root -Force:$Force
+    }
+}
+
+# 2) Domain sync
+Invoke-Step 'domain sync' {
+    $script = Join-Path $Agents 'domain-sync.ps1'
+    if (-not (Test-Path $script)) { throw 'domain-sync.ps1 missing - run arah init/update first' }
+    $invokeArgs = @()
+    if ($DryRun) { $invokeArgs += '-DryRun' }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs
+}
+
+# 3) Discover
+Invoke-Step 'discover' {
+    $script = Join-Path $Agents 'discover-repo.ps1'
+    $invokeArgs = @()
+    if ($ApplyDiscovery) { $invokeArgs += '-Apply' }
+    if ($DryRun) { $invokeArgs += '-DryRun' }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs
+}
+
+# 4) Organism bootstrap
+Invoke-Step 'organism bootstrap' {
+    $script = Join-Path $Agents 'organism-bootstrap.ps1'
+    $invokeArgs = @()
+    if ($Force) { $invokeArgs += '-Force' }
+    if ($DryRun) { $invokeArgs += '-DryRun' }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs
+}
+
+# 5) Evolve
+Invoke-Step 'evolve' {
+    $script = Join-Path $Agents 'evolve-harness.ps1'
+    $invokeArgs = @()
+    if ($DryRun) { $invokeArgs += '-DryRun' }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs
+}
+
+# 6) Export graph
+Invoke-Step 'export-graph' {
+    $script = Join-Path $Agents 'export-agent-graph.ps1'
+    if (-not (Test-Path $script)) {
+        Write-Warning 'export-agent-graph.ps1 missing - skip'
+        return
+    }
+    Push-Location $Root
+    try { & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script } finally { Pop-Location }
+}
+
+# 7) Doctor
+if (-not $SkipDoctor) {
+    Invoke-Step 'doctor' {
+        $validate = Join-Path $Agents 'validate-manifests.ps1'
+        if (Test-Path $validate) {
+            & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $validate
+        }
+        if ($HarnessRoot -or $env:ARAH_HARNESS_PATH) {
+            $hr = if ($HarnessRoot) { $HarnessRoot } else { $env:ARAH_HARNESS_PATH }
+            $doctor = Join-Path $hr 'cli'
+            $doctor = Join-Path $doctor 'doctor.ps1'
+            if (Test-Path $doctor) {
+                & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $doctor -Target $Root
+            }
+        }
+    }
+}
+
+Write-Host ""
+Write-Host 'regenerate: complete'
+Write-Host '  artifacts:'
+Write-Host '    docs/_meta/discovery.proposed.yaml'
+Write-Host '    docs/_meta/organism.manifest.yaml'
+Write-Host '    docs/_meta/evolution.proposed.yaml'
+Write-Host '    docs/_meta/agent-graph.generated.json'
+Write-Host '  review proposals -> PR -> human merge'
+
+$record = Join-Path $Agents 'record-agent-event.ps1'
+if ((Test-Path $record) -and -not $DryRun) {
+    & $record -AgentId orchestrator -Action 'regenerate.homeostasis' -Outcome ok -AutonomyLevel activate -Details 'pipeline=ok' 2>$null
+}
+
+exit 0
