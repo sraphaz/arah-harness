@@ -3,28 +3,51 @@
 [![CI](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](VERSION)
+[![Spec](https://img.shields.io/badge/spec-arah--biocomponent-purple.svg)](docs/specs/arah-biocomponent.spec.yaml)
 
 **ARAH** — *Agent Runtime Autonomous Harness*
 
-Kernel open-source para bootstrap de repositórios **gerenciados por agentes**: multi-agente coreografado, auditável, observável, com economia de tokens — e, desde **v0.3**, dimensão **biocomponente** (discovery, organismo, sinais, evolução) — sem copiar `.agents/`, scripts e gates em cada projeto novo.
+O kernel open-source que transforma qualquer repositório em um **organismo de agentes**: coreografado, auditável, observável — e, desde a v0.3, **autônomo o bastante para se descobrir, se organizar e evoluir**.
 
-> Extraído e generalizado do ecossistema [Arah](https://github.com/sraphaz/arah). Validado em produção interna e no monorepo **IAutos** (legaltech).
+> Extraído do ecossistema [Arah](https://github.com/sraphaz/arah). Validado em produção e no monorepo legaltech **[IAutos](https://github.com/sraphaz/iautos)**.
+
+---
+
+## A ideia em uma frase
+
+Instale o harness uma vez. Ele observa o domínio e a stack, propõe os agentes certos, define como eles se comunicam e melhora a cada ciclo — **sempre com você no comando do merge**.
+
+```text
+  humano define intenção
+        │
+        ▼
+  ┌─────────────────────────────────────────┐
+  │  ORGANISMO ARAH                         │
+  │  discover → cells → signals → evolve    │
+  │  coreografia · skills · gates · audit   │
+  └─────────────────────────────────────────┘
+        │
+        ▼
+  Pull Request → CI → ready-for-merge → merge humano
+```
 
 ---
 
 ## Por que existe
 
-Cada repo novo exigia replicar manualmente:
+Sem um harness, cada repositório novo replica à mão:
 
-- Manifests YAML (`.agents/`, `.skills/`)
-- Coreografia path-based (`choreography.yaml`)
-- Scripts PowerShell (`scripts/agents/`, `scripts/harness/`)
-- Hooks Cursor, rules escopadas, workflows CI
-- Specs SDD, gates, Definition of Done, Agent Graph
+- Manifests de agentes e skills
+- Coreografia path-based
+- Scripts de orquestração e gates
+- Hooks, rules, workflows CI
+- Specs SDD, Definition of Done, Agent Graph
 
-**ARAH Harness** versiona isso uma vez. Seu produto recebe via `init` + `arah.config.yaml`.
+**ARAH versiona isso uma vez.** Seu produto recebe o kernel via `install` e customiza só o que é dele — `arah.config.yaml`, overlays e domínio.
 
-## Diferencial vs mercado
+---
+
+## O que torna o ARAH diferente
 
 | Capacidade | Spec Kit | BMAD | autonomous-sdlc | harnessforge | **ARAH** |
 |---|:---:|:---:|:---:|:---:|:---:|
@@ -35,129 +58,184 @@ Cada repo novo exigia replicar manualmente:
 | Agent Graph auditável | ❌ | parcial | parcial | ❌ | ✅ |
 | Drift-check (`sync-check`) | ❌ | ❌ | parcial | ✅ | ✅ |
 | Comunicação passiva (tokens) | parcial | ❌ | parcial | ✅ | ✅ |
-| Biocomponente (discover/evolve) | ❌ | parcial | parcial | ❌ | ✅ |
+| **Biocomponente** (discover → evolve) | ❌ | parcial | parcial | ❌ | ✅ |
+
+### Biocomponente — a dimensão viva
+
+Desde a **v0.3**, o harness não é só um pacote de arquivos. É um **biocomponente tecnológico** instalado no repositório:
+
+| Fase | Comando | O que acontece |
+|------|---------|----------------|
+| Percepção | `discover` | Lê stack, estrutura e pistas de domínio |
+| Ontogenia | `organism bootstrap` | Define células, tecidos e vias de sinal |
+| Comunicação | `organism signal` | Sinais tipados, append-only, auditáveis |
+| Aprendizado | `evolve` | Propõe melhorias a partir do ledger |
+| Homeostase | `regenerate` | Atualiza kernel + regenera o organismo |
+
+**Princípio de ouro:** agentes *propõem*; humanos *aplicam*.  
+Nada de spawn silencioso. Nada de merge automático. Evolução por seleção via PR.
+
+→ Guia completo: **[docs/BIOCOMPONENT.md](docs/BIOCOMPONENT.md)**
+
+---
+
+## Começar em 60 segundos
+
+```powershell
+git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\arah-harness
+cd C:\caminho\para\meu-projeto
+
+powershell -ExecutionPolicy Bypass -File $env:USERPROFILE\arah-harness\cli\arah.ps1 install `
+  -ProjectName "meu-projeto"
+
+# Deixe o organismo se formar
+powershell -File $env:USERPROFILE\arah-harness\cli\arah.ps1 regenerate -Target . -UpdateKernel
+```
+
+Revise as propostas em `docs/_meta/`, ajuste `arah.config.yaml`, abra o PR.
+
+Guia detalhado: **[docs/INSTALL.md](docs/INSTALL.md)** · Checklist: **[docs/BOOTSTRAP.md](docs/BOOTSTRAP.md)**
+
+---
 
 ## Arquitetura
 
 ```mermaid
 flowchart TB
-  subgraph harness["arah-harness (este repo)"]
-    CLI[cli/arah.ps1]
-    KERNEL[kernel/]
-    TPL[templates/]
+  subgraph harness["arah-harness"]
+    CLI["cli/arah.ps1"]
+    KERNEL["kernel/"]
+    TPL["templates/"]
+    BIO["biocomponente<br/>discover · organism · evolve"]
   end
   subgraph target["seu repositório"]
-    CFG[arah.config.yaml]
-    AGENTS[.agents/]
-    SKILLS[.skills/]
-    SCRIPTS[scripts/agents/]
-    OVERLAY[choreography.*.yaml]
+    CFG["arah.config.yaml"]
+    AGENTS[".agents/ + .skills/"]
+    META["docs/_meta/<br/>discovery · organism · evolution"]
+    BUS[".arah/bus/signals.jsonl"]
+    OVERLAY["choreography.*.yaml"]
   end
-  CLI -->|init / update| KERNEL
+  CLI -->|install / update / regenerate| KERNEL
+  CLI --> BIO
   KERNEL --> AGENTS
-  KERNEL --> SKILLS
-  KERNEL --> SCRIPTS
   TPL --> CFG
+  BIO --> META
+  BIO --> BUS
   CFG -->|domain sync| OVERLAY
+  META -->|propostas → PR| CFG
 ```
 
-## Instalar em outro repositório
+### Camadas
 
-```powershell
-# Clone (uma vez)
-git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\arah-harness
+| Camada | O quê | Quem mexe |
+|--------|-------|-----------|
+| Produto | Código da aplicação | Agentes operacionais + humanos |
+| Domínio | Pareceres de negócio | Agentes consultivos (gerados) |
+| Kernel | Operacionais, skills, scripts, hooks | `arah update` / `regenerate` |
+| Config | `arah.config.yaml`, overlays, AGENTS.md | Humano (+ Apply revisável) |
+| Organismo | Manifesto, sinais, evolução | Biocomponente + PR |
 
-# No repo-alvo
-cd C:\caminho\para\meu-projeto
-powershell -ExecutionPolicy Bypass -File $env:USERPROFILE\arah-harness\cli\arah.ps1 install -ProjectName "meu-projeto"
-```
-
-Guia completo: **[docs/INSTALL.md](docs/INSTALL.md)**
-
-Após editar `arah.config.yaml` (testes + domínios) — ou deixe o biocomponente propor:
-
-```powershell
-$HARNESS = if ($env:ARAH_HARNESS_PATH) { $env:ARAH_HARNESS_PATH } else { "$env:USERPROFILE\arah-harness" }
-powershell -File $HARNESS\cli\arah.ps1 regenerate -Target . -UpdateKernel
-# ou passo a passo:
-powershell -File $HARNESS\cli\arah.ps1 discover
-powershell -File $HARNESS\cli\arah.ps1 domain sync
-powershell -File $HARNESS\cli\arah.ps1 organism bootstrap
-powershell -File $HARNESS\cli\arah.ps1 evolve
-powershell -File $HARNESS\cli\arah.ps1 export-graph
-powershell -File $HARNESS\cli\arah.ps1 doctor
-```
+---
 
 ## CLI
 
-| Comando | Descrição |
-|---------|-----------|
-| `install` | `init` + `doctor` + próximos passos (recomendado) |
-| `init` | Instala kernel + templates + workflow CI |
-| `domain sync` | Gera agentes de domínio + `choreography.domains.yaml` |
-| `validate-runtime` | Valida coreografia de agentes runtime (`runtime:` em `arah.config.yaml`) |
-| `export-graph` | Exporta Agent Graph (JSON + Mermaid) |
-| `update [-Force]` | Reaplica kernel (preserva config/overlays) |
-| `sync-check` | Detecta drift vs kernel (ideal no CI) |
+### Essencial
+
+| Comando | Função |
+|---------|--------|
+| `install` | Bootstrap completo (recomendado) |
+| `init` | Kernel + templates + CI |
+| `update [-Force]` | Reaplica kernel (preserva config) |
 | `doctor` | Valida instalação |
-| `discover [-Apply]` | Observa stack/domínio → propostas |
-| `organism bootstrap` | Ritual ontogênico (células + tecidos) |
+| `sync-check` | Drift vs upstream (CI) |
+| `domain sync` | Gera agentes de domínio |
+| `export-graph` | Agent Graph (JSON + Mermaid) |
+
+### Biocomponente
+
+| Comando | Função |
+|---------|--------|
+| `discover [-Apply]` | Observa repo → propostas de domínio/stack |
+| `organism bootstrap` | Ritual do primeiro momento |
+| `organism status` | Estado do organismo |
 | `organism signal` | Emite sinal tipado no bus |
-| `evolve [-Apply]` | Self-learning → propostas de evolução |
+| `evolve [-Apply]` | Ciclo de self-learning |
 | `regenerate [-UpdateKernel]` | Homeostase completa no consumidor |
 
-Dimensão biocomponente: **[docs/BIOCOMPONENT.md](docs/BIOCOMPONENT.md)**
+```powershell
+# Atualizar um repo que já usa ARAH para v0.3
+powershell -File cli/arah.ps1 regenerate -Target C:\meu-projeto -UpdateKernel -Force
+```
 
-## Estrutura
+---
+
+## Estrutura do repositório
 
 ```
 arah-harness/
-├── kernel/              # Copiado para projetos-alvo (versionado)
-│   ├── .agents/         # 11 operacionais + schema agent-graph
-│   ├── .skills/         # 18 skills executáveis
-│   ├── .cursor/         # hooks (domain review + live session)
-│   └── scripts/         # orquestração, gates, export graph, telemetria
-├── extension/arah-live/ # Extensão Cursor/VS Code — painel ao vivo
-├── cli/                 # init | update | doctor | domain sync | …
-├── templates/           # arah.config.yaml, AGENTS.md, CI
-├── docs/                # METHOD, mercado, bootstrap, migração
+├── kernel/                 # Superfície distribuída (versionada)
+│   ├── .agents/            # Operacionais + domain advisors + coreografia
+│   ├── .skills/            # Procedimentos determinísticos
+│   ├── .cursor/            # Hooks (domain review + live session)
+│   └── scripts/            # Orquestração, gates, biocomponente, telemetria
+├── cli/                    # install · discover · organism · evolve · regenerate
+├── extension/arah-live/    # Painel Cursor/VS Code em tempo real
+├── harness/profiles/       # Tiers: minimal → enterprise
+├── schemas/arah-harness/   # Contratos canônicos
+├── templates/              # Config, AGENTS.md, CI
+├── docs/                   # Método, biocomponente, governança
 └── scripts/self-test.ps1
 ```
 
+---
+
 ## Princípios
 
-1. **Humano comanda, agente executa** — merge sempre humano
-2. **Tudo via Pull Request**
-3. **Escopo mínimo** por manifest
-4. **Spec-before-code** quando aplicável
-5. **Contexto sob demanda** — pareceres passivos (arquivo + CI), sem turnos extras
-6. **Kernel imutável** — customização em `arah.config.yaml` e overlays `choreography.*.yaml`
+1. **Humano comanda** — merge sempre humano  
+2. **Tudo via Pull Request**  
+3. **Escopo mínimo** por manifest  
+4. **Spec-before-code** quando a fase exige  
+5. **Contexto sob demanda** — arquivo + CI + sinais tipados (sem chat obrigatório)  
+6. **Agentes propõem; humanos aplicam** — autonomia com ledger  
+7. **Kernel imutável no consumidor** — customização em config e overlays  
+
+---
 
 ## Documentação
 
-| Doc | Conteúdo |
-|-----|----------|
-| [docs/METHOD.md](docs/METHOD.md) | Método ARAH completo |
-| [docs/MARKET_REFERENCE.md](docs/MARKET_REFERENCE.md) | Referências e decisões |
-| [docs/INSTALL.md](docs/INSTALL.md) | Instalar em qualquer repo |
-| [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-init |
-| [docs/LIVE_SESSION.md](docs/LIVE_SESSION.md) | Extensão ARAH Live + telemetria |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Como contribuir |
+| Documento | Conteúdo |
+|-----------|----------|
+| **[BIOCOMPONENT.md](docs/BIOCOMPONENT.md)** | Dimensão viva — discovery, organismo, sinais, evolução |
+| [METHOD.md](docs/METHOD.md) | Método ARAH completo |
+| [INSTALL.md](docs/INSTALL.md) | Instalar em qualquer repo |
+| [BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-install |
+| [GOVERNANCE.md](docs/GOVERNANCE.md) | Autonomia e gates humanos |
+| [MODEL.md](docs/MODEL.md) | Harness-model first-class |
+| [LIVE_SESSION.md](docs/LIVE_SESSION.md) | Telemetria + extensão |
+| [MARKET_REFERENCE.md](docs/MARKET_REFERENCE.md) | Posicionamento vs mercado |
 | [CHANGELOG.md](CHANGELOG.md) | Histórico de versões |
+
+---
 
 ## Exemplo real
 
-**IAutos** ([sraphaz/iautos](https://github.com/sraphaz/iautos)) — monorepo legaltech white-label:
+**[IAutos](https://github.com/sraphaz/iautos)** — monorepo legaltech white-label:
 
-- 6 domínios consultivos (`core-cases`, `compliance`, `auth-tenant`, …)
-- Overlay `choreography.iautos.yaml` para `packages/**` e `apps/web/**`
-- Separação clara: ARAH SDLC (repo) vs agentes runtime (`packages/ai-orchestrator/agents/`)
+- Domínios consultivos (`core-cases`, `compliance`, `auth-tenant`, …)
+- Overlay `choreography.iautos.yaml` para monorepo
+- Separação clara: SDLC ARAH no repo vs agentes runtime do produto
+
+---
 
 ## Desenvolvimento deste repo
 
 ```powershell
 ./scripts/self-test.ps1
 ```
+
+Contribuindo: [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
 
 ## Licença
 

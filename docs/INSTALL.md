@@ -1,25 +1,35 @@
-# Instalar ARAH Harness em outro repositório
+# Instalar ARAH Harness
 
-Guia copy-paste para adicionar o kernel ARAH a **qualquer repo** (greenfield ou brownfield).
+Guia premium para adicionar o kernel ARAH a **qualquer repositório** — greenfield ou brownfield — e ativar a dimensão biocomponente.
 
-Repositório upstream: **https://github.com/sraphaz/arah-harness** (release **v0.2.0**)
+**Upstream:** [sraphaz/arah-harness](https://github.com/sraphaz/arah-harness) · **Release:** **v0.3.0**
 
 ---
 
-## Comando rápido (recomendado)
+## Em 3 comandos
 
 ```powershell
-# 1) Clone o harness (uma vez por máquina ou por pasta de projetos)
 git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\arah-harness
-
-# 2) Entre no repo que receberá o ARAH
 cd C:\caminho\para\meu-projeto
 
-# 3) Instale (init + doctor + instruções pós-install)
-powershell -ExecutionPolicy Bypass -File $env:USERPROFILE\arah-harness\cli\arah.ps1 install -ProjectName "meu-projeto"
+powershell -ExecutionPolicy Bypass -File $env:USERPROFILE\arah-harness\cli\arah.ps1 install `
+  -ProjectName "meu-projeto"
 ```
 
-Alternativa com clone **irmão** do projeto (padrão usado no [IAutos](https://github.com/sraphaz/iautos)):
+Ative o organismo (recomendado na v0.3):
+
+```powershell
+$env:ARAH_HARNESS_PATH = "$env:USERPROFILE\arah-harness"
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 regenerate -Target . -UpdateKernel
+```
+
+Revise `docs/_meta/*.proposed.yaml` → ajuste `arah.config.yaml` → commit → PR.
+
+---
+
+## Variantes de layout
+
+### Clone irmão (padrão IAutos)
 
 ```powershell
 cd C:\caminho\para
@@ -28,7 +38,7 @@ cd meu-projeto
 powershell -ExecutionPolicy Bypass -File ..\arah-harness\cli\arah.ps1 install -ProjectName "meu-projeto"
 ```
 
-Ou defina o caminho uma vez:
+### Path fixo
 
 ```powershell
 $env:ARAH_HARNESS_PATH = "C:\caminho\para\arah-harness"
@@ -37,39 +47,31 @@ powershell -ExecutionPolicy Bypass -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 ins
 
 ---
 
-## Passo a passo completo
-
-### 1. `install` (kernel + templates + CI)
-
-```powershell
-powershell -ExecutionPolicy Bypass -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 install -Target . -ProjectName "meu-projeto"
-```
-
-Instala no repo-alvo:
+## O que o `install` coloca no repo
 
 | Artefato | Descrição |
 |----------|-----------|
-| `.agents/` | 11 agentes operacionais + checklists |
-| `.skills/` | 18 skills |
-| `scripts/agents/` + `scripts/harness/` | Orquestração, gates, agent graph |
-| `.cursor/hooks.json` | Domain review passivo |
-| `arah.config.yaml` | Config do projeto (edite!) |
-| `AGENTS.md` | Manual (só se não existir) |
+| `.agents/` | 11 operacionais + domain advisors + coreografia |
+| `.skills/` | Skills executáveis (incl. biocomponente) |
+| `scripts/agents/` · `scripts/harness/` | Orquestração, gates, discover/evolve/regenerate |
+| `.cursor/hooks.json` | Domain review + live session |
+| `arah.config.yaml` | Config do projeto (**edite**) |
+| `AGENTS.md` | Manual operacional (só se não existir) |
 | `.github/workflows/agents-validate.yml` | CI de manifests + graph |
 | `.arah-version` | Pin da versão do harness |
 
-**Brownfield** (já tem `AGENTS.md`): o `init` **não sobrescreve** arquivos existentes. Mescle manualmente a seção ARAH do template ou do [IAutos](https://github.com/sraphaz/iautos/blob/main/AGENTS.md).
+**Brownfield:** sem `-Force`, arquivos existentes não são sobrescritos. Mescle a seção ARAH manualmente se já houver `AGENTS.md`.
 
-### 2. Configurar `arah.config.yaml`
+---
 
-Edite testes e domínios de negócio:
+## Configurar `arah.config.yaml`
 
 ```yaml
 harness:
   source: sraphaz/arah-harness
-  version: "0.2.0"
+  version: "0.3.0"
   repository: https://github.com/sraphaz/arah-harness
-  release: v0.2.0
+  release: v0.3.0
 
 project:
   name: meu-projeto
@@ -92,26 +94,30 @@ domains:
       Invariantes a verificar no PR.
 ```
 
-### 3. Gerar agentes de domínio (ou deixar o biocomponente propor)
+### Deixar o biocomponente propor
 
 ```powershell
-# Manual:
-powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 domain sync -Target .
-
-# Ou discovery + homeostase (v0.3+):
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 discover -Target .
-powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 organism bootstrap -Target .
+# revise docs/_meta/discovery.proposed.yaml
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 discover -Target . -Apply   # opcional
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 domain sync -Target .
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 organism bootstrap -Target .
 ```
 
-Cria `.agents/domain/*.agent.yaml` e `.agents/choreography.domains.yaml`.
-Propostas ficam em `docs/_meta/discovery.proposed.yaml` — ver [BIOCOMPONENT.md](BIOCOMPONENT.md).
+Detalhe: [BIOCOMPONENT.md](BIOCOMPONENT.md).
 
-### 4. Overlay local (opcional, recomendado)
+---
 
-Crie `.agents/choreography.<projeto>.yaml` com regras de paths do seu monorepo (ex.: `packages/**`, `apps/**`). Ver [IAutos](https://github.com/sraphaz/iautos/blob/main/.agents/choreography.iautos.yaml).
+## Overlay local (monorepos)
 
-### 5. Validar e exportar grafo
+Crie `.agents/choreography.<projeto>.yaml` com regras de path do seu monorepo (`packages/**`, `apps/**`, …).  
+Referência: [choreography.iautos.yaml](https://github.com/sraphaz/iautos/blob/main/.agents/choreography.iautos.yaml).
+
+Overlays sobrevivem a `update` / `regenerate`.
+
+---
+
+## Validar
 
 ```powershell
 ./scripts/agents/validate-manifests.ps1
@@ -119,7 +125,9 @@ powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 export-graph -Target .
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 doctor -Target .
 ```
 
-### 6. Commit no repo-alvo
+---
+
+## Primeiro commit no repo-alvo
 
 ```powershell
 git add .agents .skills scripts .cursor arah.config.yaml .arah-version .github AGENTS.md docs
@@ -128,37 +136,41 @@ git commit -m "chore: bootstrap ARAH Harness v0.3.0"
 
 ---
 
-## Manutenção
+## Manutenção e evolução
+
+| Objetivo | Comando |
+|----------|---------|
+| Homeostase completa (recomendado) | `arah regenerate -UpdateKernel -Force` |
+| Só reaplicar kernel | `arah update -Force` |
+| Detectar drift | `arah sync-check` |
+| Self-learning | `arah evolve` |
+| Redefinir organismo | `arah organism bootstrap -Force` |
 
 ```powershell
-# Homeostase completa (recomendado a partir de v0.3)
-powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 regenerate -Target . -UpdateKernel -Force
-
-# Ou só reaplicar kernel (preserva arah.config.yaml e overlays)
-powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 update -Target . -Force
-
-# Detectar drift vs upstream
-powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 sync-check -Target .
-
-# Ciclo de autoaprendizado
-powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 evolve -Target .
+# Receber v0.3+ em consumidor existente
+git -C $env:ARAH_HARNESS_PATH pull
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 regenerate `
+  -Target . -UpdateKernel -Force
 ```
+
+Isso reaplica o kernel, rediscovery, rebootstrap, evolve, grafo e doctor — e deixa sugestões em `docs/_meta/` para o repositório evoluir via PR.
 
 ---
 
 ## CI no repo-alvo
 
-O workflow `agents-validate.yml` já vem no `init`. Para drift-check opcional, configure a variável de repositório GitHub:
+O workflow `agents-validate.yml` vem no `init`. Para drift-check opcional:
 
-| Variável | Valor exemplo |
-|----------|----------------|
-| `ARAH_HARNESS_PATH` | `../arah-harness` (se checkout em CI) |
+| Variável | Exemplo |
+|----------|---------|
+| `ARAH_HARNESS_PATH` | `../arah-harness` (checkout paralelo no CI) |
 
 ---
 
-## Referências
+## Próximos passos
 
-- [BOOTSTRAP.md](BOOTSTRAP.md) — checklist pós-init
-- [METHOD.md](METHOD.md) — arquitetura do método
-- [MIGRATION_FROM_ARAH.md](MIGRATION_FROM_ARAH.md) — migrar repo Arah existente
-- Exemplo real: [sraphaz/iautos](https://github.com/sraphaz/iautos)
+1. Checklist: [BOOTSTRAP.md](BOOTSTRAP.md)  
+2. Método: [METHOD.md](METHOD.md)  
+3. Biocomponente: [BIOCOMPONENT.md](BIOCOMPONENT.md)  
+4. Migração Arah legado: [MIGRATION_FROM_ARAH.md](MIGRATION_FROM_ARAH.md)  
+5. Exemplo real: [sraphaz/iautos](https://github.com/sraphaz/iautos)  

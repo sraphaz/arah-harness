@@ -1,19 +1,26 @@
 # Roadmap — arah-harness
 
-## Now
+## Now · v0.3 Biocomponente
 
-- Biocomponente v0.3: discover, organism, signal bus, evolve, regenerate
-- Spec `arah-biocomponent` ativa
+- Organismo instalável: discover → bootstrap → signals → evolve → regenerate  
+- Spec `arah-biocomponent` ativa e coberta pelo self-test  
+- Documentação premium (README, BIOCOMPONENT, METHOD, INSTALL, BOOTSTRAP)  
 - Consumidores atualizam via `arah regenerate -UpdateKernel`
 
 ## Next
 
-- Apply discovery gera PR draft opcional (`propose_and_draft_pr`)
-- Doctor compara managed-blocks de profile install
-- MCP agent-graph + bus de sinais
-- Bash parity para scripts críticos
+- `propose_and_draft_pr` — Apply discovery/evolution abre PR draft opcional  
+- Doctor com diff de managed-blocks (profile install)  
+- MCP: agent-graph + leitura do bus de sinais  
+- Heurísticas de discovery mais ricas (PowerShell, monorepos profundos, README NLP leve)  
+- Bash parity nos scripts críticos do biocomponente  
 
-## Later
+## Later · v1.0
 
-- v1.0: Arah produto consome harness como dependência (prova real)
-- Releases semver com CHANGELOG contínuo
+- Produto Arah consome harness como dependência versionada (prova real)  
+- Releases semver com CHANGELOG contínuo e notas de migração automáticas  
+- Profiles enterprise com retention contractual + dashboards de evolução  
+
+## Norte
+
+ARAH como **biocomponente padrão** de repositórios sérios: autonomia crescente, ledger intacto, humano no merge.

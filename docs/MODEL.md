@@ -1,8 +1,10 @@
 # HARNESS MODEL — ARAH Harness
 
-**Versão**: 0.1.0 · **Data**: 2026-07-06
+**Versão do model**: 0.1.0 · **Harness**: 0.3.0 · **Data**: 2026-07-06
 
 O **harness-model** define o que todo repo governado declara — domain agents, governança, observabilidade e auditoria são **first-class**, não add-ons opcionais.
+
+A dimensão **biocomponente** (discovery, organism, signals, evolution) estende esse modelo com artefatos por repositório — ver [BIOCOMPONENT.md](BIOCOMPONENT.md).
 
 Schema: [`schemas/arah-harness/harness-model.schema.yaml`](../schemas/arah-harness/harness-model.schema.yaml)
 

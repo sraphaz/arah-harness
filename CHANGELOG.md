@@ -20,6 +20,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Princípio de mercado: “agentes que criam agentes” → **proposta + Apply + PR** (sem spawn silencioso)
 - CLI e METHOD documentam ciclo biocomponente
 - Consumidores atualizam com `regenerate -UpdateKernel` para receber a dimensão
+- Documentação premium: README, BIOCOMPONENT, METHOD, INSTALL, BOOTSTRAP, AGENTS.md
 
 ## [0.2.3] - 2026-07-06
 

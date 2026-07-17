@@ -1,6 +1,8 @@
 # Referências de mercado — ARAH Harness
 
-Síntese das referências usadas para desenhar o ARAH Harness e posicionamento vs o ecossistema Arah existente.
+Síntese das referências usadas para desenhar o ARAH Harness e o posicionamento vs o ecossistema Arah e o mercado agentic (2026).
+
+**Leitura complementar:** [BIOCOMPONENT.md](BIOCOMPONENT.md) — como a v0.3 traduz autonomia sem perder auditoria.
 
 ## Referências principais
 
