@@ -17,8 +17,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$MetaDir = Join-Path $Root 'docs/_meta'
+$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+$MetaDir = Join-Path (Join-Path $Root 'docs') '_meta'
 $OutFile = Join-Path $MetaDir 'discovery.proposed.yaml'
 $ConfigPath = Join-Path $Root 'arah.config.yaml'
 

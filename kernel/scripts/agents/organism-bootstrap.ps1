@@ -16,11 +16,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$MetaDir = Join-Path $Root 'docs/_meta'
+$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+$MetaDir = Join-Path (Join-Path $Root 'docs') '_meta'
 $OutFile = Join-Path $MetaDir 'organism.manifest.yaml'
 $DiscoveryFile = Join-Path $MetaDir 'discovery.proposed.yaml'
-$StateDir = Join-Path $Root '.arah/organism'
+$StateDir = Join-Path (Join-Path $Root '.arah') 'organism'
 $StateFile = Join-Path $StateDir 'state.json'
 $AgentsDir = Join-Path $Root '.agents'
 

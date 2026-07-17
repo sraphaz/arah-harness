@@ -13,9 +13,12 @@
 #>
 param(
     [string]$From = '',
-    [string]$To = '*',
+    # Destination cell/tissue ('*' = broadcast). Named SignalTo to avoid -To/-Topic prefix clash.
+    [Alias('To')]
+    [string]$SignalTo = '*',
     [ValidateSet('attract', 'consult', 'propose', 'acknowledge', 'coalesce', 'evolve', 'status', '')]
-    [string]$Type = '',
+    [Alias('Type')]
+    [string]$SignalType = '',
     [string]$Topic = 'general',
     [string]$Payload = '',
     [string]$CorrelationId = '',
@@ -26,8 +29,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$BusDir = Join-Path $Root '.arah/bus'
+$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+$BusDir = Join-Path (Join-Path $Root '.arah') 'bus'
 $BusFile = Join-Path $BusDir 'signals.jsonl'
 
 if ($List) {
@@ -39,13 +42,13 @@ if ($List) {
     exit 0
 }
 
-if (-not $From -or -not $Type) {
-    Write-Error "Use: signal-bus.ps1 -From <cell> -Type <attract|consult|propose|...> [-To cell|tissue|*] [-Topic t] [-Payload json]"
+if (-not $From -or -not $SignalType) {
+    Write-Error "Use: signal-bus.ps1 -From <cell> -SignalType <attract|consult|propose|...> [-SignalTo cell|tissue|*] [-Topic t] [-Payload json]"
     exit 1
 }
 
 # Soft validate against organism manifest if present
-$manifest = Join-Path $Root 'docs/_meta/organism.manifest.yaml'
+$manifest = Join-Path (Join-Path (Join-Path $Root 'docs') '_meta') 'organism.manifest.yaml'
 if (Test-Path $manifest) {
     $mraw = Get-Content $manifest -Raw
     if ($mraw -notmatch "(?m)^\s+- id:\s*$([regex]::Escape($From))\s*$") {
@@ -68,9 +71,9 @@ if ($Payload) {
 $event = [ordered]@{
     ts = (Get-Date).ToUniversalTime().ToString('o')
     signal_id = $signalId
-    type = $Type
+    type = $SignalType
     from = $From
-    to = $To
+    to = $SignalTo
     topic = $Topic
     payload = $payloadObj
     correlation_id = $CorrelationId
@@ -79,11 +82,11 @@ $event = [ordered]@{
 
 $line = ($event | ConvertTo-Json -Compress -Depth 6)
 Add-Content -Path $BusFile -Value $line -Encoding UTF8
-Write-Host "signal-bus: $Type from=$From to=$To topic=$Topic id=$signalId"
+Write-Host "signal-bus: $SignalType from=$From to=$SignalTo topic=$Topic id=$signalId"
 
 # Mirror propose/evolve into live diagnostics when available
-$diagDir = Join-Path $Root '.cursor/arah-live'
-if ($Type -in @('propose', 'evolve', 'coalesce')) {
+$diagDir = Join-Path (Join-Path $Root '.cursor') 'arah-live'
+if ($SignalType -in @('propose', 'evolve', 'coalesce')) {
     if (-not (Test-Path $diagDir)) { New-Item -ItemType Directory -Path $diagDir -Force | Out-Null }
     $diag = Join-Path $diagDir 'diagnostics.jsonl'
     Add-Content -Path $diag -Value $line -Encoding UTF8
@@ -91,7 +94,7 @@ if ($Type -in @('propose', 'evolve', 'coalesce')) {
 
 $record = Join-Path $PSScriptRoot 'record-agent-event.ps1'
 if (Test-Path $record) {
-    & $record -AgentId $From -Action "signal.$Type" -Outcome ok -AutonomyLevel $AutonomyLevel -CorrelationId $CorrelationId -Details "to=$To;topic=$Topic" 2>$null
+    & $record -AgentId $From -Action "signal.$SignalType" -Outcome ok -AutonomyLevel $AutonomyLevel -CorrelationId $CorrelationId -Details "to=$SignalTo;topic=$Topic" 2>$null
 }
 
 exit 0

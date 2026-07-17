@@ -16,16 +16,16 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$MetaDir = Join-Path $Root 'docs/_meta'
+$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+$MetaDir = Join-Path (Join-Path $Root 'docs') '_meta'
 $OutFile = Join-Path $MetaDir 'evolution.proposed.yaml'
-$AuditFile = Join-Path $Root '.arah/audit/events.jsonl'
-$BusFile = Join-Path $Root '.arah/bus/signals.jsonl'
-$LiveEvents = Join-Path $Root '.cursor/arah-live/events.jsonl'
+$AuditFile = Join-Path (Join-Path (Join-Path $Root '.arah') 'audit') 'events.jsonl'
+$BusFile = Join-Path (Join-Path (Join-Path $Root '.arah') 'bus') 'signals.jsonl'
+$LiveEvents = Join-Path (Join-Path (Join-Path $Root '.cursor') 'arah-live') 'events.jsonl'
 $DiscoveryFile = Join-Path $MetaDir 'discovery.proposed.yaml'
 $OrganismFile = Join-Path $MetaDir 'organism.manifest.yaml'
 $SkillsDir = Join-Path $Root '.skills'
-$ChoreoFile = Join-Path $Root '.agents/choreography.yaml'
+$ChoreoFile = Join-Path (Join-Path $Root '.agents') 'choreography.yaml'
 
 function Count-Jsonl {
     param([string]$Path)

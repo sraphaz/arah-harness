@@ -26,7 +26,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
 $Agents = $PSScriptRoot
 
 Write-Host "regenerate: organism homeostasis → $Root"

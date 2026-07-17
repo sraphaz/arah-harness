@@ -26,8 +26,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$BusDir = Join-Path $Root '.arah/bus'
+$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+$BusDir = Join-Path (Join-Path $Root '.arah') 'bus'
 $BusFile = Join-Path $BusDir 'signals.jsonl'
 
 if ($List) {
@@ -45,7 +45,7 @@ if (-not $From -or -not $Type) {
 }
 
 # Soft validate against organism manifest if present
-$manifest = Join-Path $Root 'docs/_meta/organism.manifest.yaml'
+$manifest = Join-Path (Join-Path (Join-Path $Root 'docs') '_meta') 'organism.manifest.yaml'
 if (Test-Path $manifest) {
     $mraw = Get-Content $manifest -Raw
     if ($mraw -notmatch "(?m)^\s+- id:\s*$([regex]::Escape($From))\s*$") {
