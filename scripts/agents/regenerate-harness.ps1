@@ -106,6 +106,7 @@ Invoke-Step 'metrics rollup' {
         Write-Warning 'metrics-rollup.ps1 missing - skip'
         return
     }
+    # -File argv (not call-operator array splat) — Mode ValidateSet-safe
     $invokeArgs = @('-Mode', 'rollup')
     if ($DryRun) { $invokeArgs += '-DryRun' }
     & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs

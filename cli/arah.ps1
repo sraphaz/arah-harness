@@ -174,10 +174,18 @@ switch ($Command) {
             Write-Error 'Use: arah metrics rollup|report [-Last N] [-Digest]'
             exit 1
         }
-        $invokeArgs = @('-Mode', $mode, '-Last', $Last)
-        if ($Digest) { $invokeArgs += '-Digest' }
-        if ($DryRun) { $invokeArgs += '-DryRun' }
-        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+        # Hashtable splat: array @('-Mode', ...) binds incorrectly to ValidateSet params
+        $splat = @{ Mode = $mode; Last = $Last }
+        if ($Digest) { $splat.Digest = $true }
+        if ($DryRun) { $splat.DryRun = $true }
+        Push-Location $targetPath
+        try {
+            & $script @splat
+            if (-not $?) { exit 1 }
+            if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        } finally {
+            Pop-Location
+        }
     }
     'regenerate' {
         & (Join-Path $CliDir 'regenerate.ps1') -Target $targetPath -Force:$Force `
