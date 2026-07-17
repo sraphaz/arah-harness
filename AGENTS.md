@@ -1,7 +1,7 @@
 ﻿# AGENTS.md — Operação por agentes (ARAH)
 
 **Projeto:** arah-harness  
-**Harness:** ARAH **0.3.0** · TechOrganism ativo
+**Harness:** ARAH **0.3.1** · TechOrganism + Economy Intelligence
 
 Fonte de verdade para agentes (Cursor, CI). Procedimentos em `.skills/`; operação profunda em `docs/ops/` (crie se necessário).
 

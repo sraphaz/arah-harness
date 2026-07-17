@@ -9,6 +9,7 @@
     3) discover
     4) organism bootstrap
     5) evolve
+    5b) metrics rollup (Economy Intelligence)
     6) export-graph
     7) doctor
   Sugestoes ficam em docs/_meta/*.proposed.yaml para o repositorio evoluir.
@@ -98,6 +99,18 @@ Invoke-Step 'evolve' {
     & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs
 }
 
+# 5b) Economy Intelligence scorecard
+Invoke-Step 'metrics rollup' {
+    $script = Join-Path $Agents 'metrics-rollup.ps1'
+    if (-not (Test-Path $script)) {
+        Write-Warning 'metrics-rollup.ps1 missing - skip'
+        return
+    }
+    $invokeArgs = @('-Mode', 'rollup')
+    if ($DryRun) { $invokeArgs += '-DryRun' }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs
+}
+
 # 6) Export graph
 Invoke-Step 'export-graph' {
     $script = Join-Path $Agents 'export-agent-graph.ps1'
@@ -134,6 +147,7 @@ Write-Host '    docs/_meta/discovery.proposed.yaml'
 Write-Host '    docs/_meta/organism.manifest.yaml'
 Write-Host '    docs/_meta/evolution.proposed.yaml'
 Write-Host '    docs/_meta/agent-graph.generated.json'
+Write-Host '    .arah/observability/summary.yaml (metrics scorecard)'
 Write-Host '  review proposals -> PR -> human merge'
 
 $record = Join-Path $Agents 'record-agent-event.ps1'

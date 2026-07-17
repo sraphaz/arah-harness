@@ -1,19 +1,19 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, regenerate
+  ARAH Harness CLI - init, update, doctor, discover, organism, evolve, metrics, regenerate
 #>
 param(
     [Parameter(Position = 0)]
     [ValidateSet(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
         'export-graph', 'validate-runtime', 'discover', 'organism',
-        'evolve', 'regenerate', 'help'
+        'evolve', 'metrics', 'regenerate', 'help'
     )]
     [string]$Command = 'help',
 
     [Parameter(Position = 1)]
-    [ValidateSet('sync', 'bootstrap', 'status', 'signal', '')]
+    [ValidateSet('sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', '')]
     [string]$SubCommand = '',
 
     [string]$Target = '',
@@ -24,6 +24,8 @@ param(
     [switch]$UpdateKernel,
     [switch]$ApplyDiscovery,
     [switch]$SkipDoctor,
+    [switch]$Digest,
+    [int]$Last = 500,
 
     # signal-bus passthrough (SignalTo avoids -To/-Topic prefix ambiguity)
     [string]$From = '',
@@ -161,6 +163,22 @@ switch ($Command) {
         if ($DryRun) { $invokeArgs += '-DryRun' }
         Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
     }
+    'metrics' {
+        $script = Get-TargetScript 'scripts/agents/metrics-rollup.ps1'
+        $mode = switch ($SubCommand) {
+            'report' { 'report' }
+            'rollup' { 'rollup' }
+            default { '' }
+        }
+        if (-not $mode) {
+            Write-Error 'Use: arah metrics rollup|report [-Last N] [-Digest]'
+            exit 1
+        }
+        $invokeArgs = @('-Mode', $mode, '-Last', $Last)
+        if ($Digest) { $invokeArgs += '-Digest' }
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+    }
     'regenerate' {
         & (Join-Path $CliDir 'regenerate.ps1') -Target $targetPath -Force:$Force `
             -UpdateKernel:$UpdateKernel -ApplyDiscovery:$ApplyDiscovery `
@@ -185,6 +203,8 @@ ARAH Harness CLI — TechOrganism
   powershell -File cli/arah.ps1 organism status [-Target path]
   powershell -File cli/arah.ps1 organism signal -From cell -SignalType attract|consult|propose|... [-SignalTo ...] [-Topic ...]
   powershell -File cli/arah.ps1 evolve [-Target path] [-Apply] [-DryRun]
+  powershell -File cli/arah.ps1 metrics rollup [-Target path] [-Last N] [-Digest]
+  powershell -File cli/arah.ps1 metrics report [-Target path] [-Last N] [-Digest]
   powershell -File cli/arah.ps1 regenerate [-Target path] [-UpdateKernel] [-Force] [-ApplyDiscovery]
 "@
     }

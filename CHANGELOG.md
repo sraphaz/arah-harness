@@ -2,6 +2,23 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.3.1] - 2026-07-17
+
+### Added
+
+- **Economy Intelligence** — scorecard de eficiência do harness (Spec-Id: `arah-economy-metrics`)
+- `arah metrics rollup|report` — agrega audit/live/signals → `.arah/observability/summary.yaml`
+- Schema `metrics-summary`; campos opcionais de tokens/custo em `audit-event`
+- Skill `metrics-rollup`; digest opcional `docs/_meta/metrics.digest.md` (`-Digest`)
+- Evolve consome scorecard e pode propor `kind: economy`
+- Docs: [ECONOMY.md](docs/ECONOMY.md)
+
+### Changed
+
+- `record-agent-event` preserva scorecard rico (não sobrescreve metrics-summary)
+- `regenerate` inclui passo metrics rollup
+- Evolution schema: `kind: economy` + `based_on.metrics_semaphore`
+
 ## [0.3.0] - 2026-07-17
 
 ### Added

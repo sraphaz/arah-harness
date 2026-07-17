@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.1-green.svg)](VERSION)
 [![TechOrganism](https://img.shields.io/badge/TechOrganism-v0.3-0A7A5A.svg)](docs/TECHORGANISM.md)
 
 **ARAH** — *Agent Runtime Autonomous Harness*  
@@ -162,6 +162,7 @@ flowchart TB
 | `organism status` | Estado do organismo |
 | `organism signal` | Emite sinal tipado no bus |
 | `evolve [-Apply]` | Ciclo de self-learning |
+| `metrics rollup\|report` | Economy Intelligence (scorecard) |
 | `regenerate [-UpdateKernel]` | Homeostase completa no consumidor |
 
 ```powershell
@@ -180,12 +181,12 @@ arah-harness/
 │   ├── .skills/            # Procedimentos determinísticos
 │   ├── .cursor/            # Hooks (domain review + live session)
 │   └── scripts/            # Orquestração, gates, TechOrganism, telemetria
-├── cli/                    # install · discover · organism · evolve · regenerate
+├── cli/                    # install · discover · organism · evolve · metrics · regenerate
 ├── extension/arah-live/    # Painel Cursor/VS Code em tempo real
 ├── harness/profiles/       # Tiers: minimal → enterprise
 ├── schemas/arah-harness/   # Contratos canônicos
 ├── templates/              # Config, AGENTS.md, CI
-├── docs/                   # Método, TechOrganism, governança
+├── docs/                   # Método, TechOrganism, Economy, governança
 └── scripts/self-test.ps1
 ```
 
@@ -208,6 +209,7 @@ arah-harness/
 | Documento | Conteúdo |
 |-----------|----------|
 | **[TECHORGANISM.md](docs/TECHORGANISM.md)** | Dimensão viva — discovery, organismo, sinais, evolução |
+| **[ECONOMY.md](docs/ECONOMY.md)** | Economy Intelligence — scorecard e eficiência |
 | [METHOD.md](docs/METHOD.md) | Método ARAH completo |
 | [INSTALL.md](docs/INSTALL.md) | Instalar em qualquer repo |
 | [BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-install |

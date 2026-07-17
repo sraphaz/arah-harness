@@ -41,10 +41,11 @@ observability:
   diagnostics: .cursor/arah-live/diagnostics.jsonl
   session_traces: .cursor/arah-live/sessions/
   metrics_summary: .arah/observability/summary.yaml
+  metrics_digest: docs/_meta/metrics.digest.md   # opcional (arah metrics rollup -Digest)
   agent_graph: docs/_meta/agent-graph.generated.json
 ```
 
-Ver [OBSERVABILITY.md](OBSERVABILITY.md).
+Ver [OBSERVABILITY.md](OBSERVABILITY.md) e [ECONOMY.md](ECONOMY.md).
 
 ### `audit`
 

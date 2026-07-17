@@ -1,9 +1,9 @@
 # Método ARAH
 
 **ARAH** — *Agent Runtime Autonomous Harness*  
-**Versão do método** alinhada ao harness **0.3.0**
+**Versão do método** alinhada ao harness **0.3.1**
 
-Framework de bootstrap para repositórios gerenciados por agentes: autonomia coreografada, auditável, observável, com economia de tokens — e dimensão **TechOrganism** para discovery, organização e evolução contínua.
+Framework de bootstrap para repositórios gerenciados por agentes: autonomia coreografada, auditável, observável, com economia de tokens **medida** (Economy Intelligence) — e dimensão **TechOrganism** para discovery, organização e evolução contínua.
 
 ---
 
@@ -94,6 +94,8 @@ ARAH privilegia **contexto sob demanda**, não chat entre agentes:
 
 Sinais (`attract`, `consult`, `propose`, `coalesce`, `evolve`, …) são artefatos append-only — não um swarm conversacional.
 
+Desde **v0.3.1**, a política vira também **métrica**: `arah metrics report` expõe se o harness está produtivo, neutro ou caro demais. Ver [ECONOMY.md](ECONOMY.md).
+
 Detalhe: [TECHORGANISM.md](TECHORGANISM.md).
 
 ---
@@ -108,6 +110,7 @@ Capacidade que diferencia a v0.3: o harness **observa**, **organiza** e **evolui
 | `organism bootstrap` | Células, tecidos, vias |
 | `organism signal` | Comunicação tipada |
 | `evolve` | Self-learning → propostas |
+| `metrics` | Economy Intelligence (scorecard) |
 | `regenerate` | Homeostase no consumidor |
 
 **Agentes propõem; humanos aplicam.**
