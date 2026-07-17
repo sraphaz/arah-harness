@@ -215,7 +215,7 @@ if ($Apply) {
     $signal = Join-Path $PSScriptRoot 'signal-bus.ps1'
     if (Test-Path $signal) {
         $payload = (@{ proposals = $proposals.Count; artifact = 'docs/_meta/evolution.proposed.yaml' } | ConvertTo-Json -Compress)
-        & $signal -From orchestrator -To '*' -Type evolve -Topic homeostasis -Payload $payload -AutonomyLevel consult
+        & $signal -From orchestrator -SignalTo '*' -SignalType evolve -Topic homeostasis -Payload $payload -AutonomyLevel consult
     }
     Write-Host "evolve: Apply emitted evolve signal — revise proposals and open PR (no silent kernel rewrite)"
 }

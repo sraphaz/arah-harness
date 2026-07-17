@@ -7,9 +7,9 @@
   Tipos: attract | consult | propose | acknowledge | coalesce | evolve | status.
   Default econômico: sinais são artefatos (não chat multi-turno).
 .EXAMPLE
-  ./signal-bus.ps1 -From orchestrator -To backend -Type attract -Topic delivery
+  ./signal-bus.ps1 -From orchestrator -SignalTo backend -SignalType attract -Topic delivery
   ./signal-bus.ps1 -List -Last 10
-  ./signal-bus.ps1 -From qa -To '*' -Type propose -Topic craft -Payload '{"change":"add craft-review to frontend paths"}'
+  ./signal-bus.ps1 -From qa -SignalTo '*' -SignalType propose -Topic craft -Payload '{"change":"add craft-review to frontend paths"}'
 #>
 param(
     [string]$From = '',
