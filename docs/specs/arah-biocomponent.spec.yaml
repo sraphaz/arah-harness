@@ -46,37 +46,37 @@ acceptance:
   - id: AC-01
     when: operador executa arah discover em um repositório com código
     then: gera docs/_meta/discovery.proposed.yaml com stack, domínios e especialistas candidatos
-    status: pending
+    status: covered
     covered_by: scripts/agents/discover-repo.ps1
 
   - id: AC-02
     when: operador executa arah organism bootstrap após discovery
     then: gera docs/_meta/organism.manifest.yaml com células, grupos e topologia de sinais
-    status: pending
+    status: covered
     covered_by: scripts/agents/organism-bootstrap.ps1
 
   - id: AC-03
     when: um agente emite um sinal tipado via signal-bus
     then: o sinal é append-only em .arah/bus/signals.jsonl com schema válido
-    status: pending
+    status: covered
     covered_by: scripts/agents/signal-bus.ps1
 
   - id: AC-04
     when: operador executa arah evolve após eventos de auditoria/telemetria
     then: gera docs/_meta/evolution.proposed.yaml com propostas de melhoria (skills, coreografia, células)
-    status: pending
+    status: covered
     covered_by: scripts/agents/evolve-harness.ps1
 
   - id: AC-05
     when: operador executa arah regenerate em um consumidor
     then: reaplica kernel, sincroniza domínios, discovery, organismo, evolve, grafo e doctor
-    status: pending
+    status: covered
     covered_by: scripts/agents/regenerate-harness.ps1
 
   - id: AC-06
     when: propostas de discovery/evolution existem e Apply é solicitado
     then: apenas patches em arah.config.yaml / overlays são escritos; merge continua humano
-    status: pending
+    status: covered
     covered_by: scripts/agents/discover-repo.ps1
 
 harness:

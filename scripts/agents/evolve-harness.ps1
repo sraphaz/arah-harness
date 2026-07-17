@@ -63,7 +63,7 @@ foreach ($a in $actions) {
 }
 
 $proposals = @()
-$pid = 1
+$propSeq = 1
 
 function Add-Proposal {
     param(
@@ -75,7 +75,7 @@ function Add-Proposal {
         [string[]]$Evidence = @()
     )
     $script:proposals += [ordered]@{
-        id = ('EVO-{0:D3}' -f $script:pid)
+        id = ('EVO-{0:D3}' -f $script:propSeq)
         kind = $Kind
         target = $Target
         change = $Change
@@ -84,7 +84,7 @@ function Add-Proposal {
         evidence = $Evidence
         human_gate = 'proposal_before_implementation'
     }
-    $script:pid++
+    $script:propSeq++
 }
 
 # Heuristic 1: blocked/denied actions → skill or autonomy proposal

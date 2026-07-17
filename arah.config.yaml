@@ -46,7 +46,7 @@ domains:
 
   - id: cli
     name: CLI ARAH
-    description: init, update, doctor, domain sync, export-graph
+    description: init, update, doctor, domain sync, discover, organism, evolve, regenerate, export-graph
     paths:
       - cli/**
     enrich: |
