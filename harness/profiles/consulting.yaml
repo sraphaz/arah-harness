@@ -32,7 +32,7 @@ model:
     agent_graph: docs/_meta/agent-graph.generated.json
   audit:
     event_schema: arah-harness/audit-event
-    ledger_path: .arah/audit/events.jsonl
+    ledger_path: .arah/local/audit/
     retention_policy: project_default
     record_script: scripts/agents/record-agent-event.ps1
 

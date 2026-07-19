@@ -6,11 +6,14 @@
 
 | Camada | Local | Conteúdo |
 |--------|-------|----------|
-| Auditoria | `.arah/audit/events.jsonl` | Eventos de agente (append-only) |
-| Resumo | `.arah/observability/summary.yaml` | Contadores agregados |
+| Auditoria (quente) | `.arah/local/audit/` | Eventos arquivo-por-evento + archive |
+| Sinais (quente) | `.arah/local/bus/` | Barramento tipado |
+| Resumo | `.arah/observability/summary.yaml` | Contadores agregados (quente) |
+| Evidência fria | `docs/_meta/runs/*/summary.json` | Resumos versionáveis |
 | Live (Cursor) | `.cursor/arah-live/diagnostics.jsonl` | Diagnósticos de sessão |
 | Sessões | `.cursor/arah-live/sessions/*.diagnostics.jsonl` | Traces por conversa |
 | Agent Graph | `docs/_meta/agent-graph.generated.json` | Grafo exportável |
+| Capacidades | `capabilities.yaml` | Status available/experimental/planned |
 
 ## Telemetria de sessão
 
@@ -57,6 +60,7 @@ Workflow `.github/workflows/agents-validate.yml` roda:
 
 ## Privacidade
 
-Diagnósticos locais em `.cursor/arah-live/` — não commitar por padrão (ver `.gitignore`).
+Diagnósticos locais em `.cursor/arah-live/` e `.arah/local/` — não commitar (ver `.gitignore`).  
+Payloads de bus/audit passam por scrubbing de secrets antes da persistência.
 
-Ver também: [LIVE_SESSION.md](LIVE_SESSION.md), [AUDIT.md](AUDIT.md).
+Ver também: [LIVE_SESSION.md](LIVE_SESSION.md), [AUDIT.md](AUDIT.md), [STATE_MODEL.md](STATE_MODEL.md).

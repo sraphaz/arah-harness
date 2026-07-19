@@ -9,7 +9,7 @@ description: "LGPD checklist, threat model, audit log, gates fortes e scan refor
 model:
   audit:
     event_schema: arah-harness/audit-event
-    ledger_path: .arah/audit/events.jsonl
+    ledger_path: .arah/local/audit/
     retention_policy: contractual
     record_script: scripts/agents/record-agent-event.ps1
   governance:

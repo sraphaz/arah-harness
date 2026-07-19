@@ -164,7 +164,7 @@ foreach ($t in $tissuesFiltered) {
     foreach ($m in $t.members) { [void]$sb.AppendLine("      - $m") }
 }
 [void]$sb.AppendLine('signaling:')
-[void]$sb.AppendLine('  bus_path: .arah/bus/signals.jsonl')
+[void]$sb.AppendLine('  bus_path: .arah/local/bus/')
 [void]$sb.AppendLine('  default_mode: passive')
 [void]$sb.AppendLine('homeostasis:')
 [void]$sb.AppendLine('  regenerate_command: arah regenerate')

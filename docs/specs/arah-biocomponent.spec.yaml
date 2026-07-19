@@ -59,7 +59,7 @@ acceptance:
 
   - id: AC-03
     when: um agente emite um sinal tipado via signal-bus
-    then: o sinal é append-only em .arah/bus/signals.jsonl com schema válido
+    then: o sinal é arquivo-por-evento em .arah/local/bus/pending/<ULID>.json com campo v e schema válido
     status: covered
     covered_by: scripts/agents/signal-bus.ps1
 

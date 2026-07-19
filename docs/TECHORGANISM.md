@@ -60,7 +60,7 @@ A natureza inspira a *forma*; o ledger garante a *prova*.
 | Organismo | Harness instalado no repo | kernel + config + meta |
 | Célula | Agente (operacional / domínio / specialist) | `.agents/**/*.agent.yaml` |
 | Tecido | Grupo com tópico compartilhado | `organism.manifest.yaml` → `tissues` |
-| Sinal químico | Mensagem tipada, append-only | `.arah/bus/signals.jsonl` |
+| Sinal químico | Mensagem tipada, arquivo-por-evento | `.arah/local/bus/` |
 | Ontogenia | Primeiro momento de definição | `arah organism bootstrap` |
 | Homeostase | Manter o organismo saudável | `arah regenerate` |
 | Evolução | Seleção via proposta + PR | `evolution.proposed.yaml` |
@@ -127,11 +127,11 @@ Sinais tipados. Default **passivo** (economia de tokens).
 
 ```powershell
 arah organism signal `
-  -From orchestrator -To backend `
-  -Type attract -Topic delivery
+  -From orchestrator -SignalTo backend `
+  -SignalType attract -Topic delivery
 ```
 
-Ledger: `.arah/bus/signals.jsonl`.
+Ledger (quente): `.arah/local/bus/` — ver [STATE_MODEL.md](STATE_MODEL.md).
 
 ### 4. Aprendizado — `evolve`
 
@@ -162,9 +162,10 @@ Pipeline: update → domain sync → discover → organism → evolve → graph 
 | `docs/_meta/organism.manifest.yaml` | Mapa de células e tecidos | Sim |
 | `docs/_meta/evolution.proposed.yaml` | Propostas de self-learning | Sim |
 | `docs/_meta/agent-graph.generated.json` | Grafo auditável | Sim (gerado) |
-| `.arah/bus/signals.jsonl` | Barramento de sinais | Não (runtime) |
+| `.arah/local/bus/` | Barramento de sinais (quente) | Não (runtime) |
+| `.arah/local/audit/` | Ledger de ações (quente) | Não (runtime) |
+| `docs/_meta/runs/*/summary.json` | Evidência fria por run | Sim |
 | `.arah/organism/state.json` | Estado ontogênico | Não (runtime) |
-| `.arah/audit/events.jsonl` | Ledger de ações | Não (runtime) |
 
 ---
 

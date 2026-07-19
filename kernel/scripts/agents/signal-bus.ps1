@@ -3,17 +3,16 @@
 .SYNOPSIS
   Barramento de sinais tipados entre células do organismo ARAH.
 .DESCRIPTION
-  Comunicação orgânica e auditável: append-only em .arah/bus/signals.jsonl.
-  Tipos: attract | consult | propose | acknowledge | coalesce | evolve | status.
-  Default econômico: sinais são artefatos (não chat multi-turno).
+  Comunicação orgânica e auditável: arquivo-por-evento em
+  .arah/local/bus/pending/<ULID>.json (estado quente). Tipos congelados
+  (schema v0.2.0+): attract | consult | propose | acknowledge | coalesce | evolve | status.
+  Campo obrigatório `v` no payload (compatibilidade aditiva).
 .EXAMPLE
   ./signal-bus.ps1 -From orchestrator -SignalTo backend -SignalType attract -Topic delivery
   ./signal-bus.ps1 -List -Last 10
-  ./signal-bus.ps1 -From qa -SignalTo '*' -SignalType propose -Topic craft -Payload '{"change":"add craft-review to frontend paths"}'
 #>
 param(
     [string]$From = '',
-    # Destination cell/tissue ('*' = broadcast). Named SignalTo to avoid -To/-Topic prefix clash.
     [Alias('To')]
     [string]$SignalTo = '*',
     [ValidateSet('attract', 'consult', 'propose', 'acknowledge', 'coalesce', 'evolve', 'status', '')]
@@ -29,16 +28,17 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
-$BusDir = Join-Path (Join-Path $Root '.arah') 'bus'
-$BusFile = Join-Path $BusDir 'signals.jsonl'
+. (Join-Path $PSScriptRoot 'arah-event-io.ps1')
+$Root = Get-ArahRoot -FromScriptRoot $PSScriptRoot
+$SignalSchemaVersion = 1
 
 if ($List) {
-    if (-not (Test-Path $BusFile)) {
-        Write-Host "signal-bus: empty (no signals yet)"
+    $lines = Read-ArahEvents -Root $Root -Kind bus -Last $Last
+    if ($lines.Count -eq 0) {
+        Write-Host 'signal-bus: empty (no signals yet)'
         exit 0
     }
-    Get-Content $BusFile | Select-Object -Last $Last
+    $lines | ForEach-Object { Write-Output $_ }
     exit 0
 }
 
@@ -47,7 +47,6 @@ if (-not $From -or -not $SignalType) {
     exit 1
 }
 
-# Soft validate against organism manifest if present
 $manifest = Join-Path (Join-Path (Join-Path $Root 'docs') '_meta') 'organism.manifest.yaml'
 if (Test-Path $manifest) {
     $mraw = Get-Content $manifest -Raw
@@ -56,8 +55,6 @@ if (Test-Path $manifest) {
     }
 }
 
-New-Item -ItemType Directory -Path $BusDir -Force | Out-Null
-
 if (-not $CorrelationId) {
     $CorrelationId = [guid]::NewGuid().ToString('N').Substring(0, 12)
 }
@@ -65,30 +62,31 @@ if (-not $CorrelationId) {
 $signalId = [guid]::NewGuid().ToString('N').Substring(0, 10)
 $payloadObj = $null
 if ($Payload) {
-    try { $payloadObj = $Payload | ConvertFrom-Json } catch { $payloadObj = @{ text = $Payload } }
+    $scrubbedPayload = Protect-ArahSecrets -Text $Payload
+    try { $payloadObj = $scrubbedPayload | ConvertFrom-Json } catch { $payloadObj = @{ text = $scrubbedPayload } }
 }
 
 $event = [ordered]@{
-    ts = (Get-Date).ToUniversalTime().ToString('o')
-    signal_id = $signalId
-    type = $SignalType
-    from = $From
-    to = $SignalTo
-    topic = $Topic
-    payload = $payloadObj
-    correlation_id = $CorrelationId
-    autonomy_level = $AutonomyLevel
+    v               = $SignalSchemaVersion
+    ts              = (Get-Date).ToUniversalTime().ToString('o')
+    signal_id       = $signalId
+    type            = $SignalType
+    from            = $From
+    to              = $SignalTo
+    topic           = $Topic
+    payload         = $payloadObj
+    correlation_id  = $CorrelationId
+    autonomy_level  = $AutonomyLevel
 }
 
-$line = ($event | ConvertTo-Json -Compress -Depth 6)
-Add-Content -Path $BusFile -Value $line -Encoding UTF8
-Write-Host "signal-bus: $SignalType from=$From to=$SignalTo topic=$Topic id=$signalId"
+$path = Write-ArahEventFile -Root $Root -Kind bus -Event $event
+Write-Host "signal-bus: $SignalType from=$From to=$SignalTo topic=$Topic id=$signalId file=$(Split-Path $path -Leaf)"
 
-# Mirror propose/evolve into live diagnostics when available
 $diagDir = Join-Path (Join-Path $Root '.cursor') 'arah-live'
 if ($SignalType -in @('propose', 'evolve', 'coalesce')) {
     if (-not (Test-Path $diagDir)) { New-Item -ItemType Directory -Path $diagDir -Force | Out-Null }
     $diag = Join-Path $diagDir 'diagnostics.jsonl'
+    $line = Protect-ArahSecrets -Text (($event | ConvertTo-Json -Compress -Depth 6))
     Add-Content -Path $diag -Value $line -Encoding UTF8
 }
 

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# ARAH Harness pre-commit — lightweight local enforcement
+# Installed by: powershell -File cli/arah.ps1 hooks install
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+# Block committing hot operational state
+if git diff --cached --name-only | grep -E '^\.arah/local/' >/dev/null 2>&1; then
+  echo "ARAH pre-commit: refusing .arah/local/ (hot state is gitignored — run arah compact / migrate-state)"
+  exit 1
+fi
+
+# Secrets in staged diff (simple patterns; CI runs deeper scan)
+if git diff --cached -U0 | grep -Eiq '(api[_-]?key|password|secret|token)\s*[=:]\s*.{8,}|(ghp_|sk-|AKIA)[A-Za-z0-9]{16,}'; then
+  echo "ARAH pre-commit: possible secret in staged diff — scrub before commit"
+  exit 1
+fi
+
+# Prefer PowerShell gates when available
+if command -v pwsh >/dev/null 2>&1; then
+  PWSH=pwsh
+elif command -v powershell >/dev/null 2>&1; then
+  PWSH=powershell
+else
+  PWSH=""
+fi
+
+if [[ -n "$PWSH" && -f scripts/agents/validate-manifests.ps1 ]]; then
+  "$PWSH" -NoProfile -ExecutionPolicy Bypass -File scripts/agents/validate-manifests.ps1 || {
+    echo "ARAH pre-commit: validate-manifests failed"
+    exit 1
+  }
+fi
+
+exit 0

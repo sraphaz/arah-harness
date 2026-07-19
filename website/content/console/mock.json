@@ -1,0 +1,534 @@
+{
+  "version": "0.3.1",
+  "locale": "pt",
+  "filters": [
+    {
+      "slug": "todos",
+      "name": "todos",
+      "key": ""
+    },
+    {
+      "slug": "consulta",
+      "name": "consulta",
+      "key": "consultation"
+    },
+    {
+      "slug": "gates",
+      "name": "gates",
+      "key": "gates"
+    },
+    {
+      "slug": "mudancas",
+      "name": "mudanças",
+      "key": "change"
+    },
+    {
+      "slug": "evolucao",
+      "name": "evolução",
+      "key": "evolution"
+    }
+  ],
+  "repos": [
+    {
+      "slug": "checkout-platform",
+      "name": "checkout-platform",
+      "kernel": "0.3.1",
+      "drift": "sem drift",
+      "driftOk": true,
+      "sync": "há 12 s",
+      "kpis": {
+        "cells": 6,
+        "signals24h": 142,
+        "gateRate": "98,2%",
+        "gateOk": true,
+        "awaiting": 3,
+        "proposals": 2
+      },
+      "gates": [
+        {
+          "slug": "manifests",
+          "name": "manifests",
+          "status": "ok",
+          "duration": "0,8 s"
+        },
+        {
+          "slug": "specs",
+          "name": "specs",
+          "status": "ok",
+          "duration": "2,1 s"
+        },
+        {
+          "slug": "documentacao",
+          "name": "documentação",
+          "status": "ok",
+          "duration": "1,2 s"
+        },
+        {
+          "slug": "grafo",
+          "name": "grafo",
+          "status": "ok",
+          "duration": "0,6 s"
+        },
+        {
+          "slug": "seguranca",
+          "name": "segurança",
+          "status": "ok",
+          "duration": "3,4 s"
+        },
+        {
+          "slug": "dependencias",
+          "name": "dependências",
+          "status": "ok",
+          "duration": "5,9 s"
+        },
+        {
+          "slug": "build",
+          "name": "build",
+          "status": "ok",
+          "duration": "48 s"
+        }
+      ],
+      "gateSummary": "7/7 aprovados · run-8f31 · 14:29",
+      "territories": [
+        {
+          "slug": "payments",
+          "name": "payments",
+          "path": "backend/payments/**",
+          "health": "saudável",
+          "agents": 2,
+          "signals": 34,
+          "autonomy": "propose-only"
+        },
+        {
+          "slug": "catalog",
+          "name": "catalog",
+          "path": "backend/catalog/**",
+          "health": "saudável",
+          "agents": 2,
+          "signals": 18,
+          "autonomy": "propose-only"
+        },
+        {
+          "slug": "web",
+          "name": "web",
+          "path": "frontend/**",
+          "health": "saudável",
+          "agents": 1,
+          "signals": 9,
+          "autonomy": "execute-with-audit"
+        },
+        {
+          "slug": "infra",
+          "name": "infra",
+          "path": "infra/** · .github/**",
+          "health": "atenção",
+          "agents": 1,
+          "signals": 4,
+          "autonomy": "escalate"
+        }
+      ],
+      "queue": [
+        {
+          "id": "#147",
+          "title": "refunds idempotency guard",
+          "gates": "7/7",
+          "autonomy": "propose-only",
+          "evidence": "run-8f31",
+          "agent": "backend-payments"
+        },
+        {
+          "id": "#146",
+          "title": "catalog cache invalidation",
+          "gates": "7/7",
+          "autonomy": "propose-only",
+          "evidence": "run-8e02",
+          "agent": "backend-catalog"
+        },
+        {
+          "id": "#142",
+          "title": "evolução: dividir domínio backend",
+          "gates": "—",
+          "autonomy": "proposta",
+          "evidence": "evolve-0712",
+          "agent": "arah evolve"
+        }
+      ],
+      "proposals": [
+        {
+          "title": "Dividir o domínio \"backend\" em payments + catalog",
+          "evidence": "78% dos sinais dos últimos 30 dias escopados a payments"
+        },
+        {
+          "title": "Promover a skill test-first a obrigatória em payments",
+          "evidence": "12/12 runs com test-first passaram gates na 1ª tentativa"
+        }
+      ],
+      "autonomyMix": [
+        {
+          "slug": "propose-only",
+          "name": "propose-only",
+          "percent": 82
+        },
+        {
+          "slug": "execute-with-audit",
+          "name": "execute-with-audit",
+          "percent": 15
+        },
+        {
+          "slug": "escalate",
+          "name": "escalate",
+          "percent": 3
+        }
+      ],
+      "feed": [
+        {
+          "time": "14:32:07",
+          "type": "consultation.answer",
+          "message": "veredicto: aprovar com spec",
+          "route": "payments-specialist → backend-payments"
+        },
+        {
+          "time": "14:31:52",
+          "type": "consultation.request",
+          "message": "mudança em refunds.ts requer parecer",
+          "route": "backend-payments → payments-specialist"
+        },
+        {
+          "time": "14:29:10",
+          "type": "gates.passed",
+          "message": "7/7 aprovados",
+          "route": "sync-check · run-8f31"
+        },
+        {
+          "time": "14:28:44",
+          "type": "change.ready",
+          "message": "branch preparada para PR #147",
+          "route": "backend-payments"
+        },
+        {
+          "time": "14:12:03",
+          "type": "gates.passed",
+          "message": "7/7 aprovados",
+          "route": "sync-check · run-8e02"
+        },
+        {
+          "time": "13:57:31",
+          "type": "evolution.proposal",
+          "message": "dividir domínio backend",
+          "route": "arah evolve"
+        },
+        {
+          "time": "13:44:19",
+          "type": "consultation.answer",
+          "message": "invariante: idempotência de reembolso",
+          "route": "payments-specialist → backend-payments"
+        },
+        {
+          "time": "13:41:02",
+          "type": "change.ready",
+          "message": "catalog cache invalidation",
+          "route": "backend-catalog"
+        },
+        {
+          "time": "12:58:47",
+          "type": "gates.failed",
+          "message": "segurança: secret no diff (bloqueado)",
+          "route": "sync-check · run-8d77"
+        },
+        {
+          "time": "12:31:15",
+          "type": "consultation.request",
+          "message": "estratégia de invalidação de cache",
+          "route": "backend-catalog → catalog-specialist"
+        }
+      ]
+    },
+    {
+      "slug": "catalog-service",
+      "name": "catalog-service",
+      "kernel": "0.3.0",
+      "drift": "kernel desatualizado",
+      "driftOk": false,
+      "sync": "há 40 s",
+      "kpis": {
+        "cells": 3,
+        "signals24h": 57,
+        "gateRate": "91,4%",
+        "gateOk": false,
+        "awaiting": 1,
+        "proposals": 1
+      },
+      "gates": [
+        {
+          "slug": "manifests",
+          "name": "manifests",
+          "status": "ok",
+          "duration": "0,7 s"
+        },
+        {
+          "slug": "specs",
+          "name": "specs",
+          "status": "ok",
+          "duration": "1,8 s"
+        },
+        {
+          "slug": "documentacao",
+          "name": "documentação",
+          "status": "ok",
+          "duration": "1,0 s"
+        },
+        {
+          "slug": "grafo",
+          "name": "grafo",
+          "status": "ok",
+          "duration": "0,5 s"
+        },
+        {
+          "slug": "seguranca",
+          "name": "segurança",
+          "status": "ok",
+          "duration": "2,9 s"
+        },
+        {
+          "slug": "dependencias",
+          "name": "dependências",
+          "status": "falha",
+          "duration": "6,2 s"
+        },
+        {
+          "slug": "build",
+          "name": "build",
+          "status": "ok",
+          "duration": "31 s"
+        }
+      ],
+      "gateSummary": "6/7 · dependências: lodash 4.17.19 vulnerável (CVE) · 11:02",
+      "territories": [
+        {
+          "slug": "catalog",
+          "name": "catalog",
+          "path": "src/catalog/**",
+          "health": "saudável",
+          "agents": 2,
+          "signals": 41,
+          "autonomy": "propose-only"
+        },
+        {
+          "slug": "search",
+          "name": "search",
+          "path": "src/search/**",
+          "health": "atenção",
+          "agents": 1,
+          "signals": 12,
+          "autonomy": "propose-only"
+        },
+        {
+          "slug": "docs",
+          "name": "docs",
+          "path": "docs/**",
+          "health": "saudável",
+          "agents": 0,
+          "signals": 4,
+          "autonomy": "execute-with-audit"
+        }
+      ],
+      "queue": [
+        {
+          "id": "#89",
+          "title": "search relevance boost",
+          "gates": "6/7 (dependências)",
+          "autonomy": "propose-only",
+          "evidence": "run-3c11",
+          "agent": "search-agent"
+        }
+      ],
+      "proposals": [
+        {
+          "title": "Adicionar gate de licenças a dependências",
+          "evidence": "3 pacotes sem licença aprovada detectados no ledger"
+        }
+      ],
+      "autonomyMix": [
+        {
+          "slug": "propose-only",
+          "name": "propose-only",
+          "percent": 88
+        },
+        {
+          "slug": "execute-with-audit",
+          "name": "execute-with-audit",
+          "percent": 12
+        },
+        {
+          "slug": "escalate",
+          "name": "escalate",
+          "percent": 0
+        }
+      ],
+      "feed": [
+        {
+          "time": "11:02:40",
+          "type": "gates.failed",
+          "message": "dependências: CVE em lodash 4.17.19",
+          "route": "sync-check · run-3c11"
+        },
+        {
+          "time": "10:58:12",
+          "type": "change.ready",
+          "message": "search relevance boost",
+          "route": "search-agent"
+        },
+        {
+          "time": "10:41:55",
+          "type": "consultation.answer",
+          "message": "usar BM25, não trigram",
+          "route": "catalog-specialist → search-agent"
+        },
+        {
+          "time": "10:39:01",
+          "type": "consultation.request",
+          "message": "abordagem de relevância",
+          "route": "search-agent → catalog-specialist"
+        },
+        {
+          "time": "09:12:33",
+          "type": "evolution.proposal",
+          "message": "gate de licenças",
+          "route": "arah evolve"
+        },
+        {
+          "time": "08:55:20",
+          "type": "gates.passed",
+          "message": "7/7 aprovados",
+          "route": "sync-check · run-3b90"
+        }
+      ]
+    },
+    {
+      "slug": "infra-core",
+      "name": "infra-core",
+      "kernel": "0.3.1",
+      "drift": "sem drift",
+      "driftOk": true,
+      "sync": "há 8 s",
+      "kpis": {
+        "cells": 2,
+        "signals24h": 11,
+        "gateRate": "100%",
+        "gateOk": true,
+        "awaiting": 0,
+        "proposals": 0
+      },
+      "gates": [
+        {
+          "slug": "manifests",
+          "name": "manifests",
+          "status": "ok",
+          "duration": "0,6 s"
+        },
+        {
+          "slug": "specs",
+          "name": "specs",
+          "status": "ok",
+          "duration": "0,9 s"
+        },
+        {
+          "slug": "documentacao",
+          "name": "documentação",
+          "status": "ok",
+          "duration": "0,8 s"
+        },
+        {
+          "slug": "grafo",
+          "name": "grafo",
+          "status": "ok",
+          "duration": "0,4 s"
+        },
+        {
+          "slug": "seguranca",
+          "name": "segurança",
+          "status": "ok",
+          "duration": "4,1 s"
+        },
+        {
+          "slug": "dependencias",
+          "name": "dependências",
+          "status": "ok",
+          "duration": "3,3 s"
+        },
+        {
+          "slug": "build",
+          "name": "build",
+          "status": "ok",
+          "duration": "12 s"
+        }
+      ],
+      "gateSummary": "7/7 aprovados · run-1a04 · 09:15",
+      "territories": [
+        {
+          "slug": "terraform",
+          "name": "terraform",
+          "path": "terraform/**",
+          "health": "saudável",
+          "agents": 1,
+          "signals": 7,
+          "autonomy": "escalate"
+        },
+        {
+          "slug": "ci",
+          "name": "ci",
+          "path": ".github/**",
+          "health": "saudável",
+          "agents": 1,
+          "signals": 4,
+          "autonomy": "escalate"
+        }
+      ],
+      "queue": [],
+      "proposals": [],
+      "autonomyMix": [
+        {
+          "slug": "propose-only",
+          "name": "propose-only",
+          "percent": 34
+        },
+        {
+          "slug": "execute-with-audit",
+          "name": "execute-with-audit",
+          "percent": 0
+        },
+        {
+          "slug": "escalate",
+          "name": "escalate",
+          "percent": 66
+        }
+      ],
+      "feed": [
+        {
+          "time": "09:15:02",
+          "type": "gates.passed",
+          "message": "7/7 aprovados",
+          "route": "sync-check · run-1a04"
+        },
+        {
+          "time": "09:02:47",
+          "type": "consultation.answer",
+          "message": "mudança em rede exige janela",
+          "route": "infra-specialist → terraform-agent"
+        },
+        {
+          "time": "08:58:30",
+          "type": "consultation.request",
+          "message": "alteração de VPC peering",
+          "route": "terraform-agent → infra-specialist"
+        },
+        {
+          "time": "07:40:11",
+          "type": "gates.passed",
+          "message": "7/7 aprovados",
+          "route": "sync-check · run-19f8"
+        }
+      ]
+    }
+  ]
+}

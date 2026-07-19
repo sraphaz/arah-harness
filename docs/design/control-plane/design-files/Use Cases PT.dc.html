@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casos de Uso — ARAH Harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#0A0C0F;color:#E7ECF1;font-family:'Schibsted Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E7ECF1;text-decoration:none}
+a:hover{color:oklch(80% 0.09 200)}
+*{box-sizing:border-box}
+::selection{background:oklch(70% 0.09 200 / .35)}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0A0C0F">
+<nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:28px;padding:10px 32px;min-height:64px;row-gap:6px;flex-wrap:wrap;background:rgba(10,12,15,.82);backdrop-filter:blur(14px);border-bottom:1px solid #161C24">
+  <a href="Home PT.dc.html" style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.02em">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="3" y1="19" x2="11" y2="11" stroke="oklch(78% 0.09 200)" stroke-width="1.6"></line><line x1="11" y1="3" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><line x1="19" y1="19" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><circle cx="11" cy="11" r="3" fill="oklch(78% 0.09 200)"></circle><circle cx="3" cy="19" r="2" fill="#3A4553"></circle><circle cx="19" cy="19" r="2" fill="#3A4553"></circle><circle cx="11" cy="3" r="2" fill="#3A4553"></circle></svg>
+    <span>ARAH Harness</span>
+  </a>
+  <div style="display:flex;gap:22px;font-size:14px;color:#9AA5B1;margin-left:12px;flex:1;flex-wrap:wrap">
+    <a href="Home PT.dc.html" style="color:#9AA5B1">Produto</a>
+    <a href="Architecture PT.dc.html" style="color:#9AA5B1">Arquitetura</a>
+    <a href="How It Works PT.dc.html" style="color:#9AA5B1">Como Funciona</a>
+    <a href="TechOrganism PT.dc.html" style="color:#9AA5B1">TechOrganism</a>
+    <a href="Use Cases PT.dc.html" style="color:#E7ECF1">Casos de Uso</a>
+    <a href="Docs PT.dc.html" style="color:#9AA5B1">Documentação</a>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center"><div style="display:flex;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #232B36;border-radius:7px;padding:2px"><a href="Use Cases.dc.html" style="padding:4px 9px;border-radius:5px;color:#5A6675">EN</a><span style="padding:4px 9px;border-radius:5px;background:#1E2630;color:#E7ECF1">PT</span></div>
+    <a href="https://github.com/sraphaz/arah-harness" style="font-size:13.5px;font-family:'IBM Plex Mono',monospace;color:#9AA5B1;border:1px solid #232B36;padding:7px 14px;border-radius:6px;white-space:nowrap" style-hover="border-color:#3A4553;color:#E7ECF1">Ver no GitHub</a>
+    <a href="Docs PT.dc.html" style="font-size:13.5px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:8px 16px;border-radius:6px" style-hover="background:oklch(84% 0.09 200)">Começar</a>
+  </div>
+</nav>
+
+<header style="max-width:1200px;margin:0 auto;padding:88px 32px 56px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:oklch(78% 0.09 200);margin-bottom:20px">Casos de uso</div>
+  <h1 style="font-size:clamp(32px,5vw,48px);line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:0 0 20px;max-width:820px;text-wrap:balance">Onde um harness repo-first se paga</h1>
+  <p style="font-size:18px;line-height:1.6;color:#9AA5B1;margin:0;max-width:720px">Oito situações em que governança, persistência e coordenação importam mais do que geração bruta de código.</p>
+</header>
+
+<section style="max-width:1200px;margin:0 auto;padding:16px 32px 100px">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px">
+    <div style="border:1px solid #1E2630;border-radius:12px;padding:30px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:14px">UC·01</div><h3 style="font-size:20px;font-weight:700;margin:0 0 10px">Repositório Novo</h3><p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0">Estrutura de governança desde o primeiro commit: domínios, agentes, autonomia e gates existem antes da primeira feature.</p></div>
+    <div style="border:1px solid #1E2630;border-radius:12px;padding:30px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:14px">UC·02</div><h3 style="font-size:20px;font-weight:700;margin:0 0 10px">Repositório Legado</h3><p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0">Discovery progressivo sem reconstruir o projeto — o harness propõe domínios a partir da estrutura que já existe.</p></div>
+    <div style="border:1px solid #1E2630;border-radius:12px;padding:30px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:14px">UC·03</div><h3 style="font-size:20px;font-weight:700;margin:0 0 10px">Monorepo</h3><p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0">Responsabilidades diferentes para áreas e produtos diferentes: a coreografia por paths dá a cada território seus próprios agentes, especialistas e gates.</p></div>
+    <div style="border:1px solid #1E2630;border-radius:12px;padding:30px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:14px">UC·04</div><h3 style="font-size:20px;font-weight:700;margin:0 0 10px">Engenharia Regulada</h3><p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0">Specs, evidências, gates executáveis e aprovação humana — uma trilha de auditoria que existe porque o fluxo a produz, não como um adendo.</p></div>
+    <div style="border:1px solid #1E2630;border-radius:12px;padding:30px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:14px">UC·05</div><h3 style="font-size:20px;font-weight:700;margin:0 0 10px">Engenharia Multiagente</h3><p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0">Coordenação explícita entre agentes operacionais e consultivos: papéis, fronteiras e sinais compartilhados em vez de sessões sobrepostas.</p></div>
+    <div style="border:1px solid #1E2630;border-radius:12px;padding:30px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:14px">UC·06</div><h3 style="font-size:20px;font-weight:700;margin:0 0 10px">Consultoria</h3><p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0">Um kernel comum com overlays específicos por cliente: a mesma máquina de governança, adaptada por projeto sem bifurcar a prática.</p></div>
+    <div style="border:1px solid #1E2630;border-radius:12px;padding:30px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:14px">UC·07</div><h3 style="font-size:20px;font-weight:700;margin:0 0 10px">Plataforma de Produtos</h3><p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0">Políticas compartilhadas entre produtos diferentes: uma superfície de política, muitos repositórios, gates e regras de autonomia consistentes.</p></div>
+    <div style="border:1px solid #1E2630;border-radius:12px;padding:30px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:14px">UC·08</div><h3 style="font-size:20px;font-weight:700;margin:0 0 10px">Migração de Modelo</h3><p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0">Troque modelos e ferramentas enquanto contexto, procedimentos e governança ficam no repositório — nada para reensinar, nada perdido.</p></div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:80px 32px;text-align:center;background:#0B0E12">
+  <div style="max-width:680px;margin:0 auto">
+    <p style="font-size:20px;line-height:1.5;font-weight:500;color:#DDE4EB;margin:0 0 28px;text-wrap:balance">Seu contexto de engenharia deve pertencer ao seu repositório, não a um fornecedor de modelo.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="Docs PT.dc.html" style="font-size:15px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:13px 24px;border-radius:7px" style-hover="background:oklch(84% 0.09 200)">Começar</a>
+      <a href="https://github.com/sraphaz/arah-harness" style="font-size:15px;font-weight:500;border:1px solid #2A3340;color:#E7ECF1;padding:13px 24px;border-radius:7px" style-hover="border-color:#4A5563">Ver no GitHub</a>
+    </div>
+  </div>
+</section>
+<footer style="border-top:1px solid #141A22;padding:36px 32px;background:#080A0D">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:#5A6675">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-weight:700;color:#8C97A5">ARAH Harness</span><span>· Engenharia humano-agente governada, enraizada no repositório.</span></div>
+    <div style="display:flex;gap:20px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+      <a href="https://github.com/sraphaz/arah-harness" style="color:#5A6675" style-hover="color:#E7ECF1">GitHub</a>
+      <a href="https://github.com/sraphaz/arah-harness/releases" style="color:#5A6675" style-hover="color:#E7ECF1">Releases</a>
+      <a href="https://github.com/sraphaz/arah-harness/blob/main/CONTRIBUTING.md" style="color:#5A6675" style-hover="color:#E7ECF1">Contribuir</a>
+    </div>
+  </div>
+</footer>
+</div>
+</x-dc>
+</body>
+</html>

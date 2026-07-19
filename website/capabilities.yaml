@@ -1,0 +1,74 @@
+# capabilities.yaml — fonte única de status de capacidades do ARAH Harness
+# Consumido pelo site (W-07) e por docs. Não duplicar status em outros arquivos.
+version: 1
+updated_at: 2026-07-19
+harness_version: "0.3.1"
+
+available:
+  - id: agents-skills-manifests
+    name: Agentes, skills e manifests
+    notes: YAML validado + coreografia por paths
+  - id: gates-ci
+    name: Gates e CI
+    notes: Policy as code local e em PR
+  - id: domain-sync
+    name: Domain sync
+    notes: Domínios em arah.config.yaml → agents
+  - id: techorganism-discover
+    name: Discover
+    notes: docs/_meta/discovery.proposed.yaml
+  - id: techorganism-organism
+    name: Organism bootstrap + signal bus
+    notes: Manifest + sinais tipados (v=1)
+  - id: techorganism-evolve
+    name: Evolve
+    notes: Propostas a partir de evidência
+  - id: techorganism-regenerate
+    name: Regenerate
+    notes: Homeostase / update de kernel
+  - id: audit-hot-cold
+    name: Estado quente × evidência fria
+    notes: .arah/local/ + docs/_meta/runs/
+  - id: file-per-event
+    name: Arquivo-por-evento + compact
+    notes: ULID pending → archive JSONL
+  - id: secret-scrubbing
+    name: Scrubbing de secrets
+    notes: Antes de persistir bus/audit
+  - id: hooks-pre-commit
+    name: Pre-commit hooks
+    notes: arah hooks install
+  - id: install-minimal
+    name: Install mínimo
+    notes: manifests + gates sem organismo
+  - id: live-session-extension
+    name: ARAH Live Session (IDE)
+    notes: Telemetria Cursor/VS Code
+
+experimental:
+  - id: session-telemetry
+    name: Session telemetry rica
+    notes: .cursor/arah-live diagnostics
+  - id: agent-graph-export
+    name: Agent graph export
+    notes: JSON + Mermaid derivados
+
+planned:
+  - id: portable-cli-go
+    name: CLI binária portátil (Go)
+    notes: ADR-001; doctor/sync-check/export-graph
+  - id: arahd-daemon
+    name: Daemon arahd
+    notes: Watch + batch + WebSocket
+  - id: live-console
+    name: ARAH Live Console
+    notes: Épico C — backlog de UI
+  - id: product-site
+    name: Site de produto + docs MDX
+    notes: Épico W — backlog de UI
+  - id: semantic-discovery
+    name: Discovery semântico
+    notes: Monorepos heterogêneos
+  - id: org-control-plane
+    name: Control plane multi-repo
+    notes: Agregador org-level (longo prazo)

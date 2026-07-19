@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.3.1-green.svg)](VERSION)
 [![TechOrganism](https://img.shields.io/badge/TechOrganism-v0.3-0A7A5A.svg)](docs/TECHORGANISM.md)
 
 **ARAH** — *Agent Runtime Autonomous Harness*  
@@ -114,7 +114,7 @@ flowchart TB
     CFG["arah.config.yaml"]
     AGENTS[".agents/ + .skills/"]
     META["docs/_meta/<br/>discovery · organism · evolution"]
-    BUS[".arah/bus/signals.jsonl"]
+    BUS[".arah/local/bus/"]
     OVERLAY["choreography.*.yaml"]
   end
   CLI -->|install / update / regenerate| KERNEL
@@ -208,6 +208,9 @@ arah-harness/
 | Documento | Conteúdo |
 |-----------|----------|
 | **[TECHORGANISM.md](docs/TECHORGANISM.md)** | Dimensão viva — discovery, organismo, sinais, evolução |
+| [STATE_MODEL.md](docs/STATE_MODEL.md) | Estado quente × evidência fria |
+| [backlog/](docs/backlog/) | Control Plane — épicos W/C/H |
+| [website/](website/) | Site EN/PT + docs + Live Console (UI) → [GitHub Pages](https://sraphaz.github.io/arah-harness/) |
 | [METHOD.md](docs/METHOD.md) | Método ARAH completo |
 | [INSTALL.md](docs/INSTALL.md) | Instalar em qualquer repo |
 | [BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-install |
