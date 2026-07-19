@@ -1,6 +1,11 @@
 id: pr-steward
 name: PR Steward
 description: Resolve apontamentos de bots, aplica ready-for-merge quando CI verde.
+execution_role:
+  can_route: false
+  can_execute: true
+  can_consult: false
+  can_review: true
 triggers:
   - pull_request:opened
   - pull_request:synchronize

@@ -6,6 +6,11 @@ description: |
 type: domain
 autonomy:
   - consult
+execution_role:
+  can_route: false
+  can_execute: false
+  can_consult: true
+  can_review: true
 triggers:
   - manual
   - pull_request:opened

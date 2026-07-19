@@ -141,6 +141,22 @@ try {
     $caps = Join-Path $HarnessRoot 'capabilities.yaml'
     if (-not (Test-Path -LiteralPath $caps)) { throw "capabilities.yaml missing" }
 
+    # Execution Control Protocol — distribution + scenarios
+    Write-Host "=== Execution Control ==="
+    if (-not (Test-Path (Join-Path $Tmp 'scripts/agents/execute-task.ps1'))) {
+        throw "execute-task.ps1 missing after init"
+    }
+    if (-not (Test-Path (Join-Path $Tmp '.cursor/rules/arah-execution-control.mdc'))) {
+        throw "cursor execution-control rule missing after init"
+    }
+    if (-not (Test-Path (Join-Path $Tmp 'schemas/arah-harness/execution-contract.schema.yaml'))) {
+        throw "execution-contract schema missing after init"
+    }
+    $cfgEcp = Get-Content (Join-Path $Tmp 'arah.config.yaml') -Raw
+    if ($cfgEcp -notmatch '(?m)^execution_control:') { throw "execution_control missing in consumer config" }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $HarnessRoot 'scripts/harness/test-execution-control.ps1')
+    if ($LASTEXITCODE -ne 0) { throw "test-execution-control failed" }
+
     Write-Host "self-test: OK"
     exit 0
 } finally {

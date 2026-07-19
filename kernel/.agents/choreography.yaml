@@ -1,20 +1,26 @@
 # Coreografia de agentes — kernel ARAH (genérico)
 # Regras de domínio são mescladas no init a partir de arah.config.yaml
+# Execution Control: cada regra executável resolve exatamente um primary_executor.
 version: 2
-updated: 2026-07-04
+updated: 2026-07-19
 policy: |
-  Regras aplicadas após roteamento do orquestrador. Agentes de domínio (negócio)
-  publicam parecer consultivo; operacionais ativam checklist + skills.
+  Regras aplicadas após roteamento do orquestrador.
+  Uma tarefa pode ter vários participantes, mas exatamente um executor primário.
+  Consultores retornam parecer estruturado ao executor; não conversam entre si.
+  Domínios (type: domain) usam role: consultant.
 
 rules:
   - id: specs-sdd
     paths:
       - docs/specs/**
       - scripts/harness/**
+    execution:
+      primary_executor: spec-steward
     agents:
       - id: spec-steward
         type: operational
-        autonomy: [activate, invoke_skill]
+        role: executor
+        autonomy: [activate, execute_change, invoke_skill]
         skills: [spec-validate, harness-run]
 
   - id: architecture-docs
@@ -22,17 +28,22 @@ rules:
       - docs/architecture/**
       - docs/design/**
       - docs/adr/**
+    execution:
+      primary_executor: solutions-architect
     agents:
       - id: solutions-architect
         type: operational
-        autonomy: [activate, invoke_skill]
+        role: executor
+        autonomy: [activate, execute_change, invoke_skill]
         skills: [architecture-review, register-adr, craft-review]
       - id: architecture-documenter
         type: domain
+        role: consultant
         autonomy: [consult]
         skills: [architecture-review, register-adr, doc-taxonomy]
       - id: clean-craft-advisor
         type: domain
+        role: consultant
         autonomy: [consult]
         skills: [craft-review]
 
@@ -41,28 +52,36 @@ rules:
       - docs/testing/**
       - tests/**
       - e2e/**
+    execution:
+      primary_executor: qa
     agents:
-      - id: test-architect
-        type: domain
-        autonomy: [consult]
-        skills: [test-strategy, run-tests]
       - id: qa
         type: operational
-        autonomy: [activate, invoke_skill]
+        role: executor
+        autonomy: [activate, execute_change, invoke_skill]
         skills: [run-tests, craft-review]
+      - id: test-architect
+        type: domain
+        role: consultant
+        autonomy: [consult]
+        skills: [test-strategy, run-tests]
 
   - id: craft-backend
     paths:
       - backend/**
       - src/**/api/**
       - services/**
+    execution:
+      primary_executor: backend
     agents:
       - id: backend
         type: operational
-        autonomy: [activate, invoke_skill]
+        role: executor
+        autonomy: [activate, execute_change, invoke_skill]
         skills: [craft-review]
       - id: solutions-architect
         type: operational
+        role: consultant
         autonomy: [consult_post, invoke_skill]
         skills: [craft-review]
 
@@ -71,10 +90,13 @@ rules:
       - frontend/**
       - apps/web/**
       - apps/mobile/**
+    execution:
+      primary_executor: frontend
     agents:
       - id: frontend
         type: operational
-        autonomy: [activate, invoke_skill]
+        role: executor
+        autonomy: [activate, execute_change, invoke_skill]
         skills: [craft-review]
 
   - id: infra-deploy
@@ -83,10 +105,13 @@ rules:
       - infrastructure/**
       - docker-compose*.yml
       - Dockerfile
+    execution:
+      primary_executor: release
     agents:
       - id: release
         type: operational
-        autonomy: [activate]
+        role: executor
+        autonomy: [activate, execute_change]
 
   - id: biocomponent-meta
     paths:
@@ -108,17 +133,26 @@ rules:
       - scripts/agents/evolve-harness.ps1
       - scripts/agents/metrics-rollup.ps1
       - scripts/agents/regenerate-harness.ps1
+    execution:
+      primary_executor: docs-steward
     agents:
+      - id: docs-steward
+        type: operational
+        role: executor
+        autonomy: [activate, execute_change, invoke_skill]
       - id: orchestrator
         type: operational
+        role: router
         autonomy: [route, activate, invoke_skill]
         skills: [discover-repo, evolve-harness, regenerate-harness, metrics-rollup]
       - id: spec-steward
         type: operational
+        role: consultant
         autonomy: [activate, invoke_skill]
         skills: [spec-validate]
       - id: solutions-architect
         type: operational
+        role: consultant
         autonomy: [consult, invoke_skill]
         skills: [architecture-review]
 
@@ -134,40 +168,52 @@ rules:
       - docs/AUDIT.md
       - docs/specs/arah-economy-metrics.spec.yaml
       - cli/arah.ps1
+    execution:
+      primary_executor: docs-steward
     agents:
+      - id: docs-steward
+        type: operational
+        role: executor
+        autonomy: [activate, execute_change, invoke_skill]
       - id: orchestrator
         type: operational
+        role: router
         autonomy: [route, activate, invoke_skill]
         skills: [metrics-rollup, evolve-harness]
       - id: spec-steward
         type: operational
+        role: consultant
         autonomy: [activate, invoke_skill]
         skills: [spec-validate]
-      - id: docs-steward
-        type: operational
-        autonomy: [activate, invoke_skill]
 
   - id: pr-always
     paths:
       - "**"
     when: pull_request
+    execution:
+      primary_executor: pr-steward
     agents:
-      - id: qa
-        type: operational
-        autonomy: [activate, invoke_skill]
-        skills: [craft-review, run-tests]
       - id: pr-steward
         type: operational
-        autonomy: [activate]
+        role: executor
+        autonomy: [activate, execute_change]
+      - id: qa
+        type: operational
+        role: reviewer
+        autonomy: [activate, invoke_skill]
+        skills: [craft-review, run-tests]
       - id: clean-craft-advisor
         type: domain
+        role: consultant
         autonomy: [consult]
         skills: [craft-review]
       - id: test-architect
         type: domain
+        role: consultant
         autonomy: [consult]
         skills: [test-strategy]
       - id: security
         type: operational
+        role: reviewer
         autonomy: [consult, invoke_skill]
         skills: [dep-audit, code-review]

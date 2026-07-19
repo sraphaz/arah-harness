@@ -21,6 +21,8 @@ Quando o TechOrganism chega a um repositório, ele responde ao que antes só o h
 
 Ciclo vivo: **perceber → definir → sinalizar → evoluir → regenerar**.
 
+Sinais e células **não** são uma rede livre de conversação. Entregas executáveis passam pelo [Execution Control Protocol](EXECUTION_CONTROL.md): um `primary_executor`, consultas limitadas, evidência concreta, terminalidade `done|blocked`.
+
 ```text
                  ┌──────────────┐
                  │   humano     │
@@ -43,6 +45,9 @@ Ciclo vivo: **perceber → definir → sinalizar → evoluir → regenerar**.
         │             ▼                  │
         │        regenerate              │
         └─────────────┬──────────────────┘
+                      │
+                      ▼
+         contrato → executor → done|blocked
                       │
                       ▼
               PR → CI → merge humano

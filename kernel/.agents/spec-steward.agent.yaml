@@ -1,6 +1,11 @@
 id: spec-steward
 name: Spec Steward
 description: Autoria, validação e harness de specs SDD.
+execution_role:
+  can_route: false
+  can_execute: true
+  can_consult: true
+  can_review: false
 triggers:
   - pull_request:opened
   - manual

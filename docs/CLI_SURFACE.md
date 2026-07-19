@@ -22,6 +22,8 @@
 | `compact` | `-Kind` `-RetainDays` `-DryRun` | `compact-state.ps1`
 | `migrate-state` | `-DryRun` | `migrate-state.ps1` |
 | `hooks install` | `-Target` `-Force` | `install-hooks.ps1` |
+| `task create` | `-Objective` `-Area` `-Class` | `task-control.ps1` / `execute-task.ps1` |
+| `task status\|validate\|complete\|block` | `-TaskId` (`-Evidence` / `-Reason`) | `task-control.ps1` |
 
 ## Gaps conhecidos (aceitos)
 

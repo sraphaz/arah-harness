@@ -45,3 +45,20 @@ specialists: []
 #   path: packages/ai-orchestrator/agents
 #   choreography: choreography.yaml
 #   autonomy: autonomy.yaml
+
+# Execution Control Protocol — terminalidade (intenção → um executor → done|blocked)
+execution_control:
+  enabled: true
+  terminal_states:
+    - done
+    - blocked
+  limits:
+    max_handoffs: 2
+    max_consultations: 2
+    max_analysis_cycles: 1
+  behavior:
+    require_primary_executor: true
+    forbid_consultant_to_consultant_handoff: true
+    require_completion_evidence: true
+    require_blocking_reason: true
+    prevent_reroute_after_execution_started: true

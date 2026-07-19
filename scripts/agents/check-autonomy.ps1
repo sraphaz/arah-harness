@@ -22,7 +22,7 @@ $AutonomyFile = Join-Path $RepoRoot '.agents\autonomy.yaml'
 
 $ranks = @{
     observe = 0; consult = 1; route = 2; activate = 3
-    invoke_skill = 4; side_effect = 5; public = 6
+    execute_change = 4; invoke_skill = 5; side_effect = 6; public = 7
 }
 
 $maxAutonomy = 'activate'
@@ -38,10 +38,13 @@ $actionLevel = @{
     'domain.consult' = 'consult'
     'route.handoff' = 'route'
     'session.write' = 'activate'
+    'execute.change' = 'execute_change'
     'skill.invoke' = 'invoke_skill'
     'pr.comment' = 'activate'
     'release.cut' = 'side_effect'
     'deploy.trigger' = 'side_effect'
+    'execution.complete' = 'execute_change'
+    'execution.block' = 'route'
 }
 
 $required = if ($actionLevel.ContainsKey($Action)) { $actionLevel[$Action] } else { 'activate' }
@@ -51,6 +54,7 @@ $actionGates = @{
     'release.cut' = @('release_approval')
     'deploy.trigger' = @('release_approval', 'destructive')
     'skill.invoke' = @('spec_before_work')
+    'execute.change' = @('spec_before_work')
 }
 
 $gates = @()
