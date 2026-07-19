@@ -73,7 +73,27 @@ function Invoke-TargetScript {
     )
     Push-Location $targetPath
     try {
-        & $ScriptPath @ScriptArgs
+        # Convert CLI-style (-Name value / -Switch) arrays into a hashtable splat.
+        # Array splatting alone binds positionally and breaks ValidateSet parameters.
+        if ($ScriptArgs.Count -eq 0) {
+            & $ScriptPath
+        } else {
+            $ht = @{}
+            for ($i = 0; $i -lt $ScriptArgs.Count; $i++) {
+                $a = [string]$ScriptArgs[$i]
+                if ($a -match '^-(.+)$') {
+                    $name = $Matches[1]
+                    $next = if ($i + 1 -lt $ScriptArgs.Count) { $ScriptArgs[$i + 1] } else { $null }
+                    if ($null -eq $next -or ([string]$next -match '^-')) {
+                        $ht[$name] = $true
+                    } else {
+                        $ht[$name] = $next
+                        $i++
+                    }
+                }
+            }
+            & $ScriptPath @ht
+        }
         if (-not $?) { exit 1 }
         if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     } finally {
@@ -198,9 +218,9 @@ switch ($Command) {
         if (-not (Test-Path -LiteralPath $script)) {
             $script = Get-TargetScript 'scripts/agents/install-hooks.ps1'
         }
-        $invokeArgs = @('-Target', $targetPath)
-        if ($Force) { $invokeArgs += '-Force' }
-        & $script @invokeArgs
+        $hookSplat = @{ Target = $targetPath }
+        if ($Force) { $hookSplat.Force = $true }
+        & $script @hookSplat
         if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     default {
