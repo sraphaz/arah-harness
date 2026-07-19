@@ -17,8 +17,9 @@
 | `discover` | `-Target` `-Apply` `-DryRun` | `discover-repo.ps1` |
 | `organism bootstrap\|status\|signal` | signal: `-From` `-SignalType` `-SignalTo` `-Topic` `-Payload` | `organism-bootstrap` / `signal-bus` |
 | `evolve` | `-Target` `-Apply` `-DryRun` | `evolve-harness.ps1` |
+| `metrics rollup\|report` | `-Last` `-Digest` `-DryRun` | `metrics-rollup.ps1` |
 | `regenerate` | `-UpdateKernel` `-Force` `-ApplyDiscovery` `-SkipDoctor` `-DryRun` | `cli/regenerate.ps1` |
-| `compact` | `-Kind` `-RetainDays` `-DryRun` | `compact-state.ps1` |
+| `compact` | `-Kind` `-RetainDays` `-DryRun` | `compact-state.ps1`
 | `migrate-state` | `-DryRun` | `migrate-state.ps1` |
 | `hooks install` | `-Target` `-Force` | `install-hooks.ps1` |
 
