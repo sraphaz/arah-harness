@@ -1,0 +1,49 @@
+name: Go
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "live/**"
+      - "cmd/arah/**"
+      - ".github/workflows/go.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "live/**"
+      - "cmd/arah/**"
+      - ".github/workflows/go.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: live/go.sum
+      - name: Test live service
+        working-directory: live
+        run: go test ./...
+      - name: Build arah-live
+        working-directory: live
+        run: go build -o /tmp/arah-live ./cmd/arah-live
+
+  portable-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Build + smoke phase-1 CLI
+        working-directory: cmd/arah
+        run: |
+          go build -o /tmp/arah .
+          /tmp/arah version
+          /tmp/arah doctor -target ../..
+          /tmp/arah sync-check -target ../.. || true

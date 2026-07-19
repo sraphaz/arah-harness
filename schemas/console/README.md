@@ -1,14 +1,31 @@
 # schemas/console/
 
-Contratos de dados lidos pelo ARAH Live Console (épico C).
+Contratos de dados lidos pelo **ARAH Live Console** (épico C).
 
-**Status:** placeholder — implementação completa em [C-01](../../docs/backlog/C-live-console.md).
+O console é **somente-leitura**: estes schemas descrevem artefatos do harness, nunca mutações.
 
-Pré-requisito satisfeito: tipos de sinal versionados (`arah-harness/signal` v0.2.0 + `docs/SIGNAL_COMPATIBILITY.md`).
+| Schema | Artefato |
+|--------|----------|
+| [`console-event.schema.json`](./console-event.schema.json) | Evento tipado no feed (bus/audit/live) |
+| [`summary.schema.json`](./summary.schema.json) | `GET /api/summary` |
+| [`gate-run.schema.json`](./gate-run.schema.json) | Última execução de gates |
+| [`domain-health.schema.json`](./domain-health.schema.json) | Território / domínio |
 
-Quando C-01 for aberto, versionar aqui:
+## Prefixos de evento (`type`)
 
-- eventos do bus (`.arah/local/bus/**`, legado `.arah/bus/*.jsonl`)
-- ledger (`.arah/local/audit/**`)
-- `docs/_meta/{domains.yaml,graph.json,discovery.proposed.yaml}`
-- `arah.config.yaml` (subset consumido pelo summary)
+| Prefixo | Cor (UI) | Origem típica |
+|---------|----------|---------------|
+| `consultation.*` | ciano | signal-bus consult/attract |
+| `gates.passed` / `gates.failed` | verde / vermelho | record-agent-event / CI |
+| `change.*` | âmbar | sessões / file edits |
+| `evolution.*` | `#B49BE0` | evolve / propose |
+| `session.*` | âmbar | `.cursor/arah-live` |
+
+Wire format alinhado a `arah-harness/signal` v0.2 (`v` aditivo). Ver [SIGNAL_COMPATIBILITY.md](../../docs/SIGNAL_COMPATIBILITY.md).
+
+## Paths observados
+
+- Quente: `.arah/local/bus/`, `.arah/local/audit/`
+- Legado: `.arah/bus/signals.jsonl`, `.arah/audit/events.jsonl`
+- Meta: `docs/_meta/agent-graph.generated.json`, `discovery.proposed.yaml`, `evolution.proposed.yaml`
+- Config: `arah.config.yaml`, `.arah-version`

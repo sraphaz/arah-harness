@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arah.dev/schemas/console/console-event.schema.json",
+  "title": "ARAH Console Event",
+  "type": "object",
+  "required": ["v", "ts", "type", "message"],
+  "additionalProperties": true,
+  "properties": {
+    "v": { "type": "integer", "minimum": 1, "description": "Wire-format version (additive)" },
+    "ts": { "type": "string", "format": "date-time" },
+    "type": {
+      "type": "string",
+      "pattern": "^(consultation|gates|change|evolution|session|signal|audit)\\.[a-z0-9_.-]+$",
+      "description": "Prefixed event type for feed coloring/filters"
+    },
+    "message": { "type": "string" },
+    "route": { "type": "string", "description": "Optional path/domain route" },
+    "correlation_id": { "type": "string" },
+    "agent_id": { "type": "string" },
+    "outcome": {
+      "type": "string",
+      "enum": ["ok", "blocked", "denied", "error", "pending"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["bus", "audit", "live", "gates", "github"]
+    },
+    "payload": { "type": "object" }
+  }
+}

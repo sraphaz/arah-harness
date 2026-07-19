@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arah.dev/schemas/console/summary.schema.json",
+  "title": "ARAH Live Summary",
+  "type": "object",
+  "required": ["repo", "kernel", "drift", "kpis", "live"],
+  "properties": {
+    "repo": { "type": "string" },
+    "kernel": { "type": "string" },
+    "drift": { "type": "string" },
+    "drift_ok": { "type": "boolean" },
+    "live": { "type": "boolean" },
+    "synced_at": { "type": "string", "format": "date-time" },
+    "kpis": {
+      "type": "object",
+      "required": ["cells", "signals_24h", "gate_rate", "awaiting", "proposals"],
+      "properties": {
+        "cells": { "type": "integer" },
+        "signals_24h": { "type": "integer" },
+        "gate_rate": { "type": "string" },
+        "gate_ok": { "type": "boolean" },
+        "awaiting": { "type": "integer" },
+        "proposals": { "type": "integer" }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Malformed event queue (non-fatal)"
+    }
+  }
+}

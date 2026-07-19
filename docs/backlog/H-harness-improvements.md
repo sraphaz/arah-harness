@@ -11,7 +11,7 @@
 | H-04 | Arquivo-por-evento + compactação | **done** — ULID + `arah compact` |
 | H-05 | Scrubbing de secrets na evidência | **done** — scrub antes de persistir |
 | H-06 | ADR linguagem da CLI portátil | **done** — ADR-001 (Go) |
-| H-07 | CLI binária portátil (fase 1) | **backlog** — após ADR |
+| H-07 | CLI binária portátil (fase 1) | **done** — `cmd/arah` doctor/sync-check/version |
 | H-08 | Daemon `arahd` (opcional) | **backlog** — médio prazo |
 | H-09 | Pre-commit hooks + branch protection | **done** — `arah hooks install` |
 | H-10 | Fonte única de status de capacidades | **done** — `capabilities.yaml` |
@@ -39,8 +39,8 @@ Redação antes de persistir; gate security também varre `.arah/**` (quando ver
 ### H-06 · Decisão: linguagem da CLI portátil `P` — done
 [`docs/adr/001-portable-cli-language.md`](../adr/001-portable-cli-language.md) — Go.
 
-### H-07 · CLI binária portátil (fase 1) `G` — backlog
-Reimplementar doctor/sync-check/export-graph em Go; PowerShell permanece na transição.
+### H-07 · CLI binária portátil (fase 1) `G` — done
+Binário em [`cmd/arah/`](../../cmd/arah/): `doctor`, `sync-check`, `version` com exit codes 0/1/2/4/10. PowerShell permanece canônico para fluxos de escrita/organismo; `export-graph` segue no PS até fase 2.
 
 ### H-08 · Daemon `arahd` (opcional) `G` — backlog
 Watch + batch + stream WS; CLI degrada sem daemon.
