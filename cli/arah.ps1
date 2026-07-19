@@ -1,19 +1,19 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  ARAH Harness CLI - init, update, doctor, discover, organism, evolve, metrics, regenerate
+  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks
 #>
 param(
     [Parameter(Position = 0)]
     [ValidateSet(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
         'export-graph', 'validate-runtime', 'discover', 'organism',
-        'evolve', 'metrics', 'regenerate', 'help'
+        'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks', 'help'
     )]
     [string]$Command = 'help',
 
     [Parameter(Position = 1)]
-    [ValidateSet('sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', '')]
+    [ValidateSet('sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', 'install', '')]
     [string]$SubCommand = '',
 
     [string]$Target = '',
@@ -24,8 +24,12 @@ param(
     [switch]$UpdateKernel,
     [switch]$ApplyDiscovery,
     [switch]$SkipDoctor,
+    [switch]$Minimal,
     [switch]$Digest,
     [int]$Last = 500,
+    [ValidateSet('all', 'bus', 'audit', '')]
+    [string]$Kind = '',
+    [int]$RetainDays = 90,
 
     # signal-bus passthrough (SignalTo avoids -To/-Topic prefix ambiguity)
     [string]$From = '',
@@ -52,6 +56,12 @@ function Get-TargetScript {
         if ($p) { $path = Join-Path $path $p }
     }
     if (-not (Test-Path -LiteralPath $path)) {
+        # Fall back to harness root scripts (for compact/migrate before/without full install)
+        $fallback = $HarnessRoot
+        foreach ($p in $parts) {
+            if ($p) { $fallback = Join-Path $fallback $p }
+        }
+        if (Test-Path -LiteralPath $fallback) { return $fallback }
         Write-Error "$Rel not found — run arah init/update first"
         exit 1
     }
@@ -65,7 +75,27 @@ function Invoke-TargetScript {
     )
     Push-Location $targetPath
     try {
-        & $ScriptPath @ScriptArgs
+        # Convert CLI-style (-Name value / -Switch) arrays into a hashtable splat.
+        # Array splatting alone binds positionally and breaks ValidateSet parameters.
+        if ($ScriptArgs.Count -eq 0) {
+            & $ScriptPath
+        } else {
+            $ht = @{}
+            for ($i = 0; $i -lt $ScriptArgs.Count; $i++) {
+                $a = [string]$ScriptArgs[$i]
+                if ($a -match '^-(.+)$') {
+                    $name = $Matches[1]
+                    $next = if ($i + 1 -lt $ScriptArgs.Count) { $ScriptArgs[$i + 1] } else { $null }
+                    if ($null -eq $next -or ([string]$next -match '^-')) {
+                        $ht[$name] = $true
+                    } else {
+                        $ht[$name] = $next
+                        $i++
+                    }
+                }
+            }
+            & $ScriptPath @ht
+        }
         if (-not $?) { exit 1 }
         if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     } finally {
@@ -75,12 +105,12 @@ function Invoke-TargetScript {
 
 switch ($Command) {
     'init' {
-        $splat = @{ Target = $targetPath; Force = $Force }
+        $splat = @{ Target = $targetPath; Force = $Force; Minimal = $Minimal }
         if ($ProjectName) { $splat.ProjectName = $ProjectName }
         & (Join-Path $CliDir 'init.ps1') @splat
     }
     'install' {
-        $splat = @{ Target = $targetPath; Force = $Force }
+        $splat = @{ Target = $targetPath; Force = $Force; Minimal = $Minimal }
         if ($ProjectName) { $splat.ProjectName = $ProjectName }
         & (Join-Path $CliDir 'install.ps1') @splat
     }
@@ -192,12 +222,39 @@ switch ($Command) {
             -UpdateKernel:$UpdateKernel -ApplyDiscovery:$ApplyDiscovery `
             -SkipDoctor:$SkipDoctor -DryRun:$DryRun
     }
+    'compact' {
+        $script = Get-TargetScript 'scripts/agents/compact-state.ps1'
+        $k = if ($Kind) { $Kind } else { 'all' }
+        $invokeArgs = @('-Kind', $k, '-RetainDays', $RetainDays)
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+    }
+    'migrate-state' {
+        $script = Get-TargetScript 'scripts/agents/migrate-state.ps1'
+        $invokeArgs = @()
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+    }
+    'hooks' {
+        if ($SubCommand -ne 'install') {
+            Write-Error 'Use: arah hooks install [-Target path] [-Force]'
+            exit 1
+        }
+        $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'install-hooks.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Get-TargetScript 'scripts/agents/install-hooks.ps1'
+        }
+        $hookSplat = @{ Target = $targetPath }
+        if ($Force) { $hookSplat.Force = $true }
+        & $script @hookSplat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
     default {
         Write-Host @"
 ARAH Harness CLI — TechOrganism
 
-  powershell -File cli/arah.ps1 install [-Target path] [-ProjectName name] [-Force]
-  powershell -File cli/arah.ps1 init [-Target path] [-ProjectName name] [-Force]
+  powershell -File cli/arah.ps1 install [-Target path] [-ProjectName name] [-Force] [-Minimal]
+  powershell -File cli/arah.ps1 init [-Target path] [-ProjectName name] [-Force] [-Minimal]
   powershell -File cli/arah.ps1 update [-Target path] [-Force]
   powershell -File cli/arah.ps1 doctor [-Target path]
   powershell -File cli/arah.ps1 sync-check [-Target path]
@@ -214,6 +271,11 @@ ARAH Harness CLI — TechOrganism
   powershell -File cli/arah.ps1 metrics rollup [-Target path] [-Last N] [-Digest]
   powershell -File cli/arah.ps1 metrics report [-Target path] [-Last N] [-Digest]
   powershell -File cli/arah.ps1 regenerate [-Target path] [-UpdateKernel] [-Force] [-ApplyDiscovery]
+
+  # State model (hot/cold)
+  powershell -File cli/arah.ps1 compact [-Target path] [-Kind all|bus|audit] [-RetainDays 90] [-DryRun]
+  powershell -File cli/arah.ps1 migrate-state [-Target path] [-DryRun]
+  powershell -File cli/arah.ps1 hooks install [-Target path] [-Force]
 "@
     }
 }

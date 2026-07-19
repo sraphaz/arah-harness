@@ -3,8 +3,9 @@
 .SYNOPSIS
   Economy Intelligence - agrega audit/live/signals em scorecard de eficiencia.
 .DESCRIPTION
-  Le .arah/audit/events.jsonl (+ bus + live), calcula totais, rates e semaphore,
-  e escreve .arah/observability/summary.yaml (schema arah-harness/metrics-summary).
+  Le estado quente (.arah/local/audit + bus + legado) e live, calcula totais,
+  rates e semaphore, e escreve .arah/observability/summary.yaml
+  (schema arah-harness/metrics-summary).
   Modo report imprime scorecard humano. -Digest grava docs/_meta/metrics.digest.md.
 .EXAMPLE
   ./metrics-rollup.ps1
@@ -22,9 +23,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
-$AuditFile = Join-Path (Join-Path (Join-Path $Root '.arah') 'audit') 'events.jsonl'
-$BusFile = Join-Path (Join-Path (Join-Path $Root '.arah') 'bus') 'signals.jsonl'
+. (Join-Path $PSScriptRoot 'arah-event-io.ps1')
+$Root = Get-ArahRoot -FromScriptRoot $PSScriptRoot
 $LiveEvents = Join-Path (Join-Path (Join-Path $Root '.cursor') 'arah-live') 'events.jsonl'
 $ObsDir = Join-Path (Join-Path $Root '.arah') 'observability'
 $SummaryFile = Join-Path $ObsDir 'summary.yaml'
@@ -38,13 +38,9 @@ function Count-JsonlLines {
 }
 
 function Read-AuditEvents {
-    param([string]$Path, [int]$Max)
+    param([int]$Max)
     $events = @()
-    if (-not (Test-Path -LiteralPath $Path)) { return $events }
-    $lines = @(Get-Content -LiteralPath $Path | Where-Object { $_.Trim() })
-    if ($lines.Count -gt $Max) {
-        $lines = @($lines | Select-Object -Last $Max)
-    }
+    $lines = @(Read-ArahEvents -Root $Root -Kind audit -Last $Max)
     foreach ($line in $lines) {
         try {
             $events += ($line | ConvertFrom-Json)
@@ -83,10 +79,10 @@ if (Test-Path -LiteralPath $cfgPath) {
     }
 }
 
-$auditTotal = Count-JsonlLines $AuditFile
-$signalCount = Count-JsonlLines $BusFile
+$auditTotal = Get-ArahEventCount -Root $Root -Kind audit
+$signalCount = Get-ArahEventCount -Root $Root -Kind bus
 $liveCount = Count-JsonlLines $LiveEvents
-$events = @(Read-AuditEvents -Path $AuditFile -Max $Last)
+$events = @(Read-AuditEvents -Max $Last)
 $n = $events.Count
 
 $byOutcome = @{ ok = 0; blocked = 0; denied = 0; error = 0; pending = 0 }

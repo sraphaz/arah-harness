@@ -4,16 +4,24 @@
 
 ## Trilha de auditoria
 
-Append-only por repositório:
+Estado quente (gitignored) — arquivo-por-evento:
+
+```
+.arah/local/audit/pending/<ULID>.json
+.arah/local/audit/archive/YYYY-MM.jsonl   # após arah compact
+```
+
+Legado (ainda lido; migrar com `arah migrate-state`):
 
 ```
 .arah/audit/events.jsonl
 ```
 
-Cada linha (JSON):
+Cada evento (JSON):
 
 ```json
 {
+  "v": 1,
   "ts": "2026-07-06T22:00:00Z",
   "correlation_id": "a1b2c3d4e5f6",
   "project": "meu-projeto",
@@ -26,7 +34,8 @@ Cada linha (JSON):
 }
 ```
 
-Schema: [`schemas/arah-harness/audit-event.schema.yaml`](../schemas/arah-harness/audit-event.schema.yaml)
+Schema: [`schemas/arah-harness/audit-event.schema.yaml`](../schemas/arah-harness/audit-event.schema.yaml)  
+Modelo: [`STATE_MODEL.md`](STATE_MODEL.md) · Scrubbing antes do disco.
 
 ## Outcomes
 
@@ -84,12 +93,14 @@ release_approval:
 
 ## Retenção
 
-- Desenvolvimento: local, gitignored opcional
-- Enterprise profile: definir retenção com cliente (ver `harness/profiles/enterprise.yaml`)
+- Hot state: `.arah/local/` sempre gitignored; `arah compact -RetainDays 90`
+- Cold evidence: `docs/_meta/runs/<run-id>/summary.json` (versionável)
+- Enterprise profile: retenção contractual (ver `harness/profiles/enterprise.yaml`)
 
 ## Consultar eventos
 
 ```powershell
-Get-Content .arah/audit/events.jsonl | Select-Object -Last 20
-Get-Content .arah/audit/events.jsonl | ConvertFrom-Json | Where-Object { $_.outcome -eq 'blocked' }
+Get-ChildItem .arah/local/audit/pending -Filter *.json | Select-Object -Last 20
+powershell -File ./scripts/agents/signal-bus.ps1 -List   # bus
+# ou migrate/compact e ler archive/*.jsonl
 ```

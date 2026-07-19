@@ -1,7 +1,11 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  Registra evento de agente na trilha de auditoria ARAH (append-only JSONL).
+  Registra evento de agente na trilha de auditoria ARAH (arquivo-por-evento).
+.DESCRIPTION
+  Escreve em .arah/local/audit/pending/<ULID>.json com scrubbing de secrets.
+  Atualiza .arah/observability/summary.yaml (estado quente).
+  Preserva scorecard Economy Intelligence (metrics-summary) quando presente.
 .EXAMPLE
   ./record-agent-event.ps1 -AgentId pr-steward -Action skill.invoke -Outcome ok
   ./record-agent-event.ps1 -AgentId release -Action release.cut -Outcome blocked -Blocked
@@ -35,12 +39,12 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
-$AuditDir = Join-Path $RepoRoot '.arah\audit'
-$AuditFile = Join-Path $AuditDir 'events.jsonl'
+. (Join-Path $PSScriptRoot 'arah-event-io.ps1')
+$RepoRoot = Get-ArahRoot -FromScriptRoot $PSScriptRoot
 $ObsDir = Join-Path $RepoRoot '.arah\observability'
 $SummaryFile = Join-Path $ObsDir 'summary.yaml'
 $DiagFile = Join-Path $RepoRoot '.cursor\arah-live\diagnostics.jsonl'
+$AuditSchemaVersion = 1
 
 if (-not $Project) {
     $cfgPath = Join-Path $RepoRoot 'arah.config.yaml'
@@ -51,23 +55,25 @@ if (-not $Project) {
     if (-not $Project) { $Project = Split-Path $RepoRoot -Leaf }
 }
 
-New-Item -ItemType Directory -Path $AuditDir -Force | Out-Null
 New-Item -ItemType Directory -Path $ObsDir -Force | Out-Null
 
 if (-not $CorrelationId) {
     $CorrelationId = [guid]::NewGuid().ToString('N').Substring(0, 12)
 }
 
+$safeDetails = Protect-ArahSecrets -Text $Details
+
 $event = [ordered]@{
-    ts = (Get-Date).ToUniversalTime().ToString('o')
-    correlation_id = $CorrelationId
-    project = $Project
-    agent_id = $AgentId
-    action = $Action
-    autonomy_level = $AutonomyLevel
-    outcome = if ($Blocked) { 'blocked' } else { $Outcome }
-    human_gate = if ($HumanGate) { $HumanGate } else { $null }
-    details = $Details
+    v               = $AuditSchemaVersion
+    ts              = (Get-Date).ToUniversalTime().ToString('o')
+    correlation_id  = $CorrelationId
+    project         = $Project
+    agent_id        = $AgentId
+    action          = $Action
+    autonomy_level  = $AutonomyLevel
+    outcome         = if ($Blocked) { 'blocked' } else { $Outcome }
+    human_gate      = if ($HumanGate) { $HumanGate } else { $null }
+    details         = $safeDetails
 }
 
 if ($SessionId) { $event['session_id'] = $SessionId }
@@ -78,18 +84,15 @@ if ($TokensOut -ge 0) { $event['tokens_out'] = $TokensOut }
 if ($LatencyMs -ge 0) { $event['latency_ms'] = $LatencyMs }
 if ($CostUsd -ge 0) { $event['cost_usd'] = $CostUsd }
 
-$line = ($event | ConvertTo-Json -Compress -Depth 5)
-Add-Content -Path $AuditFile -Value $line -Encoding UTF8
+[void](Write-ArahEventFile -Root $RepoRoot -Kind audit -Event $event)
 
-$total = 0
+$total = Get-ArahEventCount -Root $RepoRoot -Kind audit
 $existing = ''
 $richSummary = $false
 if (Test-Path $SummaryFile) {
     $existing = Get-Content $SummaryFile -Raw
-    if ($existing -match 'total_events:\s*(\d+)') { $total = [int]$Matches[1] }
     if ($existing -match 'schema:\s*arah-harness/metrics-summary') { $richSummary = $true }
 }
-$total++
 
 if ($richSummary -and $existing) {
     # Preserve Economy Intelligence scorecard; only refresh thin trailer fields.
@@ -111,22 +114,23 @@ total_events: $total
 last_agent: $AgentId
 last_action: $Action
 last_outcome: $($event.outcome)
+storage: .arah/local/audit/pending
 "@
     Set-Content -Path $SummaryFile -Value $summary -Encoding UTF8
 }
 
-# Mirror to live diagnostics (fail-open)
 try {
     $liveDir = Split-Path $DiagFile -Parent
     if (-not (Test-Path $liveDir)) { New-Item -ItemType Directory -Path $liveDir -Force | Out-Null }
     $diag = [ordered]@{
-        ts = $event.ts
-        level = if ($event.outcome -eq 'blocked') { 'warn' } else { 'info' }
+        ts        = $event.ts
+        level     = if ($event.outcome -eq 'blocked') { 'warn' } else { 'info' }
         component = 'audit'
-        message = "$AgentId -> $Action ($($event.outcome))"
-        detail = @{ correlation_id = $CorrelationId; project = $Project }
+        message   = "$AgentId → $Action ($($event.outcome))"
+        detail    = @{ correlation_id = $CorrelationId; project = $Project }
     }
-    Add-Content -Path $DiagFile -Value ($diag | ConvertTo-Json -Compress) -Encoding UTF8
+    $diagLine = Protect-ArahSecrets -Text ($diag | ConvertTo-Json -Compress)
+    Add-Content -Path $DiagFile -Value $diagLine -Encoding UTF8
 } catch { }
 
-if (-not $Blocked) { Write-Verbose "Audit: $AuditFile" }
+if (-not $Blocked) { Write-Verbose "Audit: local pending ($total events)" }

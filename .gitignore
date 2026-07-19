@@ -1,4 +1,7 @@
 node_modules/
+website/node_modules/
+website/.next/
+website/out/
 .DS_Store
 *.log
 .env
@@ -10,7 +13,10 @@ TestResults/
 .cursor/arah-live/
 extension/arah-live/out/
 extension/arah-live/node_modules/
+# Hot operational state (never version)
+.arah/local/
 .arah/audit/
 .arah/observability/
 .arah/bus/
 .arah/organism/
+# Cold evidence summaries under docs/_meta/runs/ ARE versionable

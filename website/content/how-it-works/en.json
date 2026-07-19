@@ -1,0 +1,225 @@
+{
+  "locale": "en",
+  "meta": {
+    "title": "How It Works — ARAH Harness",
+    "version": "0.3.1"
+  },
+  "hero": {
+    "eyebrow": "How it works",
+    "headline": "The operational lifecycle",
+    "body": "Twelve operations connect installation to continuous evolution. Select a step to see its command, inputs, outputs and generated artifacts."
+  },
+  "walkthrough": {
+    "eyebrow": "Walkthrough",
+    "headline": "One change through the harness",
+    "body": "Scenario: a change touches backend/payments/**. Step through what the harness does."
+  },
+  "steps": [
+    {
+      "slug": "install",
+      "num": "01",
+      "name": "Install",
+      "description": "Installs the kernel into the consumer repository: templates, configuration, agents, skills, scripts and CI workflows.",
+      "command": "arah install -ProjectName \"my-project\"",
+      "input": "The arah-harness kernel and an existing repository.",
+      "output": "A governed repository with versioned contracts.",
+      "artifacts": "arah.config.yaml\nAGENTS.md\n.agents/ · .skills/\nscripts/ · .github/workflows/",
+      "order": 1
+    },
+    {
+      "slug": "discover",
+      "num": "02",
+      "name": "Discover",
+      "description": "Observes stack, frameworks, structure, directories and domain hints to propose domains and specialists.",
+      "command": "arah discover",
+      "input": "The repository as it exists — code, structure, dependencies.",
+      "output": "A reviewable proposal of domains and specialists.",
+      "artifacts": "docs/_meta/discovery.proposed.yaml",
+      "order": 2
+    },
+    {
+      "slug": "configure",
+      "num": "03",
+      "name": "Configure",
+      "description": "Humans review the proposal and set policies: autonomy levels, gates per domain, escalation rules.",
+      "command": "edit arah.config.yaml",
+      "input": "discovery.proposed.yaml and organizational decisions.",
+      "output": "Explicit, versioned policy.",
+      "artifacts": "arah.config.yaml (reviewed in PR)",
+      "order": 3
+    },
+    {
+      "slug": "domain-sync",
+      "num": "04",
+      "name": "Domain Sync",
+      "description": "Turns approved domain candidates into explicit domains with responsibilities, paths, references and validations.",
+      "command": "arah domain sync",
+      "input": "Approved discovery + config.",
+      "output": "Materialized domain contracts.",
+      "artifacts": "docs/_meta/domains.yaml\n.agents/advisors/*",
+      "order": 4
+    },
+    {
+      "slug": "choreograph",
+      "num": "05",
+      "name": "Choreograph",
+      "description": "A change enters. Path-based choreography matches affected files to domains and selects agents, skills and gates.",
+      "command": "(automatic on change)\narah organism status",
+      "input": "A diff — e.g. backend/payments/**",
+      "output": "An activation set: agents, advisors, skills, gates.",
+      "artifacts": ".arah/bus/choreography.*.jsonl",
+      "order": 5
+    },
+    {
+      "slug": "execute",
+      "num": "06",
+      "name": "Execute",
+      "description": "Operational agents act through deterministic skills, within their declared scope and autonomy.",
+      "command": "(agent session via Claude Code,\n Cursor, Copilot or custom)",
+      "input": "Activation set + repository context.",
+      "output": "A proposed change.",
+      "artifacts": "working branch\n.arah/audit/run-*/ (session record)",
+      "order": 6
+    },
+    {
+      "slug": "validate",
+      "num": "07",
+      "name": "Validate",
+      "description": "Executable gates run: manifests, specs, docs, graph, security, dependencies, build.",
+      "command": "arah sync-check",
+      "input": "The proposed change.",
+      "output": "Pass/fail per gate; failures block the pipeline.",
+      "artifacts": "gate reports in .arah/audit/\nCI check results",
+      "order": 7
+    },
+    {
+      "slug": "signal",
+      "num": "08",
+      "name": "Signal",
+      "description": "Agents and cells communicate through persistent, typed, append-only events — consultation, verdicts, handoffs.",
+      "command": "arah organism signal --type <type>",
+      "input": "Typed event payloads.",
+      "output": "Durable coordination visible to every tool.",
+      "artifacts": ".arah/bus/*.jsonl",
+      "order": 8
+    },
+    {
+      "slug": "audit",
+      "num": "09",
+      "name": "Audit",
+      "description": "Every action, result, autonomy decision and session event is recorded in the ledger.",
+      "command": "(continuous)\narah organism status",
+      "input": "All harness activity.",
+      "output": "An inspectable operational history.",
+      "artifacts": ".arah/audit/ledger.jsonl",
+      "order": 9
+    },
+    {
+      "slug": "evolve",
+      "num": "10",
+      "name": "Evolve",
+      "description": "The harness analyzes ledger, signals and telemetry to propose improvements — new domains, skill changes, policy adjustments.",
+      "command": "arah evolve",
+      "input": "Accumulated evidence.",
+      "output": "Evolution proposals, never auto-applied.",
+      "artifacts": "docs/_meta/evolution/proposal-*.md",
+      "order": 10
+    },
+    {
+      "slug": "human-review",
+      "num": "11",
+      "name": "Human Review",
+      "description": "Humans review proposals and changes in pull requests. Merge authority is human, always.",
+      "command": "(pull request review)",
+      "input": "Changes + evidence + gate results.",
+      "output": "A selected, accountable merge.",
+      "artifacts": "merged PR with linked evidence",
+      "order": 11
+    },
+    {
+      "slug": "regenerate",
+      "num": "12",
+      "name": "Regenerate",
+      "description": "Homeostasis: update the kernel, re-run discovery, sync domains, regenerate graphs, validate the installation.",
+      "command": "arah regenerate -Target . -UpdateKernel",
+      "input": "Current installation + latest kernel.",
+      "output": "A consistent, drift-free harness.",
+      "artifacts": "updated kernel files\ndocs/_meta/graph.json\ndoctor report",
+      "order": 12
+    }
+  ],
+  "demo": [
+    {
+      "slug": "the-path-is-identified",
+      "phase": "01 · Choreography",
+      "title": "The path is identified",
+      "body": "A diff arrives touching backend/payments/**. Choreography matches the path against domain contracts and resolves which cells this change belongs to.",
+      "terminal": "$ git diff --name-only\nbackend/payments/refunds.ts\nbackend/payments/refunds.spec.ts\n\nchoreography match:\n  domain: payments\n  rule:   \"backend/payments/**\"",
+      "order": 1
+    },
+    {
+      "slug": "related-agents-are-selected",
+      "phase": "02 · Selection",
+      "title": "Related agents are selected",
+      "body": "The domain contract names its operational agent and consultative specialist. No other agent is activated — scope is explicit.",
+      "terminal": "activate:\n  agents:   [backend-payments]\n  advisors: [payments-specialist]\nexcluded: 12 other agents (out of scope)",
+      "order": 2
+    },
+    {
+      "slug": "authorized-skills-are-loaded",
+      "phase": "03 · Capabilities",
+      "title": "Authorized skills are loaded",
+      "body": "The agent may only use the skills its manifest declares. Capabilities are versioned procedures, not improvisation.",
+      "terminal": "skills loaded for backend-payments:\n  ✓ test-first\n  ✓ refactor\n  ✗ schema-migration (not authorized)",
+      "order": 3
+    },
+    {
+      "slug": "domain-specialists-are-consulted",
+      "phase": "04 · Consultation",
+      "title": "Domain specialists are consulted",
+      "body": "Before changing refund logic, the operational agent consults the payments specialist through the signal bus.",
+      "terminal": "→ signal consultation.request\n   to: payments-specialist\n← signal consultation.answer\n   \"refunds must preserve idempotency;\n    spec required before code\"",
+      "order": 4
+    },
+    {
+      "slug": "gates-execute",
+      "phase": "05 · Validation",
+      "title": "Gates execute",
+      "body": "Manifests, specs, docs, graph, security, dependencies and build are validated as code. A failing gate stops the flow here.",
+      "terminal": "$ arah sync-check\n✓ manifests   ✓ specs\n✓ docs        ✓ graph\n✓ security    ✓ dependencies\n✓ build\ngates: 7/7 passed",
+      "order": 5
+    },
+    {
+      "slug": "events-are-recorded",
+      "phase": "06 · Signals",
+      "title": "Events are recorded",
+      "body": "Every coordination step is appended to the bus — typed, timestamped, portable across tools and sessions.",
+      "terminal": ".arah/bus/payments.jsonl\n+ consultation.request\n+ consultation.answer\n+ gates.passed\n+ change.ready",
+      "order": 6
+    },
+    {
+      "slug": "evidence-is-generated",
+      "phase": "07 · Evidence",
+      "title": "Evidence is generated",
+      "body": "The audit ledger links the change to its session, autonomy level, gate results and consultation trail.",
+      "terminal": ".arah/audit/run-8f31/\n  session.json    autonomy: propose-only\n  gates.report    7/7\n  consultation.md payments-specialist\n  diff.summary",
+      "order": 7
+    },
+    {
+      "slug": "the-change-is-prepared-for-pr",
+      "phase": "08 · Pull request",
+      "title": "The change is prepared for PR",
+      "body": "The branch, evidence and gate results are packaged into a pull request. The agent proposes; it cannot merge.",
+      "terminal": "$ gh pr create\nPR #147: refunds idempotency guard\n  evidence: .arah/audit/run-8f31/\n  gates: 7/7 · autonomy: propose-only",
+      "order": 8
+    },
+    {
+      "slug": "a-human-reviews-and-decides",
+      "phase": "09 · Human selection",
+      "title": "A human reviews and decides",
+      "body": "A human reviews the proposal with its full evidence trail and holds the merge authority. The repository remembers everything.",
+      "terminal": "review: @maintainer\ndecision: approve + merge\nledger: + selection.merge #147\n\nAgents propose. Humans select.\nThe repository remembers.",
+      "order": 9
+    }
+  ]
+}

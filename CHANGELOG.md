@@ -2,7 +2,7 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
-## [0.3.1] - 2026-07-17
+## [0.3.1] - 2026-07-19
 
 ### Added
 
@@ -12,12 +12,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Skill `metrics-rollup`; digest opcional `docs/_meta/metrics.digest.md` (`-Digest`)
 - Evolve consome scorecard e pode propor `kind: economy`
 - Docs: [ECONOMY.md](docs/ECONOMY.md)
+- **Website** (`website/`) — Next.js bilíngue EN/PT: Home, Architecture, How It Works, TechOrganism, Use Cases, portal de docs + CLI explorer, Live Console (mock)
+- Conteúdo extraído dos protótipos Control Plane em `website/content/`; CI `.github/workflows/website.yml`
+- **Deploy GitHub Pages** — export estático (`output: 'export'`) + Actions (`deploy-pages`); URL `https://sraphaz.github.io/arah-harness/` (sem domínio próprio)
+- **Estado quente × evidência fria** — `.arah/local/` (gitignored) + `docs/_meta/runs/*/summary.json`
+- **Arquivo-por-evento** — bus/audit em `<ULID>.json`; `arah compact` e `arah migrate-state`
+- **Scrubbing de secrets** antes de persistir payloads (`arah-event-io.ps1`)
+- **`arah hooks install`** — pre-commit + [BRANCH_PROTECTION.md](docs/BRANCH_PROTECTION.md)
+- **`install -Minimal`** — manifests + gates; upgrade path documentado
+- **`capabilities.yaml`** — fonte única available/experimental/planned
+- **ADR-001** — CLI portátil em Go
+- Schemas signal/audit **0.2.0** com campo `v`; [SIGNAL_COMPATIBILITY.md](docs/SIGNAL_COMPATIBILITY.md), [STATE_MODEL.md](docs/STATE_MODEL.md), [CLI_SURFACE.md](docs/CLI_SURFACE.md)
+- Backlog Control Plane: [docs/backlog/](docs/backlog/)
+- Design handoff em [docs/design/control-plane/](docs/design/control-plane/)
+- Spec `arah-state-model`
 
 ### Changed
 
 - `record-agent-event` preserva scorecard rico (não sobrescreve metrics-summary)
 - `regenerate` inclui passo metrics rollup
 - Evolution schema: `kind: economy` + `based_on.metrics_semaphore`
+- `signal-bus` / `record-agent-event` / `evolve-harness` / `metrics-rollup` leem pending+archive+legado
+- Gate security também varre evidência fria e `.arah` (exceto `local/`)
+- Organism `bus_path` default → `.arah/local/bus/`
 
 ## [0.3.0] - 2026-07-17
 
@@ -75,42 +92,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ### Added
 
 - `validate-solution-choreography.ps1` — valida agentes runtime da solução (`runtime.path` em `arah.config.yaml`)
-- CLI `arah validate-runtime` — checagem de coreografia de entrega (manifests, co_activation, harness antes de draft)
-- Parser `co_activation` em `choreography-parser.ps1` + expansão em `choreograph-agents.ps1`
-- `domain sync` gera rules para **specialists** em `choreography.domains.yaml` (elimina órfãos nextjs/prisma)
-- `doctor` executa `validate-runtime` quando configurado
-
-### Fixed
-
-- `choreograph-agents.ps1` trata `type: specialist` como consulta de domínio (path-based)
-- `config-parser.ps1` lê bloco `runtime:` aninhado em `arah.config.yaml`
-- **`arah update` preserva `arah.config.yaml` e `AGENTS.md`** (modo `-KernelOnly`)
-- `Get-ArahObjectList` parseia `paths` de specialists via `Get-ArahListBlock` (fix nextjs/prisma órfãos)
-- `Parse-ChoreographyRules` limita parsing à seção `rules:` (ignora `triggers` em runtime yaml)
 
 ## [0.2.0] - 2026-07-04
 
 ### Added
 
-- Kernel ARAH: 11 agentes operacionais, 18 skills, coreografia, checklists, hooks Cursor
-- CLI: `init`, `install`, `update`, `doctor`, `sync-check`, `domain sync`, `export-graph`
-- `domain sync` — gera `.agents/domain/` e `choreography.domains.yaml` a partir de `arah.config.yaml`
-- Agent Graph: `export-agent-graph.ps1`, `validate-agent-graph.ps1`, schema YAML
-- Overlay `choreography*.yaml` — regras locais sem perder `arah update`
-- Template CI `agents-validate.yml` instalado no `init`
-- Documentação: METHOD, MARKET_REFERENCE, BOOTSTRAP, MIGRATION_FROM_ARAH, INSTALL
-- Self-test script e workflow CI do próprio harness
+- Kernel instalável (`arah init` / `update` / `doctor`)
+- Domínios, specialists, coreografia por paths
+- Gates e CI de manifests
 
-### Fixed
-
-- Parser `arah.config.yaml`: separação domains/specialists, paths vs references, blocos enrich/validate
-
-### Proven in
-
-- [IAutos](https://github.com/sraphaz/iautos) — legaltech monorepo (6 domínios consultivos)
-
-## [0.1.0] - 2026-07-04
+## [0.1.0] - 2026-07-01
 
 ### Added
 
-- Estrutura inicial do repositório e proof-of-concept `init` + `doctor`
+- Scaffold inicial do ARAH Harness

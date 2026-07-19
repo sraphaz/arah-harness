@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARAH Live Console — acompanhamento de repositórios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#0A0C0F;color:#E7ECF1;font-family:'Schibsted Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E7ECF1;text-decoration:none}
+a:hover{color:oklch(80% 0.09 200)}
+*{box-sizing:border-box}
+::selection{background:oklch(70% 0.09 200 / .35)}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0A0C0F">
+<nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:16px;padding:10px 32px;min-height:60px;flex-wrap:wrap;background:rgba(10,12,15,.85);backdrop-filter:blur(14px);border-bottom:1px solid #161C24">
+  <a href="Home PT.dc.html" style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px">
+    <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><line x1="3" y1="19" x2="11" y2="11" stroke="oklch(78% 0.09 200)" stroke-width="1.6"></line><line x1="11" y1="3" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><line x1="19" y1="19" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><circle cx="11" cy="11" r="3" fill="oklch(78% 0.09 200)"></circle></svg>
+    <span>ARAH Live</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;color:oklch(80% 0.08 80);border:1px solid oklch(75% 0.09 80 / .4);border-radius:20px;padding:3px 10px">EXPERIMENTAL</span>
+  </a>
+  <span style="font-size:13px;color:#5A6675">Console de acompanhamento de repositórios · somente leitura</span>
+  <span style="flex:1"></span>
+  <a href="Análise Técnica.dc.html" style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:#9AA5B1;border:1px solid #232B36;padding:6px 12px;border-radius:6px;white-space:nowrap" style-hover="border-color:#3A4553;color:#E7ECF1">Análise técnica</a>
+  <a href="Home PT.dc.html" style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:#9AA5B1;border:1px solid #232B36;padding:6px 12px;border-radius:6px;white-space:nowrap" style-hover="border-color:#3A4553;color:#E7ECF1">← Site</a>
+</nav>
+
+<!-- CONSOLE HEADER -->
+<header style="max-width:1360px;margin:0 auto;padding:28px 32px 0">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <sc-for list="{{ repos }}" as="r" hint-placeholder-count="3">
+      <button onClick="{{ r.select }}" style="display:flex;align-items:center;gap:10px;border:1px solid {{ r.border }};background:{{ r.bg }};color:{{ r.color }};border-radius:8px;padding:10px 16px;font-size:13.5px;font-family:'IBM Plex Mono',monospace;cursor:pointer" style-hover="border-color:#3A4553">
+        <span style="width:8px;height:8px;border-radius:50%;background:{{ r.dot }}"></span>{{ r.name }}
+      </button>
+    </sc-for>
+    <span style="flex:1"></span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C97A5;border:1px solid #232B36;border-radius:7px;padding:8px 14px">kernel {{ repo.kernel }}</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ repo.driftColor }};border:1px solid {{ repo.driftBorder }};border-radius:7px;padding:8px 14px">{{ repo.drift }}</span>
+    <span style="display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C97A5;border:1px solid #232B36;border-radius:7px;padding:8px 14px"><span style="width:7px;height:7px;border-radius:50%;background:oklch(75% 0.1 160);animation:livePulse 2s infinite"></span>ao vivo · {{ repo.sync }}</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:14px">
+    <div style="border:1px solid #1E2630;border-radius:10px;padding:16px 18px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#5A6675;margin-bottom:8px">CÉLULAS ATIVAS</div><div style="font-size:26px;font-weight:700">{{ repo.cells }}</div></div>
+    <div style="border:1px solid #1E2630;border-radius:10px;padding:16px 18px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#5A6675;margin-bottom:8px">SINAIS · 24H</div><div style="font-size:26px;font-weight:700">{{ repo.signals24 }}</div></div>
+    <div style="border:1px solid #1E2630;border-radius:10px;padding:16px 18px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#5A6675;margin-bottom:8px">GATES · TAXA DE APROVAÇÃO</div><div style="font-size:26px;font-weight:700;color:{{ repo.gateColor }}">{{ repo.gateRate }}</div></div>
+    <div style="border:1px solid #1E2630;border-radius:10px;padding:16px 18px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#5A6675;margin-bottom:8px">AGUARDANDO SELEÇÃO</div><div style="font-size:26px;font-weight:700;color:oklch(84% 0.07 80)">{{ repo.awaiting }}</div></div>
+    <div style="border:1px solid #1E2630;border-radius:10px;padding:16px 18px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#5A6675;margin-bottom:8px">PROPOSTAS DE EVOLUÇÃO</div><div style="font-size:26px;font-weight:700">{{ repo.proposals }}</div></div>
+  </div>
+</header>
+
+<!-- CONSOLE GRID -->
+<section style="max-width:1360px;margin:0 auto;padding:14px 32px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;align-items:start">
+  <!-- FEED -->
+  <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;overflow:hidden;grid-row:span 2">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #1A212B;flex-wrap:wrap">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:#8C97A5">FEED DE SINAIS · .arah/bus/</span>
+      <span style="flex:1"></span>
+      <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+        <button onClick="{{ f.select }}" style="border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.color }};border-radius:14px;padding:4px 11px;font-size:11px;font-family:'IBM Plex Mono',monospace;cursor:pointer">{{ f.name }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ feed }}" as="ev" hint-placeholder-count="8">
+        <div style="display:flex;gap:12px;padding:11px 18px;border-bottom:1px solid #12171E;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A5563;white-space:nowrap">{{ ev.t }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ ev.color }};white-space:nowrap">{{ ev.type }}</span>
+          <span style="font-size:12.5px;color:#9AA5B1;line-height:1.45">{{ ev.msg }} <span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px">{{ ev.route }}</span></span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <!-- GATES -->
+  <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;overflow:hidden">
+    <div style="padding:14px 18px;border-bottom:1px solid #1A212B;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:#8C97A5">GATES · ÚLTIMA EXECUÇÃO</div>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ repo.gates }}" as="g" hint-placeholder-count="7">
+        <div style="display:flex;gap:12px;padding:10px 18px;border-bottom:1px solid #12171E;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ g.color }};width:14px">{{ g.mark }}</span>
+          <span style="font-size:13.5px;flex:1">{{ g.name }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">{{ g.dur }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="padding:12px 18px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ repo.gateColor }}">{{ repo.gateSummary }}</div>
+  </div>
+  <!-- TERRITORIES -->
+  <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;overflow:hidden">
+    <div style="padding:14px 18px;border-bottom:1px solid #1A212B;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:#8C97A5">TERRITÓRIOS · DOMÍNIOS</div>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ repo.domains }}" as="d" hint-placeholder-count="4">
+        <div style="padding:12px 18px;border-bottom:1px solid #12171E">
+          <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><span style="font-size:14px;font-weight:600">{{ d.name }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">{{ d.path }}</span><span style="flex:1"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ d.hColor }}">{{ d.health }}</span></div>
+          <div style="display:flex;gap:14px;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C97A5;flex-wrap:wrap"><span>{{ d.agents }} agentes</span><span>{{ d.sig }} sinais/24h</span><span>autonomia: {{ d.aut }}</span></div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <!-- SELECTION QUEUE -->
+  <div style="border:1px solid oklch(75% 0.09 80 / .3);border-radius:12px;background:#0D1117;overflow:hidden">
+    <div style="padding:14px 18px;border-bottom:1px solid #1A212B;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:oklch(80% 0.08 80)">FILA DE SELEÇÃO HUMANA</div>
+    <sc-if value="{{ repo.hasPrs }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ repo.prs }}" as="p" hint-placeholder-count="3">
+          <div style="padding:12px 18px;border-bottom:1px solid #12171E">
+            <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:oklch(84% 0.07 80)">{{ p.id }}</span><span style="font-size:13.5px;font-weight:600">{{ p.title }}</span></div>
+            <div style="display:flex;gap:14px;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C97A5;flex-wrap:wrap"><span>gates {{ p.gates }}</span><span>{{ p.aut }}</span><span>evidência: {{ p.ev }}</span><span>{{ p.agent }}</span></div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ repo.noPrs }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:22px 18px;font-size:13px;color:#5A6675">Nenhuma mudança aguardando seleção. A fila enche conforme agentes emitem <span style="font-family:'IBM Plex Mono',monospace;font-size:12px">change.ready</span>.</div>
+    </sc-if>
+  </div>
+  <!-- PROPOSALS + AUTONOMY -->
+  <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;overflow:hidden">
+    <div style="padding:14px 18px;border-bottom:1px solid #1A212B;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:#8C97A5">EVOLUÇÃO · PROPOSTAS</div>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ repo.props }}" as="pr" hint-placeholder-count="2">
+        <div style="padding:12px 18px;border-bottom:1px solid #12171E">
+          <div style="font-size:13.5px;font-weight:600">{{ pr.title }}</div>
+          <div style="font-size:12px;color:#8C97A5;margin-top:4px">{{ pr.ev }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="padding:14px 18px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#5A6675;margin-bottom:10px">DISTRIBUIÇÃO DE AUTONOMIA · 24H</div>
+      <sc-for list="{{ repo.aut }}" as="a" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA5B1;width:150px">{{ a.name }}</span>
+          <div style="flex:1;height:7px;border-radius:4px;background:#161C24;overflow:hidden"><div style="height:100%;border-radius:4px;background:{{ a.color }};width:{{ a.w }}"></div></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C97A5;width:36px;text-align:right">{{ a.pct }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+<!-- ARQUITETURA DA SOLUÇÃO -->
+<section style="border-top:1px solid #141A22;padding:80px 32px;background:#0B0E12">
+  <div style="max-width:1360px;margin:0 auto">
+    <div style="max-width:800px;margin-bottom:40px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:14px">Arquitetura da solução · modelo C4</div>
+      <h2 style="font-size:clamp(26px,4vw,34px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 14px">Um frontend plugável, somente leitura, com os artefatos do harness como contrato</h2>
+      <p style="font-size:15.5px;line-height:1.65;color:#9AA5B1;margin:0;text-wrap:pretty">O console nunca é fonte de verdade: ele observa <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#B7C0CB">.arah/</span> e <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#B7C0CB">docs/_meta/</span> e projeta esse estado em tempo real. Remove-lo não muda nada no funcionamento do harness.</p>
+    </div>
+
+    <!-- C1 CONTEXTO -->
+    <div style="border:1px solid #1A212B;border-radius:14px;background:#0C0F14;padding:28px;margin-bottom:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:oklch(78% 0.09 200);margin-bottom:18px">NÍVEL 1 · CONTEXTO</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:stretch">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="border:1px solid #2A3340;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">PESSOA</div><div style="font-size:14px;font-weight:600">Desenvolvedor(a)</div><div style="font-size:12px;color:#8C97A5;margin-top:4px">acompanha sinais e gates da sua mudança</div></div>
+          <div style="border:1px solid #2A3340;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">PESSOA</div><div style="font-size:14px;font-weight:600">Tech lead / mantenedor(a)</div><div style="font-size:12px;color:#8C97A5;margin-top:4px">opera a fila de seleção humana</div></div>
+          <div style="border:1px solid #2A3340;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">PESSOA</div><div style="font-size:14px;font-weight:600">Governança de IA</div><div style="font-size:12px;color:#8C97A5;margin-top:4px">audita autonomia e evidências</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:8px">
+          <div style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">consulta (HTTPS/WS) →</div>
+          <div style="border:1px solid oklch(75% 0.09 200 / .5);border-radius:12px;padding:20px;background:oklch(75% 0.09 200 / .06);text-align:center"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:oklch(80% 0.08 200);margin-bottom:6px">SISTEMA EM FOCO</div><div style="font-size:17px;font-weight:700;color:oklch(84% 0.07 200)">ARAH Live Console</div><div style="font-size:12.5px;color:#9AA5B1;margin-top:6px">observabilidade de repositórios governados — leitura, nunca escrita</div></div>
+          <div style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">← lê artefatos · escuta eventos</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="border:1px solid #2A3340;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">SISTEMA</div><div style="font-size:14px;font-weight:600">Repositório governado</div><div style="font-size:12px;color:#8C97A5;margin-top:4px;font-family:'IBM Plex Mono',monospace">.arah/ · docs/_meta/ · .agents/</div></div>
+          <div style="border:1px solid #2A3340;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">SISTEMA</div><div style="font-size:14px;font-weight:600">GitHub / CI</div><div style="font-size:12px;color:#8C97A5;margin-top:4px">PRs, checks, webhooks, branch protection</div></div>
+          <div style="border:1px solid #2A3340;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">SISTEMA</div><div style="font-size:14px;font-weight:600">Ambientes de IA + CLI</div><div style="font-size:12px;color:#8C97A5;margin-top:4px">produzem os sinais que o console observa</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C2 CONTAINERS -->
+    <div style="border:1px solid #1A212B;border-radius:14px;background:#0C0F14;padding:28px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:oklch(78% 0.09 200)">NÍVEL 2 · CONTAINERS</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">fronteira: ARAH Live Console</span></div>
+      <div style="border:1px dashed #2A3340;border-radius:12px;padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:12px">
+        <div style="border:1px solid oklch(75% 0.09 200 / .4);border-radius:10px;padding:16px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:oklch(80% 0.08 200);margin-bottom:6px">CONTAINER · SPA</div><div style="font-size:14.5px;font-weight:600">Console Web</div><div style="font-size:12px;color:#8C97A5;margin-top:4px;line-height:1.55">Next.js + TypeScript. Feed, gates, territórios, fila de seleção, propostas. Consome REST + WebSocket.</div></div>
+        <div style="border:1px solid oklch(75% 0.09 200 / .4);border-radius:10px;padding:16px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:oklch(80% 0.08 200);margin-bottom:6px">CONTAINER · SERVIÇO</div><div style="font-size:14.5px;font-weight:600">Live Service</div><div style="font-size:12px;color:#8C97A5;margin-top:4px;line-height:1.55">API somente leitura + stream de eventos. Roda como extensão de IDE, app desktop ou serviço de organização.</div></div>
+        <div style="border:1px solid oklch(75% 0.09 200 / .4);border-radius:10px;padding:16px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:oklch(80% 0.08 200);margin-bottom:6px">CONTAINER · DADOS</div><div style="font-size:14.5px;font-weight:600">Índice derivado</div><div style="font-size:12px;color:#8C97A5;margin-top:4px;line-height:1.55">SQLite local, descartável e regenerável a partir dos JSONL — resolve a consulta O(n) sem virar fonte de verdade.</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">
+        <div style="border:1px solid #232B36;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">EXTERNO</div><div style="font-size:13.5px;font-weight:600">Sistema de arquivos do repositório</div><div style="font-size:12px;color:#8C97A5;margin-top:4px;font-family:'IBM Plex Mono',monospace">watch em .arah/bus · .arah/audit · docs/_meta</div></div>
+        <div style="border:1px solid #232B36;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">EXTERNO</div><div style="font-size:13.5px;font-weight:600">GitHub API + webhooks</div><div style="font-size:12px;color:#8C97A5;margin-top:4px">estado de PRs e checks para a fila de seleção</div></div>
+        <div style="border:1px solid #232B36;border-radius:10px;padding:14px 16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A6675;margin-bottom:6px">EXTERNO · FUTURO</div><div style="font-size:13.5px;font-weight:600">Daemon arahd</div><div style="font-size:12px;color:#8C97A5;margin-top:4px">quando existir, substitui o watch por stream nativo</div></div>
+      </div>
+    </div>
+
+    <!-- C3 COMPONENTES -->
+    <div style="border:1px solid #1A212B;border-radius:14px;background:#0C0F14;padding:28px;margin-bottom:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;color:oklch(78% 0.09 200);margin-bottom:18px">NÍVEL 3 · COMPONENTES</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px">
+        <div style="border:1px dashed #2A3340;border-radius:12px;padding:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8C97A5;margin-bottom:12px">DENTRO DO LIVE SERVICE</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">FS Watcher</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">detecta appends nos JSONL (debounce)</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Bus Reader</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">parse incremental + validação de schema</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Ledger Indexer</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">projeta eventos no SQLite derivado</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Graph Builder</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">carrega graph.json + detecta drift</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Gate Monitor</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">agrega runs e taxas de aprovação</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">GitHub Adapter</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">webhooks → fila de seleção humana</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">WS Broadcaster</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">difunde eventos tipados aos clientes</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">AuthZ read-only</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">OAuth GitHub; escopo espelha o do repo</div></div>
+          </div>
+        </div>
+        <div style="border:1px dashed #2A3340;border-radius:12px;padding:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8C97A5;margin-bottom:12px">DENTRO DO CONSOLE WEB</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Signal Feed</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">stream filtrável por tipo/domínio</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Gate Panel</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">última execução + histórico</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Territory Map</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">domínios, paths, saúde, autonomia</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Selection Queue</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">PRs com evidência vinculada</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Proposal Review</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">propostas de evolução + evidência</div></div>
+            <div style="border:1px solid #232B36;border-radius:8px;padding:11px 13px"><div style="font-size:13px;font-weight:600">Graph Explorer</div><div style="font-size:11.5px;color:#8C97A5;margin-top:3px">navegação do grafo de agentes</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECISÕES -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:20px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5A6675;margin-bottom:8px">DECISÃO 01</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Somente leitura por padrão</div><div style="font-size:12.5px;color:#8C97A5;line-height:1.6">O console nunca escreve no repositório. Ações (aprovar, mesclar) são links para o PR — a autoridade continua onde sempre esteve.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:20px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5A6675;margin-bottom:8px">DECISÃO 02</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Artefatos como contrato de dados</div><div style="font-size:12.5px;color:#8C97A5;line-height:1.6">Qualquer frontend que leia .arah/ e docs/_meta/ é compatível. O console é substituível; os arquivos, não.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:20px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5A6675;margin-bottom:8px">DECISÃO 03</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Índice descartável</div><div style="font-size:12.5px;color:#8C97A5;line-height:1.6">O SQLite é cache: apagou, regenera dos JSONL. Resolve consulta e agregação sem criar segunda fonte de verdade.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:20px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5A6675;margin-bottom:8px">DECISÃO 04</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Três formas de implantação</div><div style="font-size:12.5px;color:#8C97A5;line-height:1.6">Extensão de IDE (dev individual), app local (tech lead) e serviço de organização (multi-repo, futuro) — mesmo código, mesmos contratos.</div></div>
+    </div>
+  </div>
+</section>
+
+<footer style="border-top:1px solid #141A22;padding:32px;background:#080A0D">
+  <div style="max-width:1360px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:#5A6675">
+    <div><span style="font-weight:700;color:#8C97A5">ARAH Live Console</span> · protótipo com dados simulados · a interface real lê .arah/ e docs/_meta/</div>
+    <div style="display:flex;gap:20px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+      <a href="Análise Técnica.dc.html" style="color:#5A6675" style-hover="color:#E7ECF1">Análise técnica</a>
+      <a href="Home PT.dc.html" style="color:#5A6675" style-hover="color:#E7ECF1">Site</a>
+      <a href="https://github.com/sraphaz/arah-harness" style="color:#5A6675" style-hover="color:#E7ECF1">GitHub</a>
+    </div>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { repo: 0, filter: 0 };
+  cyan = 'oklch(80% 0.09 200)'; green = 'oklch(75% 0.1 160)'; amber = 'oklch(80% 0.08 80)'; red = 'oklch(72% 0.11 30)';
+  typeColor(t) { return t.startsWith('consultation') ? this.cyan : t.startsWith('gates.passed') ? this.green : t.startsWith('gates.failed') ? this.red : t.startsWith('evolution') ? '#B49BE0' : this.amber; }
+  filtersDef = [['todos', ''], ['consulta', 'consultation'], ['gates', 'gates'], ['mudanças', 'change'], ['evolução', 'evolution']];
+  reposData = [
+    {name:'checkout-platform', kernel:'1.5.0', drift:'sem drift', driftOk:true, sync:'há 12 s', cells:6, signals24:142, gateRate:'98,2%', gateOk:true, awaiting:3, proposals:2,
+     gates:[['manifests','ok','0,8 s'],['specs','ok','2,1 s'],['documentação','ok','1,2 s'],['grafo','ok','0,6 s'],['segurança','ok','3,4 s'],['dependências','ok','5,9 s'],['build','ok','48 s']],
+     gateSummary:'7/7 aprovados · run-8f31 · 14:29',
+     domains:[['payments','backend/payments/**','saudável',2,34,'propose-only'],['catalog','backend/catalog/**','saudável',2,18,'propose-only'],['web','frontend/**','saudável',1,9,'execute-with-audit'],['infra','infra/** · .github/**','atenção',1,4,'escalate']],
+     prs:[['#147','refunds idempotency guard','7/7','propose-only','run-8f31','backend-payments'],['#146','catalog cache invalidation','7/7','propose-only','run-8e02','backend-catalog'],['#142','evolução: dividir domínio backend','—','proposta','evolve-0712','arah evolve']],
+     props:[['Dividir o domínio "backend" em payments + catalog','78% dos sinais dos últimos 30 dias escopados a payments'],['Promover a skill test-first a obrigatória em payments','12/12 runs com test-first passaram gates na 1ª tentativa']],
+     aut:[['propose-only',82],['execute-with-audit',15],['escalate',3]],
+     feed:[
+      ['14:32:07','consultation.answer','veredicto: aprovar com spec','payments-specialist → backend-payments'],
+      ['14:31:52','consultation.request','mudança em refunds.ts requer parecer','backend-payments → payments-specialist'],
+      ['14:29:10','gates.passed','7/7 aprovados','sync-check · run-8f31'],
+      ['14:28:44','change.ready','branch preparada para PR #147','backend-payments'],
+      ['14:12:03','gates.passed','7/7 aprovados','sync-check · run-8e02'],
+      ['13:57:31','evolution.proposal','dividir domínio backend','arah evolve'],
+      ['13:44:19','consultation.answer','invariante: idempotência de reembolso','payments-specialist → backend-payments'],
+      ['13:41:02','change.ready','catalog cache invalidation','backend-catalog'],
+      ['12:58:47','gates.failed','segurança: secret no diff (bloqueado)','sync-check · run-8d77'],
+      ['12:31:15','consultation.request','estratégia de invalidação de cache','backend-catalog → catalog-specialist']]},
+    {name:'catalog-service', kernel:'1.4.2', drift:'kernel desatualizado', driftOk:false, sync:'há 40 s', cells:3, signals24:57, gateRate:'91,4%', gateOk:false, awaiting:1, proposals:1,
+     gates:[['manifests','ok','0,7 s'],['specs','ok','1,8 s'],['documentação','ok','1,0 s'],['grafo','ok','0,5 s'],['segurança','ok','2,9 s'],['dependências','falha','6,2 s'],['build','ok','31 s']],
+     gateSummary:'6/7 · dependências: lodash 4.17.19 vulnerável (CVE) · 11:02',
+     domains:[['catalog','src/catalog/**','saudável',2,41,'propose-only'],['search','src/search/**','atenção',1,12,'propose-only'],['docs','docs/**','saudável',0,4,'execute-with-audit']],
+     prs:[['#89','search relevance boost','6/7 (dependências)','propose-only','run-3c11','search-agent']],
+     props:[['Adicionar gate de licenças a dependências','3 pacotes sem licença aprovada detectados no ledger']],
+     aut:[['propose-only',88],['execute-with-audit',12],['escalate',0]],
+     feed:[
+      ['11:02:40','gates.failed','dependências: CVE em lodash 4.17.19','sync-check · run-3c11'],
+      ['10:58:12','change.ready','search relevance boost','search-agent'],
+      ['10:41:55','consultation.answer','usar BM25, não trigram','catalog-specialist → search-agent'],
+      ['10:39:01','consultation.request','abordagem de relevância','search-agent → catalog-specialist'],
+      ['09:12:33','evolution.proposal','gate de licenças','arah evolve'],
+      ['08:55:20','gates.passed','7/7 aprovados','sync-check · run-3b90']]},
+    {name:'infra-core', kernel:'1.5.0', drift:'sem drift', driftOk:true, sync:'há 8 s', cells:2, signals24:11, gateRate:'100%', gateOk:true, awaiting:0, proposals:0,
+     gates:[['manifests','ok','0,6 s'],['specs','ok','0,9 s'],['documentação','ok','0,8 s'],['grafo','ok','0,4 s'],['segurança','ok','4,1 s'],['dependências','ok','3,3 s'],['build','ok','12 s']],
+     gateSummary:'7/7 aprovados · run-1a04 · 09:15',
+     domains:[['terraform','terraform/**','saudável',1,7,'escalate'],['ci','.github/**','saudável',1,4,'escalate']],
+     prs:[],
+     props:[],
+     aut:[['propose-only',34],['execute-with-audit',0],['escalate',66]],
+     feed:[
+      ['09:15:02','gates.passed','7/7 aprovados','sync-check · run-1a04'],
+      ['09:02:47','consultation.answer','mudança em rede exige janela','infra-specialist → terraform-agent'],
+      ['08:58:30','consultation.request','alteração de VPC peering','terraform-agent → infra-specialist'],
+      ['07:40:11','gates.passed','7/7 aprovados','sync-check · run-19f8']]}
+  ];
+  renderVals() {
+    const R = this.reposData[this.state.repo];
+    const fkey = this.filtersDef[this.state.filter][1];
+    return {
+      repos: this.reposData.map((r, i) => ({
+        name: r.name,
+        border: i === this.state.repo ? 'oklch(75% 0.09 200 / .5)' : '#1E2630',
+        bg: i === this.state.repo ? 'oklch(75% 0.09 200 / .08)' : '#0D1117',
+        color: i === this.state.repo ? 'oklch(84% 0.07 200)' : '#9AA5B1',
+        dot: r.driftOk ? this.green : this.amber,
+        select: () => this.setState({ repo: i, filter: 0 })
+      })),
+      repo: {
+        kernel: R.kernel, sync: R.sync, cells: R.cells, signals24: R.signals24,
+        gateRate: R.gateRate, gateColor: R.gateOk ? this.green : this.amber,
+        awaiting: R.awaiting, proposals: R.proposals,
+        drift: R.drift, driftColor: R.driftOk ? '#8C97A5' : this.amber,
+        driftBorder: R.driftOk ? '#232B36' : 'oklch(75% 0.09 80 / .4)',
+        gateSummary: R.gateSummary,
+        gates: R.gates.map(g => ({ name: g[0], dur: g[2], mark: g[1] === 'ok' ? '✓' : '✗', color: g[1] === 'ok' ? this.green : this.red })),
+        domains: R.domains.map(d => ({ name: d[0], path: d[1], health: d[2], hColor: d[2] === 'saudável' ? this.green : this.amber, agents: d[3], sig: d[4], aut: d[5] })),
+        hasPrs: R.prs.length > 0, noPrs: R.prs.length === 0,
+        prs: R.prs.map(p => ({ id: p[0], title: p[1], gates: p[2], aut: p[3], ev: p[4], agent: p[5] })),
+        props: R.props.map(p => ({ title: p[0], ev: p[1] })),
+        aut: R.aut.map((a, i) => ({ name: a[0], pct: a[1] + '%', w: a[1] + '%', color: [this.cyan, this.green, this.amber][i] }))
+      },
+      filters: this.filtersDef.map((f, i) => ({
+        name: f[0],
+        border: i === this.state.filter ? 'oklch(75% 0.09 200 / .5)' : '#232B36',
+        bg: i === this.state.filter ? 'oklch(75% 0.09 200 / .1)' : 'transparent',
+        color: i === this.state.filter ? 'oklch(84% 0.07 200)' : '#8C97A5',
+        select: () => this.setState({ filter: i })
+      })),
+      feed: R.feed.filter(e => !fkey || e[1].startsWith(fkey)).map(e => ({ t: e[0], type: e[1], msg: e[2], route: e[3], color: this.typeColor(e[1]) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

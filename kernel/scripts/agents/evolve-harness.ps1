@@ -3,7 +3,7 @@
 .SYNOPSIS
   Ciclo de autoaprendizado - propõe melhorias a partir de auditoria, sinais e telemetria.
 .DESCRIPTION
-  Consome .arah/audit/events.jsonl, .arah/bus/signals.jsonl e .cursor/arah-live/
+  Consome estado quente (.arah/local/... + legado jsonl) e .cursor/arah-live/
   para gerar docs/_meta/evolution.proposed.yaml. Com -Apply, emite sinal e
   opcionalmente reforça overlays locais - nunca reescreve o kernel em silêncio.
 .EXAMPLE
@@ -16,11 +16,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+. (Join-Path $PSScriptRoot 'arah-event-io.ps1')
+$Root = Get-ArahRoot -FromScriptRoot $PSScriptRoot
 $MetaDir = Join-Path (Join-Path $Root 'docs') '_meta'
 $OutFile = Join-Path $MetaDir 'evolution.proposed.yaml'
-$AuditFile = Join-Path (Join-Path (Join-Path $Root '.arah') 'audit') 'events.jsonl'
-$BusFile = Join-Path (Join-Path (Join-Path $Root '.arah') 'bus') 'signals.jsonl'
 $LiveEvents = Join-Path (Join-Path (Join-Path $Root '.cursor') 'arah-live') 'events.jsonl'
 $SummaryFile = Join-Path (Join-Path (Join-Path $Root '.arah') 'observability') 'summary.yaml'
 $DiscoveryFile = Join-Path $MetaDir 'discovery.proposed.yaml'
@@ -42,12 +41,10 @@ function Count-Jsonl {
     return @(Get-Content $Path | Where-Object { $_.Trim() }).Count
 }
 
-function Read-JsonlActions {
-    param([string]$Path, [int]$Max = 200)
-    if (-not (Test-Path $Path)) { return @() }
-    $lines = Get-Content $Path | Select-Object -Last $Max
+function Read-EventActions {
+    param([string[]]$Lines)
     $actions = @()
-    foreach ($line in $lines) {
+    foreach ($line in $Lines) {
         try {
             $o = $line | ConvertFrom-Json
             if ($o.action) { $actions += [string]$o.action }
@@ -57,13 +54,15 @@ function Read-JsonlActions {
     return $actions
 }
 
-$auditCount = Count-Jsonl $AuditFile
-$signalCount = Count-Jsonl $BusFile
+$auditCount = Get-ArahEventCount -Root $Root -Kind audit
+$signalCount = Get-ArahEventCount -Root $Root -Kind bus
 $liveCount = Count-Jsonl $LiveEvents
 $actions = @()
-$actions += Read-JsonlActions $AuditFile
-$actions += Read-JsonlActions $BusFile
-$actions += Read-JsonlActions $LiveEvents
+$actions += Read-EventActions (Read-ArahEvents -Root $Root -Kind audit -Last 200)
+$actions += Read-EventActions (Read-ArahEvents -Root $Root -Kind bus -Last 200)
+$liveLines = @()
+if (Test-Path $LiveEvents) { $liveLines = @(Get-Content $LiveEvents | Select-Object -Last 200) }
+$actions += Read-EventActions $liveLines
 
 $freq = @{}
 foreach ($a in $actions) {
@@ -115,7 +114,7 @@ if ((Test-Path $DiscoveryFile) -and -not (Test-Path $OrganismFile)) {
 
 # Heuristic 3: no signals yet -> encourage bootstrap communication
 if ($signalCount -eq 0 -and (Test-Path $OrganismFile)) {
-    Add-Proposal -Kind 'communication' -Target '.arah/bus/signals.jsonl' `
+    Add-Proposal -Kind 'communication' -Target '.arah/local/bus/' `
         -Change 'Emitir sinais coalesce nos tecidos delivery/governance no início de cada fase.' `
         -Rationale 'Organismo definido mas bus vazio - comunicação ainda não exercitada.' `
         -Confidence 'medium' -Evidence @('organism.manifest.yaml', 'signals=0')

@@ -1,0 +1,952 @@
+{
+  "locale": "en",
+  "version": "0.3.1",
+  "nav": [
+    {
+      "slug": "getting-started",
+      "name": "Getting Started",
+      "pages": [
+        {
+          "slug": "introduction",
+          "title": "Introduction"
+        },
+        {
+          "slug": "requirements",
+          "title": "Requirements"
+        },
+        {
+          "slug": "installation",
+          "title": "Installation"
+        },
+        {
+          "slug": "first-run",
+          "title": "First Run"
+        },
+        {
+          "slug": "quick-start",
+          "title": "Quick Start"
+        },
+        {
+          "slug": "update",
+          "title": "Update"
+        },
+        {
+          "slug": "uninstall",
+          "title": "Uninstall"
+        }
+      ]
+    },
+    {
+      "slug": "core-concepts",
+      "name": "Core Concepts",
+      "pages": [
+        {
+          "slug": "repository-first",
+          "title": "Repository-first"
+        },
+        {
+          "slug": "agents",
+          "title": "Agents"
+        },
+        {
+          "slug": "skills",
+          "title": "Skills"
+        },
+        {
+          "slug": "domains",
+          "title": "Domains"
+        },
+        {
+          "slug": "specialists",
+          "title": "Specialists"
+        },
+        {
+          "slug": "choreography",
+          "title": "Choreography"
+        },
+        {
+          "slug": "autonomy",
+          "title": "Autonomy"
+        },
+        {
+          "slug": "human-gates",
+          "title": "Human Gates"
+        },
+        {
+          "slug": "techorganism",
+          "title": "TechOrganism"
+        }
+      ]
+    },
+    {
+      "slug": "operations",
+      "name": "Operations",
+      "pages": [
+        {
+          "slug": "discover",
+          "title": "Discover"
+        },
+        {
+          "slug": "domain-sync",
+          "title": "Domain Sync"
+        },
+        {
+          "slug": "export-graph",
+          "title": "Export Graph"
+        },
+        {
+          "slug": "signal-bus",
+          "title": "Signal Bus"
+        },
+        {
+          "slug": "audit",
+          "title": "Audit"
+        },
+        {
+          "slug": "evolve",
+          "title": "Evolve"
+        },
+        {
+          "slug": "regenerate",
+          "title": "Regenerate"
+        },
+        {
+          "slug": "doctor",
+          "title": "Doctor"
+        },
+        {
+          "slug": "sync-check",
+          "title": "Sync Check"
+        }
+      ]
+    },
+    {
+      "slug": "validation",
+      "name": "Validation",
+      "pages": [
+        {
+          "slug": "gates-overview",
+          "title": "Gates Overview"
+        }
+      ]
+    },
+    {
+      "slug": "configuration",
+      "name": "Configuration",
+      "pages": [
+        {
+          "slug": "arah-config-yaml",
+          "title": "arah.config.yaml"
+        },
+        {
+          "slug": "schemas",
+          "title": "Schemas"
+        }
+      ]
+    },
+    {
+      "slug": "integrations",
+      "name": "Integrations",
+      "pages": [
+        {
+          "slug": "ai-environments",
+          "title": "AI Environments"
+        },
+        {
+          "slug": "github-ci",
+          "title": "GitHub & CI"
+        }
+      ]
+    },
+    {
+      "slug": "reference",
+      "name": "Reference",
+      "pages": [
+        {
+          "slug": "cli-reference",
+          "title": "CLI Reference"
+        },
+        {
+          "slug": "signal-types",
+          "title": "Signal Types"
+        },
+        {
+          "slug": "autonomy-levels",
+          "title": "Autonomy Levels"
+        },
+        {
+          "slug": "exit-codes",
+          "title": "Exit Codes"
+        },
+        {
+          "slug": "generated-artifacts",
+          "title": "Generated Artifacts"
+        }
+      ]
+    },
+    {
+      "slug": "examples",
+      "name": "Examples",
+      "pages": [
+        {
+          "slug": "minimal-repository",
+          "title": "Minimal Repository"
+        },
+        {
+          "slug": "monorepo",
+          "title": "Monorepo"
+        },
+        {
+          "slug": "regulated-environment",
+          "title": "Regulated Environment"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "slug": "introduction",
+      "section": "Getting Started",
+      "sectionSlug": "getting-started",
+      "title": "Introduction",
+      "intro": "ARAH Harness is a repo-first harness for governing, coordinating and evolving human-agent software engineering.",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "What it installs"
+        },
+        {
+          "type": "paragraph",
+          "text": "The harness installs and maintains an operational layer inside your repository: agent manifests, skills, domains, specialists, path-based choreography, autonomy policies, executable gates, a signal bus, an audit ledger, an agent graph, discovery, evolution and regeneration."
+        },
+        {
+          "type": "heading",
+          "text": "The core idea"
+        },
+        {
+          "type": "paragraph",
+          "text": "Most AI tooling starts from the agent: a prompt grants authority, tools execute, code changes. ARAH inverts this. The repository identifies context, selects agents, defines limits, applies procedures, validates results and records evidence. The repository governs the agent."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Repo-first: contracts are versioned files, not platform settings",
+            "Model agnostic: works with Claude Code, Cursor, Copilot, Codex, local models",
+            "Human in command: merge authority is always human"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "requirements",
+      "section": "Getting Started",
+      "sectionSlug": "getting-started",
+      "title": "Requirements",
+      "intro": "What you need before installing the harness.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "Windows with PowerShell 5.1+ (or PowerShell 7+ on any OS)",
+            "Git 2.30+",
+            "A target repository (new or existing)",
+            "Optional: GitHub CLI (gh) for PR automation",
+            "Optional: an AI environment — Claude Code, Cursor or Copilot"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Notes"
+        },
+        {
+          "type": "paragraph",
+          "text": "The CLI is PowerShell-based. On macOS and Linux, install PowerShell 7 (pwsh) and substitute pwsh for powershell in the commands."
+        }
+      ]
+    },
+    {
+      "slug": "installation",
+      "section": "Getting Started",
+      "sectionSlug": "getting-started",
+      "title": "Installation",
+      "intro": "Clone the harness once, then install it into any consumer repository.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\\arah-harness",
+          "label": "CLONE"
+        },
+        {
+          "type": "code",
+          "code": "cd C:\\path\\to\\your-project\n\npowershell -ExecutionPolicy Bypass `\n  -File $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 `\n  install `\n  -ProjectName \"my-project\"",
+          "label": "INSTALL"
+        },
+        {
+          "type": "heading",
+          "text": "What install creates"
+        },
+        {
+          "type": "list",
+          "items": [
+            "arah.config.yaml — policies and autonomy",
+            "AGENTS.md — the entry contract for AI environments",
+            ".agents/ and .skills/ — installed manifests",
+            "scripts/ — executable gates",
+            ".github/workflows/ — CI integration",
+            ".arah/ — audit, bus and organism state"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "first-run",
+      "section": "Getting Started",
+      "sectionSlug": "getting-started",
+      "title": "First Run",
+      "intro": "Validate the installation and let the harness observe your repository.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah doctor",
+          "label": "VALIDATE INSTALLATION"
+        },
+        {
+          "type": "paragraph",
+          "text": "doctor checks kernel integrity, config validity, schema conformance and directory structure. Fix anything it reports before proceeding."
+        },
+        {
+          "type": "code",
+          "code": "arah discover",
+          "label": "RUN DISCOVERY"
+        },
+        {
+          "type": "paragraph",
+          "text": "discover inspects stack, frameworks, structure and directories, then writes a reviewable proposal to docs/_meta/discovery.proposed.yaml. Nothing is applied without your review."
+        }
+      ]
+    },
+    {
+      "slug": "quick-start",
+      "section": "Getting Started",
+      "sectionSlug": "getting-started",
+      "title": "Quick Start",
+      "intro": "The full loop, end to end, in five commands.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah doctor\narah discover\narah domain sync\narah export-graph\narah evolve",
+          "label": "THE LOOP"
+        },
+        {
+          "type": "list",
+          "items": [
+            "doctor — validate the installation",
+            "discover — propose domains from the repository",
+            "domain sync — materialize approved domains",
+            "export-graph — derive the agent graph",
+            "evolve — propose improvements from evidence"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Each command writes versioned artifacts you review in pull requests. The harness never applies structural changes without human selection."
+        }
+      ]
+    },
+    {
+      "slug": "update",
+      "section": "Getting Started",
+      "sectionSlug": "getting-started",
+      "title": "Update",
+      "intro": "Keep the consumer consistent with the kernel through regeneration.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "powershell -File `\n  $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 `\n  regenerate `\n  -Target . `\n  -UpdateKernel",
+          "label": "REGENERATE"
+        },
+        {
+          "type": "paragraph",
+          "text": "regenerate updates the kernel, re-runs discovery, syncs domains, regenerates graphs and validates the installation. Review the resulting diff like any other change."
+        }
+      ]
+    },
+    {
+      "slug": "uninstall",
+      "section": "Getting Started",
+      "sectionSlug": "getting-started",
+      "title": "Uninstall",
+      "intro": "The harness is files in your repository — removal is a commit.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Delete the installed directories and config: .agents/, .skills/, .arah/, arah.config.yaml, AGENTS.md, the harness entries in scripts/ and .github/workflows/. Your code, docs and history are untouched."
+        },
+        {
+          "type": "code",
+          "code": "git rm -r .agents .skills .arah arah.config.yaml AGENTS.md\ngit commit -m \"remove arah harness\"",
+          "label": "REMOVE"
+        }
+      ]
+    },
+    {
+      "slug": "repository-first",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "Repository-first",
+      "intro": "The repository is the operational source of truth — not a platform, model or session.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Every contract the harness enforces is a versioned file: reviewable in PRs, diffable, portable across tools and models. There is no external database and no hidden state."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Context ownership: knowledge belongs to the repository",
+            "Independence: switch models without losing procedures",
+            "Auditability: history is git history plus the ledger"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "agents",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "Agents",
+      "intro": "An agent is a manifest before it is a model.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "# .agents/backend-payments.yaml\nrole: operational\ndomains: [payments]\npaths: [\"backend/payments/**\"]\nskills: [refactor, test-first]\nautonomy: propose-only\nescalation: payments-specialist",
+          "label": ".agents/backend-payments.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "Manifests declare role (operational or advisor), scope (domains and paths), capabilities (skills) and autonomy. Gates validate every manifest against schemas/."
+        }
+      ]
+    },
+    {
+      "slug": "skills",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "Skills",
+      "intro": "Deterministic, executable procedures — not free-form prompts.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "# .skills/test-first/skill.yaml\nname: test-first\ninputs: [spec]\nsteps:\n  - generate failing test\n  - implement\n  - run gates\noutputs: [diff, test-report]",
+          "label": ".skills/test-first/skill.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "A skill encodes \"how we do things here\" as a versioned unit an agent is explicitly authorized to run. Unauthorized skills are simply unavailable."
+        }
+      ]
+    },
+    {
+      "slug": "domains",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "Domains",
+      "intro": "Explicit areas of the repository with responsibilities, paths, references and validations.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "# docs/_meta/domains.yaml\npayments:\n  paths: [\"backend/payments/**\"]\n  owners: [platform-team]\n  advisors: [payments-specialist]\n  gates: [spec, security]",
+          "label": "docs/_meta/domains.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "Domains give agents the organizational map humans carry in their heads. Discovery proposes them; domain sync materializes what humans approve."
+        }
+      ]
+    },
+    {
+      "slug": "specialists",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "Specialists",
+      "intro": "Consultative agents bound to a domain.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Specialists encode domain judgment: constraints, invariants, decision criteria. Operational agents consult them through the signal bus before changing domain-owned code. Their answers persist as typed events."
+        }
+      ]
+    },
+    {
+      "slug": "choreography",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "Choreography",
+      "intro": "Path-based selection of agents, skills and gates.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "match: \"backend/payments/**\"\nactivate:\n  agents: [backend-payments]\n  advisors: [payments-specialist]\n  gates: [spec, security, build]",
+          "label": "harness/choreography.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "A change is routed by the files it touches. Out-of-scope agents are never activated — scope is structural, not behavioral."
+        }
+      ]
+    },
+    {
+      "slug": "autonomy",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "Autonomy",
+      "intro": "Declared authority levels per agent and per path.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "autonomy:\n  default: propose-only\n  overrides:\n    - paths: [\"docs/**\"]\n      level: execute-with-audit",
+          "label": "arah.config.yaml"
+        },
+        {
+          "type": "list",
+          "items": [
+            "propose-only — agent produces a proposal; humans apply",
+            "execute-with-audit — agent applies within scope; ledger records everything",
+            "escalate — agent must consult before acting"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "human-gates",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "Human Gates",
+      "intro": "Merge authority is human, structurally.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "No harness mechanism can merge. Evolution proposals, agent changes and code changes all terminate in a pull request reviewed by a human. This is a design invariant, not a configuration option."
+        }
+      ]
+    },
+    {
+      "slug": "techorganism",
+      "section": "Core Concepts",
+      "sectionSlug": "core-concepts",
+      "title": "TechOrganism",
+      "intro": "The operating model: perceive, organize, signal, observe, propose, select, regenerate.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "TechOrganism is the model by which a repository perceives its structure, organizes responsibilities, communicates signals, preserves memory and proposes its own evolution — under human selection. See the TechOrganism page for the full mapping."
+        }
+      ]
+    },
+    {
+      "slug": "discover",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Discover",
+      "intro": "Observe the repository and propose domains and specialists.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah discover",
+          "label": "COMMAND"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Observes: stack, frameworks, structure, directories, domain hints",
+            "Produces: docs/_meta/discovery.proposed.yaml",
+            "Never applies anything without review"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "domain-sync",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Domain Sync",
+      "intro": "Materialize approved domain candidates into contracts.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah domain sync",
+          "label": "COMMAND"
+        },
+        {
+          "type": "paragraph",
+          "text": "Reads the approved discovery output and config, writes docs/_meta/domains.yaml and advisor manifests. Re-run after structural changes."
+        }
+      ]
+    },
+    {
+      "slug": "export-graph",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Export Graph",
+      "intro": "Derive the agent graph from manifests.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah export-graph",
+          "label": "COMMAND"
+        },
+        {
+          "type": "paragraph",
+          "text": "Generates docs/_meta/graph.json — nodes for agents, skills and domains; edges for authorization and responsibility. A gate fails if the graph drifts from its sources."
+        }
+      ]
+    },
+    {
+      "slug": "signal-bus",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Signal Bus",
+      "intro": "Persistent, typed, append-only communication.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah organism signal --type consultation.request",
+          "label": "COMMAND"
+        },
+        {
+          "type": "code",
+          "code": "{\"type\":\"consultation.answer\",\n \"from\":\"payments-specialist\",\n \"to\":\"backend-payments\",\n \"ts\":\"2026-07-18T14:02:11Z\",\n \"body\":{\"verdict\":\"approve-with-spec\"}}",
+          "label": ".arah/bus/payments.jsonl"
+        }
+      ]
+    },
+    {
+      "slug": "audit",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Audit",
+      "intro": "The append-only ledger of actions, results and autonomy decisions.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Every session writes to .arah/audit/: actions taken, gates run, autonomy level in force, artifacts produced. The ledger is the evidence base for evolution proposals."
+        }
+      ]
+    },
+    {
+      "slug": "evolve",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Evolve",
+      "intro": "Propose improvements from accumulated evidence.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah evolve",
+          "label": "COMMAND"
+        },
+        {
+          "type": "paragraph",
+          "text": "Analyzes ledger, signals and telemetry. Writes proposals to docs/_meta/evolution/ — e.g. splitting an overloaded domain. Proposals become PRs; humans select."
+        }
+      ]
+    },
+    {
+      "slug": "regenerate",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Regenerate",
+      "intro": "Homeostasis for the installation.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah regenerate -Target . -UpdateKernel",
+          "label": "COMMAND"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Updates the kernel to the latest version",
+            "Re-runs discovery and syncs domains",
+            "Regenerates graphs",
+            "Validates the installation"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "doctor",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Doctor",
+      "intro": "Diagnose the installation.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah doctor",
+          "label": "COMMAND"
+        },
+        {
+          "type": "paragraph",
+          "text": "Checks kernel integrity, schema conformance, config validity and directory structure. Exit code 0 means healthy; non-zero codes identify the failing check."
+        }
+      ]
+    },
+    {
+      "slug": "sync-check",
+      "section": "Operations",
+      "sectionSlug": "operations",
+      "title": "Sync Check",
+      "intro": "Run all gates locally, exactly as CI runs them.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah sync-check",
+          "label": "COMMAND"
+        },
+        {
+          "type": "code",
+          "code": "✓ manifests   ✓ specs\n✓ docs        ✓ graph\n✓ security    ✓ dependencies\n✓ build\ngates: 7/7 passed",
+          "label": "OUTPUT"
+        }
+      ]
+    },
+    {
+      "slug": "gates-overview",
+      "section": "Validation",
+      "sectionSlug": "validation",
+      "title": "Gates Overview",
+      "intro": "Executable validations that run locally and in CI. A failing gate blocks the pipeline.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "Manifest validation — agents, skills, domains against schemas/",
+            "Spec gates — relevant changes require satisfied specs",
+            "Documentation gates — docs stay consistent with contracts",
+            "Security gates — secrets, dangerous patterns, scope violations",
+            "Dependency audits — known-vulnerable or unapproved packages",
+            "Build gates — the project must build and test",
+            "Agent graph validation — graph must match its sources"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Where they run"
+        },
+        {
+          "type": "paragraph",
+          "text": "The same scripts run in three places: on demand (arah sync-check), pre-commit (hooks) and in CI (.github/workflows/). A PR that fails validation cannot be merged."
+        }
+      ]
+    },
+    {
+      "slug": "arah-config-yaml",
+      "section": "Configuration",
+      "sectionSlug": "configuration",
+      "title": "arah.config.yaml",
+      "intro": "The consumer-side policy surface.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "project: my-project\nkernel: 0.3.1\nautonomy:\n  default: propose-only\nprofiles: [default]\noverlays: []\ngates:\n  required: [manifests, build]\n  per-domain: true",
+          "label": "arah.config.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "Profiles select predefined policy sets; overlays layer client- or product-specific adjustments over the shared kernel without forking it."
+        }
+      ]
+    },
+    {
+      "slug": "schemas",
+      "section": "Configuration",
+      "sectionSlug": "configuration",
+      "title": "Schemas",
+      "intro": "Every contract validates against a schema.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "schemas/ ships with the kernel and defines the shape of agent manifests, skill manifests, choreography rules, domain contracts and config. Schema validation is the first gate in every run."
+        }
+      ]
+    },
+    {
+      "slug": "ai-environments",
+      "section": "Integrations",
+      "sectionSlug": "integrations",
+      "title": "AI Environments",
+      "intro": "Claude Code, Cursor, Copilot, Codex and custom agents — governed, not replaced.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "AGENTS.md is the entry contract every environment reads. Installed .cursor/ rules bind Cursor; Claude Code and Copilot pick up AGENTS.md and the manifests directly. Custom agents integrate by reading the same files and writing to the same bus."
+        },
+        {
+          "type": "heading",
+          "text": "The guarantee"
+        },
+        {
+          "type": "paragraph",
+          "text": "Because contracts live in the repository, switching environments loses nothing: the same roles, skills, gates and history apply to whichever tool you point at the repo."
+        }
+      ]
+    },
+    {
+      "slug": "github-ci",
+      "section": "Integrations",
+      "sectionSlug": "integrations",
+      "title": "GitHub & CI",
+      "intro": "Gates in workflows; evidence in pull requests.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "# .github/workflows/arah-gates.yml\non: [pull_request]\njobs:\n  gates:\n    runs-on: windows-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: powershell -File scripts/arah-gates.ps1",
+          "label": ".github/workflows/arah-gates.yml"
+        },
+        {
+          "type": "paragraph",
+          "text": "The install step writes this workflow. Branch protection plus the gates job makes validation structurally unavoidable."
+        }
+      ]
+    },
+    {
+      "slug": "cli-reference",
+      "section": "Reference",
+      "sectionSlug": "reference",
+      "title": "CLI Reference",
+      "intro": "Select a command to see syntax, parameters, files read and generated.",
+      "blocks": [
+        {
+          "type": "cli-reference"
+        }
+      ]
+    },
+    {
+      "slug": "signal-types",
+      "section": "Reference",
+      "sectionSlug": "reference",
+      "title": "Signal Types",
+      "intro": "The typed vocabulary of the bus.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "consultation.request / consultation.answer — advisor round-trips",
+            "choreography.activated — activation sets per change",
+            "gates.passed / gates.failed — validation outcomes",
+            "change.ready — a change prepared for PR",
+            "selection.merge — human merge decisions",
+            "evolution.proposal — improvement proposals",
+            "session.start / session.end — telemetry boundaries"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "autonomy-levels",
+      "section": "Reference",
+      "sectionSlug": "reference",
+      "title": "Autonomy Levels",
+      "intro": "The three levels and what they permit.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "propose-only — the agent produces proposals; humans apply them",
+            "execute-with-audit — the agent applies changes within scope; the ledger records every action",
+            "escalate — the agent must consult its advisor before acting"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Levels are set per agent and overridable per path in arah.config.yaml. The default is propose-only."
+        }
+      ]
+    },
+    {
+      "slug": "exit-codes",
+      "section": "Reference",
+      "sectionSlug": "reference",
+      "title": "Exit Codes",
+      "intro": "CLI exit codes for scripting and CI.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "0 — success",
+            "1 — validation failure (gate failed)",
+            "2 — configuration error",
+            "3 — kernel drift detected",
+            "4 — schema violation",
+            "10 — environment error (missing dependency)"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "generated-artifacts",
+      "section": "Reference",
+      "sectionSlug": "reference",
+      "title": "Generated Artifacts",
+      "intro": "Everything the harness writes, and where.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "docs/_meta/discovery.proposed.yaml — discovery output",
+            "docs/_meta/domains.yaml — materialized domains",
+            "docs/_meta/graph.json — derived agent graph",
+            "docs/_meta/evolution/proposal-*.md — evolution proposals",
+            ".arah/bus/*.jsonl — typed signals",
+            ".arah/audit/ — ledger and session records"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "minimal-repository",
+      "section": "Examples",
+      "sectionSlug": "examples",
+      "title": "Minimal Repository",
+      "intro": "The smallest useful installation.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "One domain, one operational agent, default gates. Good for evaluating the loop end-to-end in an afternoon."
+        },
+        {
+          "type": "code",
+          "code": "arah install -ProjectName \"minimal\"\narah discover\narah domain sync",
+          "label": "SETUP"
+        }
+      ]
+    },
+    {
+      "slug": "monorepo",
+      "section": "Examples",
+      "sectionSlug": "examples",
+      "title": "Monorepo",
+      "intro": "Territories with different rules.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Each product area becomes a domain with its own agents, advisors, gates and autonomy. Choreography keeps agents inside their territory; shared policies live once in arah.config.yaml."
+        }
+      ]
+    },
+    {
+      "slug": "regulated-environment",
+      "section": "Examples",
+      "sectionSlug": "examples",
+      "title": "Regulated Environment",
+      "intro": "Evidence as a byproduct of the workflow.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Set autonomy to propose-only everywhere, require spec and security gates per domain, and enable full session telemetry. Every merge carries its evidence trail: specs, gate reports, consultation records, human approval."
+        }
+      ]
+    }
+  ]
+}

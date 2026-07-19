@@ -1,0 +1,70 @@
+{
+  "locale": "pt",
+  "meta": {
+    "title": "Casos de Uso — ARAH Harness",
+    "version": "0.3.1"
+  },
+  "hero": {
+    "eyebrow": "Casos de uso",
+    "headline": "Onde um harness repo-first se paga",
+    "body": "Oito situações em que governança, persistência e coordenação importam mais do que geração bruta de código."
+  },
+  "useCases": [
+    {
+      "id": "uc-01",
+      "slug": "repositorio-novo",
+      "name": "Repositório Novo",
+      "title": "Repositório Novo",
+      "description": "Estrutura de governança desde o primeiro commit: domínios, agentes, autonomia e gates existem antes da primeira feature."
+    },
+    {
+      "id": "uc-02",
+      "slug": "repositorio-legado",
+      "name": "Repositório Legado",
+      "title": "Repositório Legado",
+      "description": "Discovery progressivo sem reconstruir o projeto — o harness propõe domínios a partir da estrutura que já existe."
+    },
+    {
+      "id": "uc-03",
+      "slug": "monorepo",
+      "name": "Monorepo",
+      "title": "Monorepo",
+      "description": "Responsabilidades diferentes para áreas e produtos diferentes: a coreografia por paths dá a cada território seus próprios agentes, especialistas e gates."
+    },
+    {
+      "id": "uc-04",
+      "slug": "engenharia-regulada",
+      "name": "Engenharia Regulada",
+      "title": "Engenharia Regulada",
+      "description": "Specs, evidências, gates executáveis e aprovação humana — uma trilha de auditoria que existe porque o fluxo a produz, não como um adendo."
+    },
+    {
+      "id": "uc-05",
+      "slug": "engenharia-multiagente",
+      "name": "Engenharia Multiagente",
+      "title": "Engenharia Multiagente",
+      "description": "Coordenação explícita entre agentes operacionais e consultivos: papéis, fronteiras e sinais compartilhados em vez de sessões sobrepostas."
+    },
+    {
+      "id": "uc-06",
+      "slug": "consultoria",
+      "name": "Consultoria",
+      "title": "Consultoria",
+      "description": "Um kernel comum com overlays específicos por cliente: a mesma máquina de governança, adaptada por projeto sem bifurcar a prática."
+    },
+    {
+      "id": "uc-07",
+      "slug": "plataforma-de-produtos",
+      "name": "Plataforma de Produtos",
+      "title": "Plataforma de Produtos",
+      "description": "Políticas compartilhadas entre produtos diferentes: uma superfície de política, muitos repositórios, gates e regras de autonomia consistentes."
+    },
+    {
+      "id": "uc-08",
+      "slug": "migracao-de-modelo",
+      "name": "Migração de Modelo",
+      "title": "Migração de Modelo",
+      "description": "Troque modelos e ferramentas enquanto contexto, procedimentos e governança ficam no repositório — nada para reensinar, nada perdido."
+    }
+  ]
+}

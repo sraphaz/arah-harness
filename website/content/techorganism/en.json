@@ -1,0 +1,116 @@
+{
+  "locale": "en",
+  "meta": {
+    "title": "TechOrganism — ARAH Harness",
+    "version": "0.3.1"
+  },
+  "hero": {
+    "eyebrow": "Operating model — not the product name",
+    "headline": "TechOrganism",
+    "body": "TechOrganism is the model by which a repository perceives its structure, organizes responsibilities, communicates signals, preserves memory and proposes its own evolution — under human selection."
+  },
+  "cycle": {
+    "nodes": [
+      {
+        "slug": "discover",
+        "name": "Discover"
+      },
+      {
+        "slug": "organize",
+        "name": "Organize"
+      },
+      {
+        "slug": "signal",
+        "name": "Signal"
+      },
+      {
+        "slug": "observe",
+        "name": "Observe"
+      },
+      {
+        "slug": "propose",
+        "name": "Propose"
+      },
+      {
+        "slug": "select",
+        "name": "Select"
+      },
+      {
+        "slug": "regenerate",
+        "name": "Regenerate"
+      }
+    ],
+    "note": "Selection is the human step. The cycle never bypasses it."
+  },
+  "mapping": [
+    {
+      "metaphor": "Perception",
+      "mechanism": "discovery",
+      "slug": "discovery"
+    },
+    {
+      "metaphor": "Cells",
+      "mechanism": "agents",
+      "slug": "agents"
+    },
+    {
+      "metaphor": "Tissues",
+      "mechanism": "domains",
+      "slug": "domains"
+    },
+    {
+      "metaphor": "Capabilities",
+      "mechanism": "skills",
+      "slug": "skills"
+    },
+    {
+      "metaphor": "Nervous system",
+      "mechanism": "signal bus",
+      "slug": "signal-bus"
+    },
+    {
+      "metaphor": "Memory",
+      "mechanism": "audit ledger",
+      "slug": "audit-ledger"
+    },
+    {
+      "metaphor": "Immune system",
+      "mechanism": "gates",
+      "slug": "gates"
+    },
+    {
+      "metaphor": "Map",
+      "mechanism": "agent graph",
+      "slug": "agent-graph"
+    },
+    {
+      "metaphor": "Homeostasis",
+      "mechanism": "regeneration",
+      "slug": "regeneration"
+    },
+    {
+      "metaphor": "Evolution",
+      "mechanism": "proposals",
+      "slug": "proposals"
+    },
+    {
+      "metaphor": "Selection",
+      "mechanism": "human review",
+      "slug": "human-review"
+    }
+  ],
+  "boundaries": {
+    "body": "The organism vocabulary describes coordination mechanics, not sentience. The boundaries are explicit:",
+    "items": [
+      "The software is not conscious",
+      "It is not literally alive",
+      "It does not learn on its own without bounds",
+      "It does not replace humans",
+      "It never decides merges autonomously"
+    ]
+  },
+  "cta": {
+    "headline": "The system proposes. Humans select. Evolution happens in pull requests.",
+    "body": "The system proposes. Humans select. Evolution happens in pull requests."
+  }
+}
