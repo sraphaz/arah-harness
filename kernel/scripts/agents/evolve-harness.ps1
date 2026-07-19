@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Ciclo de autoaprendizado - propõe melhorias a partir de auditoria, sinais e telemetria.
@@ -21,10 +21,19 @@ $Root = Get-ArahRoot -FromScriptRoot $PSScriptRoot
 $MetaDir = Join-Path (Join-Path $Root 'docs') '_meta'
 $OutFile = Join-Path $MetaDir 'evolution.proposed.yaml'
 $LiveEvents = Join-Path (Join-Path (Join-Path $Root '.cursor') 'arah-live') 'events.jsonl'
+$SummaryFile = Join-Path (Join-Path (Join-Path $Root '.arah') 'observability') 'summary.yaml'
 $DiscoveryFile = Join-Path $MetaDir 'discovery.proposed.yaml'
 $OrganismFile = Join-Path $MetaDir 'organism.manifest.yaml'
 $SkillsDir = Join-Path $Root '.skills'
 $ChoreoFile = Join-Path (Join-Path $Root '.agents') 'choreography.yaml'
+
+# Refresh Economy Intelligence scorecard when possible (fail-open)
+$metricsScript = Join-Path $PSScriptRoot 'metrics-rollup.ps1'
+if (Test-Path -LiteralPath $metricsScript) {
+    try {
+        & $metricsScript -Mode rollup 2>$null | Out-Null
+    } catch { }
+}
 
 function Count-Jsonl {
     param([string]$Path)
@@ -122,7 +131,7 @@ if ($skillInvokes.Count -gt 0 -and (Test-Path $ChoreoFile)) {
 }
 
 # Heuristic 5: missing craft skills in .skills
-$expectedSkills = @('discover-repo', 'evolve-harness', 'regenerate-harness')
+$expectedSkills = @('discover-repo', 'evolve-harness', 'regenerate-harness', 'metrics-rollup')
 foreach ($sk in $expectedSkills) {
     $path = Join-Path $SkillsDir "$sk.skill.yaml"
     if (-not (Test-Path $path)) {
@@ -154,6 +163,49 @@ if (Test-Path $OrganismFile) {
         -Confidence 'low' -Evidence @("audit_events=$auditCount", "signals=$signalCount")
 }
 
+# Heuristic 8+: Economy Intelligence from metrics summary
+$metricsSemaphore = ''
+$metricsBlockedRate = ''
+$metricsTokensObserved = ''
+if (Test-Path -LiteralPath $SummaryFile) {
+    $sumRaw = Get-Content -LiteralPath $SummaryFile -Raw
+    if ($sumRaw -match '(?m)^\s*semaphore:\s*(\S+)') { $metricsSemaphore = $Matches[1].Trim() }
+    if ($sumRaw -match '(?m)^\s*blocked_rate:\s*([0-9.]+)') { $metricsBlockedRate = $Matches[1].Trim() }
+    if ($sumRaw -match '(?m)^\s*tokens_observed:\s*(\S+)') { $metricsTokensObserved = $Matches[1].Trim() }
+
+    $blockedNum = 0.0
+    if ($metricsBlockedRate) {
+        try { $blockedNum = [double]::Parse($metricsBlockedRate, [System.Globalization.CultureInfo]::InvariantCulture) } catch { $blockedNum = 0.0 }
+    }
+
+    if ($metricsSemaphore -eq 'expensive' -or $blockedNum -ge 0.25) {
+        Add-Proposal -Kind 'economy' -Target '.arah/observability/summary.yaml' `
+            -Change 'Reduzir co-ativacao e clarear gates; rodar arah metrics report e atacar roi_hints de friccao.' `
+            -Rationale 'Scorecard marca harness caro/friccao alta - eficiencia abaixo do desejado.' `
+            -Confidence 'high' -Evidence @("semaphore=$metricsSemaphore", "blocked_rate=$metricsBlockedRate")
+    }
+    elseif ($metricsSemaphore -eq 'neutral' -and $blockedNum -gt 0.10) {
+        Add-Proposal -Kind 'workflow' -Target '.agents/autonomy.yaml' `
+            -Change 'Documentar caminho de aprovacao para acoes com blocked_rate elevado; evitar retries cegos.' `
+            -Rationale 'Friccao moderada no scorecard - gates podem estar gerando custo sem outcome.' `
+            -Confidence 'medium' -Evidence @("semaphore=$metricsSemaphore", "blocked_rate=$metricsBlockedRate")
+    }
+
+    if ($metricsTokensObserved -eq 'false' -and $auditCount -ge 10) {
+        Add-Proposal -Kind 'economy' -Target 'scripts/agents/record-agent-event.ps1' `
+            -Change 'Instrumentar TokensIn/TokensOut/CostUsd nos pontos de invoke-skill e turn-stop quando a fonte de usage existir.' `
+            -Rationale 'Ledger ativo sem tokens - Economy Intelligence ainda em proxies (M1).' `
+            -Confidence 'low' -Evidence @('tokens_observed=false', "audit_events=$auditCount")
+    }
+
+    if ($sumRaw -match 'turn storm') {
+        Add-Proposal -Kind 'communication' -Target 'docs/METHOD.md' `
+            -Change 'Reforcar comunicacao passiva (arquivo+CI+sinais); evitar chat entre agentes por metrica.' `
+            -Rationale 'Hint de turn storm no scorecard - risco a economia de tokens.' `
+            -Confidence 'medium' -Evidence @('roi_hints:turn_storm')
+    }
+}
+
 # Always emit at least a homeostasis proposal when quiet
 if ($proposals.Count -eq 0) {
     Add-Proposal -Kind 'workflow' -Target 'homeostasis' `
@@ -181,7 +233,15 @@ $sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine("  live_events: $liveCount")
 [void]$sb.AppendLine("  discovery_present: $((Test-Path $DiscoveryFile).ToString().ToLower())")
 [void]$sb.AppendLine("  organism_present: $((Test-Path $OrganismFile).ToString().ToLower())")
-[void]$sb.AppendLine("summary: `"$($proposals.Count) propostas a partir de audit=$auditCount signals=$signalCount live=$liveCount`"")
+if ($metricsSemaphore) {
+    [void]$sb.AppendLine("  metrics_semaphore: $metricsSemaphore")
+}
+if ($metricsBlockedRate) {
+    [void]$sb.AppendLine("  blocked_rate: $metricsBlockedRate")
+}
+$summaryBits = "audit=$auditCount signals=$signalCount live=$liveCount"
+if ($metricsSemaphore) { $summaryBits += " semaphore=$metricsSemaphore" }
+[void]$sb.AppendLine("summary: `"$($proposals.Count) propostas a partir de $summaryBits`"")
 [void]$sb.AppendLine('proposals:')
 foreach ($p in $proposals) {
     [void]$sb.AppendLine("  - id: $($p.id)")

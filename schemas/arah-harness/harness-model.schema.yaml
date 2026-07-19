@@ -75,6 +75,11 @@ types:
       type: string
       required: true
       default: ".arah/observability/summary.yaml"
+    metrics_digest:
+      type: string
+      required: false
+      default: "docs/_meta/metrics.digest.md"
+      description: Digest humano opcional gerado por arah metrics rollup -Digest
     agent_graph:
       type: string
       default: "docs/_meta/agent-graph.generated.json"

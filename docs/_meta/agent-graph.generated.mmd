@@ -2,11 +2,13 @@ flowchart LR
   %% Gerado por scripts/agents/export-agent-graph.ps1 — não editar à mão
   subgraph CHOREOGRAPHY["Coreografia (paths -> rules)"]
     rule_architecture_docs["architecture-docs"]
+    rule_biocomponent_meta["biocomponent-meta"]
     rule_craft_backend["craft-backend"]
     rule_craft_frontend["craft-frontend"]
     rule_domain_cli["domain-cli"]
     rule_domain_extension_live["domain-extension-live"]
     rule_domain_kernel["domain-kernel"]
+    rule_economy_intelligence["economy-intelligence"]
     rule_harness_arah_sdlc["harness-arah-sdlc"]
     rule_harness_cli["harness-cli"]
     rule_harness_docs["harness-docs"]
@@ -21,6 +23,7 @@ flowchart LR
     agent_backend(["backend"])
     agent_docs_steward(["docs-steward"])
     agent_frontend(["frontend"])
+    agent_orchestrator(["orchestrator"])
     agent_pr_steward(["pr-steward"])
     agent_qa(["qa"])
     agent_release(["release"])
@@ -39,12 +42,18 @@ flowchart LR
   rule_architecture_docs --> agent_architecture_documenter
   rule_architecture_docs --> agent_clean_craft_advisor
   rule_architecture_docs --> agent_solutions_architect
+  rule_biocomponent_meta --> agent_orchestrator
+  rule_biocomponent_meta --> agent_solutions_architect
+  rule_biocomponent_meta --> agent_spec_steward
   rule_craft_backend --> agent_backend
   rule_craft_backend --> agent_solutions_architect
   rule_craft_frontend --> agent_frontend
   rule_domain_cli --> agent_cli
   rule_domain_extension_live --> agent_extension_live
   rule_domain_kernel --> agent_kernel
+  rule_economy_intelligence --> agent_docs_steward
+  rule_economy_intelligence --> agent_orchestrator
+  rule_economy_intelligence --> agent_spec_steward
   rule_harness_arah_sdlc --> agent_docs_steward
   rule_harness_arah_sdlc --> agent_extension_live
   rule_harness_arah_sdlc --> agent_release

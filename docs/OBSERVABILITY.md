@@ -1,6 +1,6 @@
 # OBSERVABILITY — ARAH Harness
 
-**Versão**: 1.0 · **Data**: 2026-07-06
+**Versão**: 1.1 · **Data**: 2026-07-17
 
 ## Camadas de observabilidade
 
@@ -8,12 +8,23 @@
 |--------|-------|----------|
 | Auditoria (quente) | `.arah/local/audit/` | Eventos arquivo-por-evento + archive |
 | Sinais (quente) | `.arah/local/bus/` | Barramento tipado |
-| Resumo | `.arah/observability/summary.yaml` | Contadores agregados (quente) |
+| Scorecard | `.arah/observability/summary.yaml` | Economy Intelligence (`metrics-summary`) |
+| Digest | `docs/_meta/metrics.digest.md` | Resumo humano opcional (`-Digest`) |
 | Evidência fria | `docs/_meta/runs/*/summary.json` | Resumos versionáveis |
 | Live (Cursor) | `.cursor/arah-live/diagnostics.jsonl` | Diagnósticos de sessão |
 | Sessões | `.cursor/arah-live/sessions/*.diagnostics.jsonl` | Traces por conversa |
 | Agent Graph | `docs/_meta/agent-graph.generated.json` | Grafo exportável |
 | Capacidades | `capabilities.yaml` | Status available/experimental/planned |
+
+## Economy Intelligence
+
+```powershell
+powershell -File cli/arah.ps1 metrics rollup
+powershell -File cli/arah.ps1 metrics report
+```
+
+Agrega audit + signals + live → rates, semaphore (`productive|neutral|expensive|insufficient_data`) e `roi_hints`.  
+Guia completo: [ECONOMY.md](ECONOMY.md).
 
 ## Telemetria de sessão
 

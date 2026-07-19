@@ -62,14 +62,21 @@ Bloqueios automáticos via `check-autonomy.ps1`:
 
 ## Resumo agregado
 
-`.arah/observability/summary.yaml` — atualizado a cada evento:
+`.arah/observability/summary.yaml` — thin update a cada evento; scorecard rico via `arah metrics rollup`:
 
 ```yaml
+# thin (record-agent-event)
 total_events: 42
 last_agent: qa
 last_action: skill.invoke
 last_outcome: ok
+
+# rico (metrics-rollup) — schema: arah-harness/metrics-summary
+# totals / efficiency.semaphore / roi_hints / by_agent ...
 ```
+
+Campos opcionais de economia no evento: `session_id`, `skill_id`, `model`, `tokens_in`, `tokens_out`, `latency_ms`, `cost_usd`.  
+Ver [ECONOMY.md](ECONOMY.md).
 
 ## Gates humanos
 

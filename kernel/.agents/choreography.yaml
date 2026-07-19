@@ -93,22 +93,26 @@ rules:
       - docs/_meta/discovery.proposed.yaml
       - docs/_meta/organism.manifest.yaml
       - docs/_meta/evolution.proposed.yaml
+      - docs/_meta/metrics.digest.md
       - docs/TECHORGANISM.md
       - docs/BIOCOMPONENT.md
+      - docs/ECONOMY.md
       - schemas/arah-harness/discovery.schema.yaml
       - schemas/arah-harness/organism.schema.yaml
       - schemas/arah-harness/signal.schema.yaml
       - schemas/arah-harness/evolution.schema.yaml
+      - schemas/arah-harness/metrics-summary.schema.yaml
       - scripts/agents/discover-repo.ps1
       - scripts/agents/organism-bootstrap.ps1
       - scripts/agents/signal-bus.ps1
       - scripts/agents/evolve-harness.ps1
+      - scripts/agents/metrics-rollup.ps1
       - scripts/agents/regenerate-harness.ps1
     agents:
       - id: orchestrator
         type: operational
         autonomy: [route, activate, invoke_skill]
-        skills: [discover-repo, evolve-harness, regenerate-harness]
+        skills: [discover-repo, evolve-harness, regenerate-harness, metrics-rollup]
       - id: spec-steward
         type: operational
         autonomy: [activate, invoke_skill]
@@ -117,6 +121,31 @@ rules:
         type: operational
         autonomy: [consult, invoke_skill]
         skills: [architecture-review]
+
+  - id: economy-intelligence
+    paths:
+      - schemas/arah-harness/metrics-summary.schema.yaml
+      - schemas/arah-harness/audit-event.schema.yaml
+      - scripts/agents/metrics-rollup.ps1
+      - scripts/agents/record-agent-event.ps1
+      - .skills/metrics-rollup.skill.yaml
+      - docs/ECONOMY.md
+      - docs/OBSERVABILITY.md
+      - docs/AUDIT.md
+      - docs/specs/arah-economy-metrics.spec.yaml
+      - cli/arah.ps1
+    agents:
+      - id: orchestrator
+        type: operational
+        autonomy: [route, activate, invoke_skill]
+        skills: [metrics-rollup, evolve-harness]
+      - id: spec-steward
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [spec-validate]
+      - id: docs-steward
+        type: operational
+        autonomy: [activate, invoke_skill]
 
   - id: pr-always
     paths:

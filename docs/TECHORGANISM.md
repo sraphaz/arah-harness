@@ -142,7 +142,16 @@ arah evolve
 arah evolve -Apply
 ```
 
-### 5. Homeostase — `regenerate`
+### 5. Economy Intelligence — `metrics`
+
+```powershell
+powershell -File cli/arah.ps1 metrics report
+powershell -File cli/arah.ps1 metrics rollup -Digest
+```
+
+Scorecard em `.arah/observability/summary.yaml`; evolve consome o semaphore para propor eficiência. Guia: [ECONOMY.md](ECONOMY.md).
+
+### 6. Homeostase — `regenerate`
 
 ```powershell
 powershell -File cli/arah.ps1 regenerate `
@@ -150,7 +159,7 @@ powershell -File cli/arah.ps1 regenerate `
   -UpdateKernel -Force
 ```
 
-Pipeline: update → domain sync → discover → organism → evolve → graph → doctor.
+Pipeline: update → domain sync → discover → organism → evolve → metrics rollup → graph → doctor.
 
 ---
 
@@ -161,11 +170,13 @@ Pipeline: update → domain sync → discover → organism → evolve → graph 
 | `docs/_meta/discovery.proposed.yaml` | Observação + propostas | Sim |
 | `docs/_meta/organism.manifest.yaml` | Mapa de células e tecidos | Sim |
 | `docs/_meta/evolution.proposed.yaml` | Propostas de self-learning | Sim |
+| `docs/_meta/metrics.digest.md` | Digest de eficiência (opcional) | Opcional |
 | `docs/_meta/agent-graph.generated.json` | Grafo auditável | Sim (gerado) |
 | `.arah/local/bus/` | Barramento de sinais (quente) | Não (runtime) |
 | `.arah/local/audit/` | Ledger de ações (quente) | Não (runtime) |
 | `docs/_meta/runs/*/summary.json` | Evidência fria por run | Sim |
 | `.arah/organism/state.json` | Estado ontogênico | Não (runtime) |
+| `.arah/observability/summary.yaml` | Scorecard Economy Intelligence | Não (runtime) |
 
 ---
 
@@ -186,6 +197,7 @@ Pipeline: update → domain sync → discover → organism → evolve → graph 
 |-------|--------|
 | `discover-repo` | `scripts/agents/discover-repo.ps1` |
 | `evolve-harness` | `scripts/agents/evolve-harness.ps1` |
+| `metrics-rollup` | `scripts/agents/metrics-rollup.ps1` |
 | `regenerate-harness` | `scripts/agents/regenerate-harness.ps1` |
 
 ---

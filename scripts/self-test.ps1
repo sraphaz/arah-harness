@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Teste de fumaça do ARAH Harness — roda em CI e localmente.
@@ -68,6 +68,23 @@ try {
     if (-not (Test-Path -LiteralPath $evolution)) {
         throw "evolution.proposed.yaml missing"
     }
+
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli metrics rollup -Target $Tmp
+    if ($LASTEXITCODE -ne 0) { throw "metrics rollup failed" }
+    $summary = Join-RepoPath $Tmp @('.arah', 'observability', 'summary.yaml')
+    if (-not (Test-Path -LiteralPath $summary)) {
+        throw "metrics summary.yaml missing"
+    }
+    $summaryRaw = Get-Content -LiteralPath $summary -Raw
+    if ($summaryRaw -notmatch 'schema:\s*arah-harness/metrics-summary') {
+        throw "metrics summary missing schema arah-harness/metrics-summary"
+    }
+    if ($summaryRaw -notmatch 'semaphore:') {
+        throw "metrics summary missing semaphore"
+    }
+
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli metrics report -Target $Tmp
+    if ($LASTEXITCODE -ne 0) { throw "metrics report failed" }
 
     & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli compact -Target $Tmp -Kind bus
     if ($LASTEXITCODE -ne 0) { throw "compact failed" }

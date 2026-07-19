@@ -162,6 +162,7 @@ flowchart TB
 | `organism status` | Estado do organismo |
 | `organism signal` | Emite sinal tipado no bus |
 | `evolve [-Apply]` | Ciclo de self-learning |
+| `metrics rollup\|report` | Economy Intelligence (scorecard) |
 | `regenerate [-UpdateKernel]` | Homeostase completa no consumidor |
 
 ```powershell
@@ -180,12 +181,12 @@ arah-harness/
 │   ├── .skills/            # Procedimentos determinísticos
 │   ├── .cursor/            # Hooks (domain review + live session)
 │   └── scripts/            # Orquestração, gates, TechOrganism, telemetria
-├── cli/                    # install · discover · organism · evolve · regenerate
+├── cli/                    # install · discover · organism · evolve · metrics · regenerate
 ├── extension/arah-live/    # Painel Cursor/VS Code em tempo real
 ├── harness/profiles/       # Tiers: minimal → enterprise
 ├── schemas/arah-harness/   # Contratos canônicos
 ├── templates/              # Config, AGENTS.md, CI
-├── docs/                   # Método, TechOrganism, governança
+├── docs/                   # Método, TechOrganism, Economy, governança
 └── scripts/self-test.ps1
 ```
 
@@ -208,6 +209,7 @@ arah-harness/
 | Documento | Conteúdo |
 |-----------|----------|
 | **[TECHORGANISM.md](docs/TECHORGANISM.md)** | Dimensão viva — discovery, organismo, sinais, evolução |
+| **[ECONOMY.md](docs/ECONOMY.md)** | Economy Intelligence — scorecard e eficiência |
 | [STATE_MODEL.md](docs/STATE_MODEL.md) | Estado quente × evidência fria |
 | [backlog/](docs/backlog/) | Control Plane — épicos W/C/H |
 | [website/](website/) | Site EN/PT + docs + Live Console (UI) → [GitHub Pages](https://sraphaz.github.io/arah-harness/) |
