@@ -38,7 +38,7 @@ Síntese das referências usadas para desenhar o ARAH Harness e o posicionamento
 
 ### copier-coding-harness / product-template
 - **Força**: Overlay em repos existentes; `copier update` para evoluir derivados
-- **ARAH adota**: `update` + pin `.arah-version`; drift-check
+- **ARAH adota**: `update` + pin `.arah-version`; drift-check; **notificação** via GitHub Releases + cron no consumidor ([UPDATE_NOTIFICATIONS.md](UPDATE_NOTIFICATIONS.md)) — equivalente prático a “há update disponível” sem Dependabot no kernel
 
 ### Thread AI — Agentic SDLC Harness
 - **URL**: https://www.threadai.com/blog/an-inside-look-how-we-built-our-agentic-sdlc-harness

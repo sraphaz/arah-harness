@@ -21,7 +21,10 @@ $ErrorActionPreference = 'Stop'
 $HarnessRoot = Split-Path $PSScriptRoot -Parent
 $KernelRoot = Join-Path $HarnessRoot 'kernel'
 $TemplatesRoot = Join-Path $HarnessRoot 'templates'
-$Version = '0.4.0'
+$VersionFile = Join-Path $HarnessRoot 'VERSION'
+$Version = if (Test-Path -LiteralPath $VersionFile) {
+    (Get-Content -LiteralPath $VersionFile -Raw).Trim()
+} else { '0.4.0' }
 
 if (-not (Test-Path $KernelRoot)) {
     Write-Error "Kernel not found at $KernelRoot"
@@ -124,14 +127,16 @@ foreach ($sub in @('domain', 'specialists')) {
     }
 }
 
-# GitHub workflow
-$wfTpl = Join-Path $TemplatesRoot 'github/workflows/agents-validate.yml'
-$wfDest = Join-Path $Target '.github/workflows/agents-validate.yml'
-if ((Test-Path $wfTpl) -and ((-not (Test-Path $wfDest)) -or $Force)) {
-    $wfDir = Split-Path $wfDest -Parent
-    if (-not (Test-Path $wfDir)) { New-Item -ItemType Directory -Path $wfDir -Force | Out-Null }
-    Copy-Item $wfTpl $wfDest -Force
-    Write-Host "  installed: .github/workflows/agents-validate.yml"
+# GitHub workflows (validate + harness update notify)
+$wfDir = Join-Path $Target '.github/workflows'
+if (-not (Test-Path $wfDir)) { New-Item -ItemType Directory -Path $wfDir -Force | Out-Null }
+foreach ($wfName in @('agents-validate.yml', 'harness-update-check.yml')) {
+    $wfTpl = Join-Path $TemplatesRoot "github/workflows/$wfName"
+    $wfDest = Join-Path $wfDir $wfName
+    if ((Test-Path $wfTpl) -and ((-not (Test-Path $wfDest)) -or $Force)) {
+        Copy-Item $wfTpl $wfDest -Force
+        Write-Host "  installed: .github/workflows/$wfName"
+    }
 }
 
 # Pin file
@@ -195,6 +200,22 @@ execution_control:
 "@
             Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
             Write-Host "  migrated: arah.config.yaml (+execution_control)"
+        }
+        $cfgRaw = Get-Content -LiteralPath $cfgPath -Raw
+        if ($cfgRaw -notmatch '(?m)^update_check:') {
+            $cfgRaw = $cfgRaw.TrimEnd() + @"
+
+
+# Harness update notifications (GitHub Releases + scheduled issue)
+update_check:
+  enabled: true
+  repository: sraphaz/arah-harness
+  notify:
+    issue: true
+    label: arah-harness-update
+"@
+            Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
+            Write-Host "  migrated: arah.config.yaml (+update_check)"
         }
     }
 }

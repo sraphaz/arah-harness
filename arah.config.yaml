@@ -2,9 +2,9 @@
 version: 1
 harness:
   source: sraphaz/arah-harness
-  version: "0.4.0"
+  version: "0.4.1"
   repository: https://github.com/sraphaz/arah-harness
-  release: v0.4.0
+  release: v0.4.1
 
 project:
   name: arah-harness
@@ -57,6 +57,14 @@ domains:
       - README.md
 
 specialists: []
+
+# Harness update notifications — GitHub Releases + scheduled issue
+update_check:
+  enabled: true
+  repository: sraphaz/arah-harness
+  notify:
+    issue: true
+    label: arah-harness-update
 
 # Execution Control Protocol — terminalidade (intenção → um executor → done|blocked)
 execution_control:

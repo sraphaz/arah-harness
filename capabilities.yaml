@@ -2,7 +2,7 @@
 # Consumido pelo site (W-07) e por docs. Não duplicar status em outros arquivos.
 version: 1
 updated_at: 2026-07-19
-harness_version: "0.4.0"
+harness_version: "0.4.1"
 
 available:
   - id: agents-skills-manifests
@@ -46,6 +46,9 @@ available:
     notes: Telemetria Cursor/VS Code
 
 experimental:
+  - id: harness-update-check
+    name: Harness update notifications
+    notes: GitHub Releases + scheduled issue / Renovate pin
   - id: execution-control
     name: Execution Control Protocol
     notes: contratos de tarefa, executor primário, done|blocked

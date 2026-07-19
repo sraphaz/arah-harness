@@ -2,6 +2,18 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.4.1] - 2026-07-19
+
+### Added
+
+- **Notificações de atualização do harness** (padrão Releases + cron no consumidor)
+  - `arah update-check` / `scripts/agents/check-harness-update.ps1` — pin × GitHub Release
+  - Workflow consumidor `harness-update-check.yml` (issue `arah-harness-update`)
+  - Workflow upstream `release.yml` — publica Release a partir de tags `v*.*.*`
+  - Template Renovate `templates/renovate-arah.json` (opcional)
+  - Docs: [UPDATE_NOTIFICATIONS.md](docs/UPDATE_NOTIFICATIONS.md)
+- `init` lê `VERSION` (não hardcode); migra `update_check` na config
+
 ## [0.4.0] - 2026-07-19
 
 ### Added

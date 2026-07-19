@@ -1,0 +1,63 @@
+# Publica GitHub Release a partir de tags vX.Y.Z (fonte de verdade para consumidores).
+# Uso:
+#   git tag v0.4.1 && git push origin v0.4.1
+# ou workflow_dispatch com tag.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v0.4.1) — must already exist or will be created from VERSION'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve tag
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog section
+        id: notes
+        shell: pwsh
+        run: |
+          $ver = '${{ steps.tag.outputs.version }}'
+          $cl = Get-Content CHANGELOG.md -Raw
+          $notes = "ARAH Harness v$ver"
+          if ($cl -match "(?ms)## \[$([regex]::Escape($ver))\][^\n]*\n(.*?)(?=\n## |\z)") {
+            $notes = $Matches[1].Trim()
+          }
+          $path = 'release-notes.md'
+          Set-Content -Path $path -Value $notes -Encoding UTF8
+          echo "file=$path" >> $env:GITHUB_OUTPUT
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ARAH Harness ${{ steps.tag.outputs.tag }}
+          body_path: ${{ steps.notes.outputs.file }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
