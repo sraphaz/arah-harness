@@ -2,6 +2,28 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.3.1] - 2026-07-19
+
+### Added
+
+- **Estado quente × evidência fria** — `.arah/local/` (gitignored) + `docs/_meta/runs/*/summary.json`
+- **Arquivo-por-evento** — bus/audit em `<ULID>.json`; `arah compact` e `arah migrate-state`
+- **Scrubbing de secrets** antes de persistir payloads (`arah-event-io.ps1`)
+- **`arah hooks install`** — pre-commit + [BRANCH_PROTECTION.md](docs/BRANCH_PROTECTION.md)
+- **`install -Minimal`** — manifests + gates; upgrade path documentado
+- **`capabilities.yaml`** — fonte única available/experimental/planned
+- **ADR-001** — CLI portátil em Go
+- Schemas signal/audit **0.2.0** com campo `v`; [SIGNAL_COMPATIBILITY.md](docs/SIGNAL_COMPATIBILITY.md), [STATE_MODEL.md](docs/STATE_MODEL.md), [CLI_SURFACE.md](docs/CLI_SURFACE.md)
+- Backlog Control Plane: [docs/backlog/](docs/backlog/) (W/C UI em espera; H parcialmente entregue)
+- Design handoff em [docs/design/control-plane/](docs/design/control-plane/)
+- Spec `arah-state-model`
+
+### Changed
+
+- `signal-bus` / `record-agent-event` / `evolve-harness` leem pending+archive+legado
+- Gate security também varre evidência fria e `.arah` (exceto `local/`)
+- Organism `bus_path` default → `.arah/local/bus/`
+
 ## [0.3.0] - 2026-07-17
 
 ### Added

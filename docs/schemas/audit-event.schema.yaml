@@ -1,0 +1,30 @@
+# audit-event.schema.yaml — evento na trilha .arah/audit/events.jsonl
+
+schema: arah-harness/audit-event
+version: 0.1.0
+
+fields:
+  ts:              {type: datetime, required: true}
+  correlation_id:  {type: string, required: true}
+  project:         {type: string, required: true}
+  agent_id:        {type: string, required: true}
+  action:          {type: string, required: true}
+  autonomy_level:  {type: string, required: true}
+  outcome:         {type: enum[ok, blocked, denied, error, pending], required: true}
+  human_gate:      {type: string, nullable: true}
+  details:         {type: string}
+
+validations_expected:
+  - "outcome=blocked deve ter details ou human_gate quando gate pendente"
+  - "append-only — eventos nunca são editados in-place"
+
+example:
+  ts: "2026-07-06T22:00:00Z"
+  correlation_id: a1b2c3d4e5f6
+  project: meu-projeto
+  agent_id: test-architect
+  action: domain.consult
+  autonomy_level: consult
+  outcome: ok
+  human_gate: null
+  details: "craft-review.md published"

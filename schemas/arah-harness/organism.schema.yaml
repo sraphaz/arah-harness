@@ -74,7 +74,7 @@ types:
   signaling_block:
     bus_path:
       type: string
-      default: .arah/bus/signals.jsonl
+      default: .arah/local/bus/
     default_mode:
       type: enum[passive, active_propose]
       default: passive

@@ -16,6 +16,25 @@ powershell -ExecutionPolicy Bypass -File $env:USERPROFILE\arah-harness\cli\arah.
   -ProjectName "meu-projeto"
 ```
 
+### Modo mínimo (manifests + gates)
+
+Para adoção leve sem organismo/bus no primeiro dia:
+
+```powershell
+powershell -File $env:USERPROFILE\arah-harness\cli\arah.ps1 install `
+  -ProjectName "meu-projeto" -Minimal
+```
+
+Isso anota `organism.enabled: false` em `arah.config.yaml`. **Upgrade path:**
+
+```powershell
+# remova o bloco organism: minimal (ou enabled: true) e:
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 regenerate -Target . -UpdateKernel
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 discover -Target .
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 organism bootstrap -Target .
+powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 hooks install -Target .
+```
+
 Ative o organismo (recomendado na v0.3):
 
 ```powershell
@@ -131,7 +150,7 @@ powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 doctor -Target .
 
 ```powershell
 git add .agents .skills scripts .cursor arah.config.yaml .arah-version .github AGENTS.md docs
-git commit -m "chore: bootstrap ARAH Harness v0.3.0"
+git commit -m "chore: bootstrap ARAH Harness v0.3.1"
 ```
 
 ---
@@ -145,6 +164,9 @@ git commit -m "chore: bootstrap ARAH Harness v0.3.0"
 | Detectar drift | `arah sync-check` |
 | Self-learning | `arah evolve` |
 | Redefinir organismo | `arah organism bootstrap -Force` |
+| Migrar estado legado → quente/frio | `arah migrate-state` |
+| Compactar eventos pending | `arah compact` |
+| Instalar pre-commit hooks | `arah hooks install` |
 
 ```powershell
 # Receber v0.3+ em consumidor existente

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentação — ARAH Harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#0A0C0F;color:#E7ECF1;font-family:'Schibsted Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E7ECF1;text-decoration:none}
+a:hover{color:oklch(80% 0.09 200)}
+*{box-sizing:border-box}
+::selection{background:oklch(70% 0.09 200 / .35)}
+input::placeholder{color:#4A5563}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0A0C0F">
+<nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:28px;padding:10px 32px;min-height:64px;row-gap:6px;flex-wrap:wrap;background:rgba(10,12,15,.82);backdrop-filter:blur(14px);border-bottom:1px solid #161C24">
+  <a href="Home PT.dc.html" style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.02em">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="3" y1="19" x2="11" y2="11" stroke="oklch(78% 0.09 200)" stroke-width="1.6"></line><line x1="11" y1="3" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><line x1="19" y1="19" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><circle cx="11" cy="11" r="3" fill="oklch(78% 0.09 200)"></circle><circle cx="3" cy="19" r="2" fill="#3A4553"></circle><circle cx="19" cy="19" r="2" fill="#3A4553"></circle><circle cx="11" cy="3" r="2" fill="#3A4553"></circle></svg>
+    <span>ARAH Harness</span>
+  </a>
+  <div style="display:flex;gap:22px;font-size:14px;color:#9AA5B1;margin-left:12px;flex:1;flex-wrap:wrap">
+    <a href="Home PT.dc.html" style="color:#9AA5B1">Produto</a>
+    <a href="Architecture PT.dc.html" style="color:#9AA5B1">Arquitetura</a>
+    <a href="How It Works PT.dc.html" style="color:#9AA5B1">Como Funciona</a>
+    <a href="TechOrganism PT.dc.html" style="color:#9AA5B1">TechOrganism</a>
+    <a href="Use Cases PT.dc.html" style="color:#9AA5B1">Casos de Uso</a>
+    <a href="Docs PT.dc.html" style="color:#E7ECF1">Documentação</a>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center"><div style="display:flex;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #232B36;border-radius:7px;padding:2px"><a href="Docs.dc.html" style="padding:4px 9px;border-radius:5px;color:#5A6675">EN</a><span style="padding:4px 9px;border-radius:5px;background:#1E2630;color:#E7ECF1">PT</span></div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;border:1px solid #232B36;border-radius:20px;padding:4px 12px">v1.5.0</span>
+    <a href="https://github.com/sraphaz/arah-harness" style="font-size:13.5px;font-family:'IBM Plex Mono',monospace;color:#9AA5B1;border:1px solid #232B36;padding:7px 14px;border-radius:6px;white-space:nowrap" style-hover="border-color:#3A4553;color:#E7ECF1">Ver no GitHub</a>
+  </div>
+</nav>
+
+<div style="max-width:1360px;margin:0 auto;display:grid;grid-template-columns:264px minmax(0,1fr);gap:0;align-items:start">
+  <aside style="position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;border-right:1px solid #141A22;padding:24px 16px 48px">
+    <input value="{{ query }}" onChange="{{ onSearch }}" placeholder="Buscar na documentação…" style="width:100%;background:#0D1117;border:1px solid #232B36;border-radius:7px;color:#E7ECF1;font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:9px 12px;outline:none;margin-bottom:18px">
+    <sc-if value="{{ searching }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;padding:6px 10px">RESULTADOS</div>
+        <sc-for list="{{ results }}" as="r" hint-placeholder-count="3">
+          <button onClick="{{ r.open }}" style="text-align:left;background:none;border:none;color:#B7C0CB;font-size:13.5px;font-family:'Schibsted Grotesk',sans-serif;padding:7px 10px;border-radius:6px;cursor:pointer" style-hover="background:#10151C;color:#E7ECF1">{{ r.title }} <span style="color:#5A6675;font-size:11.5px">· {{ r.section }}</span></button>
+        </sc-for>
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13px;color:#5A6675;padding:8px 10px">Nenhuma página corresponde a "{{ query }}".</div>
+        </sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ notSearching }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="4">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#5A6675;padding:0 10px;margin-bottom:6px">{{ sec.name }}</div>
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <sc-for list="{{ sec.pages }}" as="pg" hint-placeholder-count="4">
+                <button onClick="{{ pg.open }}" style="text-align:left;background:{{ pg.bg }};border:none;border-left:2px solid {{ pg.mark }};color:{{ pg.color }};font-size:13.5px;font-family:'Schibsted Grotesk',sans-serif;padding:7px 12px;cursor:pointer" style-hover="color:#E7ECF1">{{ pg.title }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </aside>
+
+  <main style="padding:40px 48px 90px;min-width:0">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#5A6675;margin-bottom:26px;flex-wrap:wrap">
+      <span>Docs</span><span>/</span><span>{{ crumbSection }}</span><span>/</span><span style="color:#9AA5B1">{{ crumbPage }}</span>
+      <span style="flex:1"></span>
+      <a href="https://github.com/sraphaz/arah-harness/tree/main/docs" style="color:#5A6675;border:1px solid #232B36;border-radius:5px;padding:4px 10px;font-size:11px" style-hover="color:#E7ECF1;border-color:#3A4553">Editar esta página no GitHub</a>
+    </div>
+    <div style="max-width:760px">
+      <h1 style="font-size:36px;line-height:1.15;font-weight:700;letter-spacing:-.018em;margin:0 0 14px">{{ page.title }}</h1>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0 0 34px;text-wrap:pretty">{{ page.intro }}</p>
+      <sc-for list="{{ page.blocks }}" as="b" hint-placeholder-count="3">
+        <div>
+          <sc-if value="{{ b.isHeading }}" hint-placeholder-val="{{ false }}"><h2 style="font-size:22px;font-weight:700;margin:36px 0 12px;letter-spacing:-.01em">{{ b.text }}</h2></sc-if>
+          <sc-if value="{{ b.isPara }}" hint-placeholder-val="{{ true }}"><p style="font-size:15px;line-height:1.75;color:#B7C0CB;margin:0 0 16px;text-wrap:pretty">{{ b.text }}</p></sc-if>
+          <sc-if value="{{ b.isCode }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid #1A212B;border-radius:9px;background:#080A0D;overflow:hidden;margin:0 0 18px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #141A22"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5A6675">{{ b.label }}</span><button onClick="{{ b.copy }}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C97A5;background:none;border:1px solid #232B36;border-radius:5px;padding:3px 9px;cursor:pointer" style-hover="color:#E7ECF1;border-color:#3A4553">{{ b.copyLabel }}</button></div>
+              <pre style="margin:0;padding:14px 16px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#A9C7D2;overflow:auto;white-space:pre-wrap">{{ b.text }}</pre>
+            </div>
+          </sc-if>
+          <sc-if value="{{ b.isList }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:6px;margin:0 0 18px">
+              <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="3">
+                <div style="display:flex;gap:10px;font-size:14.5px;line-height:1.6;color:#B7C0CB"><span style="color:oklch(78% 0.09 200)">·</span><span>{{ it }}</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ isCli }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:minmax(170px,220px) minmax(0,1fr);gap:14px;align-items:start;margin-top:8px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <sc-for list="{{ cliList }}" as="c" hint-placeholder-count="8">
+              <button onClick="{{ c.select }}" style="text-align:left;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};border-radius:7px;padding:9px 13px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;cursor:pointer" style-hover="border-color:#3A4553">{{ c.name }}</button>
+            </sc-for>
+          </div>
+          <div style="border:1px solid #1E2630;border-radius:11px;background:#0D1117;padding:26px;position:sticky;top:84px">
+            <pre style="margin:0 0 16px;background:#080A0D;border:1px solid #1A212B;border-radius:8px;padding:13px 16px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:oklch(84% 0.07 200);overflow:auto;white-space:pre-wrap">{{ selCli.syn }}</pre>
+            <p style="font-size:14.5px;line-height:1.65;color:#B7C0CB;margin:0 0 20px">{{ selCli.desc }}</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+              <div style="border:1px solid #1A212B;border-radius:8px;padding:13px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:#5A6675;margin-bottom:6px">LÊ</div><div style="font-size:12.5px;font-family:'IBM Plex Mono',monospace;line-height:1.6;color:#9AA5B1">{{ selCli.reads }}</div></div>
+              <div style="border:1px solid #1A212B;border-radius:8px;padding:13px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:#5A6675;margin-bottom:6px">ESCREVE</div><div style="font-size:12.5px;font-family:'IBM Plex Mono',monospace;line-height:1.6;color:#9AA5B1">{{ selCli.writes }}</div></div>
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:#5A6675;margin-bottom:6px">EXEMPLO · RESULTADO ESPERADO</div>
+            <pre style="margin:0;background:#080A0D;border:1px solid #1A212B;border-radius:8px;padding:13px 16px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#A9C7D2;overflow:auto;white-space:pre-wrap">$ {{ selCli.ex }}
+{{ selCli.out }}</pre>
+          </div>
+        </div>
+      </sc-if>
+      <div style="display:flex;justify-content:space-between;gap:12px;margin-top:56px;border-top:1px solid #141A22;padding-top:22px">
+        <sc-if value="{{ hasPrev }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ goPrev }}" style="text-align:left;background:none;border:1px solid #232B36;border-radius:9px;padding:14px 18px;cursor:pointer;color:#E7ECF1;font-family:'Schibsted Grotesk',sans-serif" style-hover="border-color:#3A4553"><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5A6675;margin-bottom:4px">← ANTERIOR</span><span style="font-size:14px">{{ prevTitle }}</span></button>
+        </sc-if>
+        <sc-if value="{{ noPrev }}" hint-placeholder-val="{{ true }}"><span></span></sc-if>
+        <sc-if value="{{ hasNext }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ goNext }}" style="text-align:right;background:none;border:1px solid #232B36;border-radius:9px;padding:14px 18px;cursor:pointer;color:#E7ECF1;font-family:'Schibsted Grotesk',sans-serif" style-hover="border-color:#3A4553"><span style="display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5A6675;margin-bottom:4px">PRÓXIMA →</span><span style="font-size:14px">{{ nextTitle }}</span></button>
+        </sc-if>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { section: 0, page: 0, query: '', copied: -1, cli: 0 };
+  docs = [
+    {name:'Primeiros Passos', pages:[
+      {title:'Introdução', intro:'O ARAH Harness é um harness repo-first para governança, coordenação e evolução da engenharia de software realizada por humanos e agentes de inteligência artificial.', blocks:[
+        {h:'O que ele instala'},{p:'O harness instala e mantém uma camada operacional dentro do seu repositório: manifests de agentes, skills, domínios, especialistas, coreografia por paths, políticas de autonomia, gates executáveis, um signal bus, um ledger de auditoria, um grafo de agentes, discovery, evolução e regeneração.'},
+        {h:'A ideia central'},{p:'A maior parte das ferramentas de IA parte do agente: um prompt concede autoridade, ferramentas executam, o código muda. O ARAH inverte essa relação. O repositório identifica o contexto, seleciona os agentes, define limites, aplica procedimentos, valida resultados e registra evidências. O repositório governa o agente.'},
+        {l:['Repo-first: contratos são arquivos versionados, não configurações de plataforma','Agnóstico a modelo: funciona com Claude Code, Cursor, Copilot, Codex, modelos locais','Humano no comando: a autoridade de merge é sempre humana']}]},
+      {title:'Requisitos', intro:'O que você precisa antes de instalar o harness.', blocks:[
+        {l:['Windows com PowerShell 5.1+ (ou PowerShell 7+ em qualquer SO)','Git 2.30+','Um repositório alvo (novo ou existente)','Opcional: GitHub CLI (gh) para automação de PRs','Opcional: um ambiente de IA — Claude Code, Cursor ou Copilot']},
+        {h:'Observações'},{p:'A CLI é baseada em PowerShell. No macOS e no Linux, instale o PowerShell 7 (pwsh) e substitua powershell por pwsh nos comandos.'}]},
+      {title:'Instalação', intro:'Clone o harness uma vez, depois instale-o em qualquer repositório consumidor.', blocks:[
+        {c:'git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\\arah-harness', label:'CLONAR'},
+        {c:'cd C:\\path\\to\\your-project\n\npowershell -ExecutionPolicy Bypass `\n  -File $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 `\n  install `\n  -ProjectName "my-project"', label:'INSTALAR'},
+        {h:'O que o install cria'},{l:['arah.config.yaml — políticas e autonomia','AGENTS.md — o contrato de entrada para ambientes de IA','.agents/ e .skills/ — manifests instalados','scripts/ — gates executáveis','.github/workflows/ — integração com CI','.arah/ — estado de auditoria, bus e organismo']}]},
+      {title:'Primeira Execução', intro:'Valide a instalação e deixe o harness observar seu repositório.', blocks:[
+        {c:'arah doctor', label:'VALIDAR A INSTALAÇÃO'},
+        {p:'O doctor verifica integridade do kernel, validade da config, conformidade com schemas e estrutura de diretórios. Corrija o que ele apontar antes de continuar.'},
+        {c:'arah discover', label:'RODAR O DISCOVERY'},
+        {p:'O discover inspeciona stack, frameworks, estrutura e diretórios, e escreve uma proposta revisável em docs/_meta/discovery.proposed.yaml. Nada é aplicado sem a sua revisão.'}]},
+      {title:'Início Rápido', intro:'O ciclo completo, de ponta a ponta, em cinco comandos.', blocks:[
+        {c:'arah doctor\narah discover\narah domain sync\narah export-graph\narah evolve', label:'O CICLO'},
+        {l:['doctor — valida a instalação','discover — propõe domínios a partir do repositório','domain sync — materializa os domínios aprovados','export-graph — deriva o grafo de agentes','evolve — propõe melhorias a partir de evidências']},
+        {p:'Cada comando escreve artefatos versionados que você revisa em pull requests. O harness nunca aplica mudanças estruturais sem seleção humana.'}]},
+      {title:'Atualização', intro:'Mantenha o consumidor consistente com o kernel por meio da regeneração.', blocks:[
+        {c:'powershell -File `\n  $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 `\n  regenerate `\n  -Target . `\n  -UpdateKernel', label:'REGENERAR'},
+        {p:'O regenerate atualiza o kernel, reexecuta o discovery, sincroniza domínios, regenera grafos e valida a instalação. Revise o diff resultante como qualquer outra mudança.'}]},
+      {title:'Desinstalação', intro:'O harness é um conjunto de arquivos no seu repositório — remover é um commit.', blocks:[
+        {p:'Exclua os diretórios instalados e a config: .agents/, .skills/, .arah/, arah.config.yaml, AGENTS.md, as entradas do harness em scripts/ e .github/workflows/. Seu código, docs e histórico ficam intactos.'},
+        {c:'git rm -r .agents .skills .arah arah.config.yaml AGENTS.md\ngit commit -m "remove arah harness"', label:'REMOVER'}]}
+    ]},
+    {name:'Conceitos Centrais', pages:[
+      {title:'Repo-first', intro:'O repositório é a fonte de verdade operacional — não uma plataforma, um modelo ou uma sessão.', blocks:[
+        {p:'Todo contrato que o harness aplica é um arquivo versionado: revisável em PRs, diffável, portável entre ferramentas e modelos. Não há banco de dados externo nem estado oculto.'},
+        {l:['Propriedade do contexto: o conhecimento pertence ao repositório','Independência: troque de modelo sem perder procedimentos','Auditabilidade: a história é o histórico do git mais o ledger']}]},
+      {title:'Agentes', intro:'Um agente é um manifest antes de ser um modelo.', blocks:[
+        {c:'# .agents/backend-payments.yaml\nrole: operational\ndomains: [payments]\npaths: ["backend/payments/**"]\nskills: [refactor, test-first]\nautonomy: propose-only\nescalation: payments-specialist', label:'.agents/backend-payments.yaml'},
+        {p:'Manifests declaram papel (operacional ou consultivo), escopo (domínios e paths), capacidades (skills) e autonomia. Gates validam cada manifest contra schemas/.'}]},
+      {title:'Skills', intro:'Procedimentos determinísticos e executáveis — não prompts livres.', blocks:[
+        {c:'# .skills/test-first/skill.yaml\nname: test-first\ninputs: [spec]\nsteps:\n  - generate failing test\n  - implement\n  - run gates\noutputs: [diff, test-report]', label:'.skills/test-first/skill.yaml'},
+        {p:'Uma skill codifica "como fazemos as coisas aqui" como uma unidade versionada que um agente é explicitamente autorizado a executar. Skills não autorizadas simplesmente não estão disponíveis.'}]},
+      {title:'Domínios', intro:'Áreas explícitas do repositório com responsabilidades, paths, referências e validações.', blocks:[
+        {c:'# docs/_meta/domains.yaml\npayments:\n  paths: ["backend/payments/**"]\n  owners: [platform-team]\n  advisors: [payments-specialist]\n  gates: [spec, security]', label:'docs/_meta/domains.yaml'},
+        {p:'Domínios dão aos agentes o mapa organizacional que humanos carregam na cabeça. O discovery os propõe; o domain sync materializa o que humanos aprovam.'}]},
+      {title:'Especialistas', intro:'Agentes consultivos vinculados a um domínio.', blocks:[
+        {p:'Especialistas codificam o julgamento de domínio: restrições, invariantes, critérios de decisão. Agentes operacionais os consultam pelo signal bus antes de mudar código do domínio. As respostas persistem como eventos tipados.'}]},
+      {title:'Coreografia', intro:'Seleção de agentes, skills e gates baseada em paths.', blocks:[
+        {c:'match: "backend/payments/**"\nactivate:\n  agents: [backend-payments]\n  advisors: [payments-specialist]\n  gates: [spec, security, build]', label:'harness/choreography.yaml'},
+        {p:'Uma mudança é roteada pelos arquivos que ela toca. Agentes fora de escopo nunca são ativados — o escopo é estrutural, não comportamental.'}]},
+      {title:'Autonomia', intro:'Níveis de autoridade declarados por agente e por path.', blocks:[
+        {c:'autonomy:\n  default: propose-only\n  overrides:\n    - paths: ["docs/**"]\n      level: execute-with-audit', label:'arah.config.yaml'},
+        {l:['propose-only — o agente produz uma proposta; humanos aplicam','execute-with-audit — o agente aplica dentro do escopo; o ledger registra tudo','escalate — o agente precisa consultar antes de agir']}]},
+      {title:'Gates Humanos', intro:'A autoridade de merge é humana, estruturalmente.', blocks:[
+        {p:'Nenhum mecanismo do harness consegue mesclar. Propostas de evolução, mudanças de agentes e mudanças de código terminam em um pull request revisado por um humano. Isso é um invariante de design, não uma opção de configuração.'}]},
+      {title:'TechOrganism', intro:'O modelo operacional: perceber, organizar, sinalizar, observar, propor, selecionar, regenerar.', blocks:[
+        {p:'TechOrganism é o modelo pelo qual um repositório percebe sua estrutura, organiza responsabilidades, comunica sinais, preserva memória e propõe sua própria evolução — sob seleção humana. Veja a página TechOrganism para o mapeamento completo.'}]}
+    ]},
+    {name:'Operações', pages:[
+      {title:'Discover', intro:'Observa o repositório e propõe domínios e especialistas.', blocks:[
+        {c:'arah discover', label:'COMANDO'},
+        {l:['Observa: stack, frameworks, estrutura, diretórios, indícios de domínio','Produz: docs/_meta/discovery.proposed.yaml','Nunca aplica nada sem revisão']}]},
+      {title:'Domain Sync', intro:'Materializa candidatos a domínio aprovados em contratos.', blocks:[
+        {c:'arah domain sync', label:'COMANDO'},
+        {p:'Lê o resultado aprovado do discovery e a config, escreve docs/_meta/domains.yaml e os manifests de especialistas. Reexecute após mudanças estruturais.'}]},
+      {title:'Export Graph', intro:'Deriva o grafo de agentes a partir dos manifests.', blocks:[
+        {c:'arah export-graph', label:'COMANDO'},
+        {p:'Gera docs/_meta/graph.json — nós para agentes, skills e domínios; arestas para autorização e responsabilidade. Um gate falha se o grafo divergir das fontes.'}]},
+      {title:'Signal Bus', intro:'Comunicação persistente, tipada e append-only.', blocks:[
+        {c:'arah organism signal --type consultation.request', label:'COMANDO'},
+        {c:'{"type":"consultation.answer",\n "from":"payments-specialist",\n "to":"backend-payments",\n "ts":"2026-07-18T14:02:11Z",\n "body":{"verdict":"approve-with-spec"}}', label:'.arah/bus/payments.jsonl'}]},
+      {title:'Auditoria', intro:'O ledger append-only de ações, resultados e decisões de autonomia.', blocks:[
+        {p:'Cada sessão escreve em .arah/audit/: ações executadas, gates rodados, nível de autonomia vigente, artefatos produzidos. O ledger é a base de evidências para as propostas de evolução.'}]},
+      {title:'Evolve', intro:'Propõe melhorias a partir de evidência acumulada.', blocks:[
+        {c:'arah evolve', label:'COMANDO'},
+        {p:'Analisa ledger, sinais e telemetria. Escreve propostas em docs/_meta/evolution/ — por exemplo, dividir um domínio sobrecarregado. Propostas viram PRs; humanos selecionam.'}]},
+      {title:'Regenerate', intro:'Homeostase para a instalação.', blocks:[
+        {c:'arah regenerate -Target . -UpdateKernel', label:'COMANDO'},
+        {l:['Atualiza o kernel para a versão mais recente','Reexecuta o discovery e sincroniza domínios','Regenera os grafos','Valida a instalação']}]},
+      {title:'Doctor', intro:'Diagnostica a instalação.', blocks:[
+        {c:'arah doctor', label:'COMANDO'},
+        {p:'Verifica integridade do kernel, conformidade com schemas, validade da config e estrutura de diretórios. Código de saída 0 significa saudável; códigos diferentes de zero identificam a checagem que falhou.'}]},
+      {title:'Sync Check', intro:'Roda todos os gates localmente, exatamente como o CI os roda.', blocks:[
+        {c:'arah sync-check', label:'COMANDO'},
+        {c:'✓ manifests   ✓ specs\n✓ docs        ✓ grafo\n✓ segurança   ✓ dependências\n✓ build\ngates: 7/7 aprovados', label:'SAÍDA'}]}
+    ]},
+    {name:'Validação', pages:[
+      {title:'Visão Geral dos Gates', intro:'Validações executáveis que rodam localmente e no CI. Um gate reprovado bloqueia o pipeline.', blocks:[
+        {l:['Validação de manifests — agentes, skills e domínios contra schemas/','Gates de spec — mudanças relevantes exigem specs satisfeitas','Gates de documentação — docs consistentes com os contratos','Gates de segurança — secrets, padrões perigosos, violações de escopo','Auditoria de dependências — pacotes vulneráveis ou não aprovados','Gates de build — o projeto precisa compilar e testar','Validação do grafo — o grafo precisa corresponder às fontes']},
+        {h:'Onde eles rodam'},{p:'Os mesmos scripts rodam em três lugares: sob demanda (arah sync-check), no pre-commit (hooks) e no CI (.github/workflows/). Um PR que falha na validação não pode ser mesclado.'}]}
+    ]},
+    {name:'Configuração', pages:[
+      {title:'arah.config.yaml', intro:'A superfície de política do lado do consumidor.', blocks:[
+        {c:'project: my-project\nkernel: 1.5.0\nautonomy:\n  default: propose-only\nprofiles: [default]\noverlays: []\ngates:\n  required: [manifests, build]\n  per-domain: true', label:'arah.config.yaml'},
+        {p:'Profiles selecionam conjuntos de política predefinidos; overlays aplicam ajustes por cliente ou por produto sobre o kernel compartilhado, sem bifurcá-lo.'}]},
+      {title:'Schemas', intro:'Todo contrato valida contra um schema.', blocks:[
+        {p:'schemas/ é distribuído com o kernel e define a forma dos manifests de agentes e skills, das regras de coreografia, dos contratos de domínio e da config. A validação de schema é o primeiro gate de toda execução.'}]}
+    ]},
+    {name:'Integrações', pages:[
+      {title:'Ambientes de IA', intro:'Claude Code, Cursor, Copilot, Codex e agentes próprios — governados, não substituídos.', blocks:[
+        {p:'AGENTS.md é o contrato de entrada que todo ambiente lê. As regras .cursor/ instaladas vinculam o Cursor; Claude Code e Copilot leem AGENTS.md e os manifests diretamente. Agentes próprios se integram lendo os mesmos arquivos e escrevendo no mesmo bus.'},
+        {h:'A garantia'},{p:'Como os contratos vivem no repositório, trocar de ambiente não perde nada: os mesmos papéis, skills, gates e histórico valem para qualquer ferramenta apontada ao repositório.'}]},
+      {title:'GitHub e CI', intro:'Gates em workflows; evidência em pull requests.', blocks:[
+        {c:'# .github/workflows/arah-gates.yml\non: [pull_request]\njobs:\n  gates:\n    runs-on: windows-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: powershell -File scripts/arah-gates.ps1', label:'.github/workflows/arah-gates.yml'},
+        {p:'O passo de instalação escreve esse workflow. Branch protection mais o job de gates torna a validação estruturalmente inevitável.'}]}
+    ]},
+    {name:'Referência', pages:[
+      {title:'Referência da CLI', intro:'Selecione um comando para ver sintaxe, descrição, arquivos lidos e gerados.', blocks:[{cli:true}]},
+      {title:'Tipos de Sinal', intro:'O vocabulário tipado do bus.', blocks:[
+        {l:['consultation.request / consultation.answer — ida e volta com especialistas','choreography.activated — conjuntos de ativação por mudança','gates.passed / gates.failed — resultados de validação','change.ready — uma mudança preparada para PR','selection.merge — decisões humanas de merge','evolution.proposal — propostas de melhoria','session.start / session.end — fronteiras de telemetria']}]},
+      {title:'Níveis de Autonomia', intro:'Os três níveis e o que cada um permite.', blocks:[
+        {l:['propose-only — o agente produz propostas; humanos as aplicam','execute-with-audit — o agente aplica mudanças dentro do escopo; o ledger registra cada ação','escalate — o agente precisa consultar seu especialista antes de agir']},
+        {p:'Os níveis são definidos por agente e substituíveis por path no arah.config.yaml. O padrão é propose-only.'}]},
+      {title:'Códigos de Saída', intro:'Códigos de saída da CLI para scripts e CI.', blocks:[
+        {l:['0 — sucesso','1 — falha de validação (gate reprovado)','2 — erro de configuração','3 — drift de kernel detectado','4 — violação de schema','10 — erro de ambiente (dependência ausente)']}]},
+      {title:'Artefatos Gerados', intro:'Tudo o que o harness escreve, e onde.', blocks:[
+        {l:['docs/_meta/discovery.proposed.yaml — saída do discovery','docs/_meta/domains.yaml — domínios materializados','docs/_meta/graph.json — grafo de agentes derivado','docs/_meta/evolution/proposal-*.md — propostas de evolução','.arah/bus/*.jsonl — sinais tipados','.arah/audit/ — ledger e registros de sessão']}]}
+    ]},
+    {name:'Exemplos', pages:[
+      {title:'Repositório Mínimo', intro:'A menor instalação útil.', blocks:[
+        {p:'Um domínio, um agente operacional, gates padrão. Bom para avaliar o ciclo de ponta a ponta em uma tarde.'},
+        {c:'arah install -ProjectName "minimal"\narah discover\narah domain sync', label:'SETUP'}]},
+      {title:'Monorepo', intro:'Territórios com regras diferentes.', blocks:[
+        {p:'Cada área de produto vira um domínio com seus próprios agentes, especialistas, gates e autonomia. A coreografia mantém agentes dentro do seu território; políticas compartilhadas vivem uma única vez no arah.config.yaml.'}]},
+      {title:'Ambiente Regulado', intro:'Evidência como subproduto do fluxo de trabalho.', blocks:[
+        {p:'Defina autonomia propose-only em tudo, exija gates de spec e segurança por domínio e habilite telemetria completa de sessão. Todo merge carrega sua trilha de evidências: specs, relatórios de gates, registros de consulta, aprovação humana.'}]}
+    ]}
+  ];
+  cli = [
+    {name:'install', syn:'arah install -ProjectName <name>', desc:'Instala o kernel no repositório consumidor: templates, config, agentes, skills, scripts, CI.', reads:'kernel/, templates/', writes:'arah.config.yaml, AGENTS.md, .agents/, .skills/, scripts/, .github/workflows/', ex:'arah install -ProjectName "my-project"', out:'kernel 1.5.0 instalado · 14 agentes · 22 skills'},
+    {name:'init', syn:'arah init', desc:'Inicializa o estado do harness em um repositório já instalado (diretórios de bus, auditoria e organismo).', reads:'arah.config.yaml', writes:'.arah/audit/, .arah/bus/, .arah/organism/', ex:'arah init', out:'estado inicializado'},
+    {name:'update', syn:'arah update', desc:'Atualiza os arquivos do kernel sem reexecutar o discovery.', reads:'kernel/', writes:'.agents/, .skills/, scripts/', ex:'arah update', out:'kernel 1.4.2 → 1.5.0'},
+    {name:'doctor', syn:'arah doctor', desc:'Diagnostica a instalação: integridade do kernel, schemas, config, estrutura.', reads:'instalação inteira', writes:'—', ex:'arah doctor', out:'✓ saudável (exit 0)'},
+    {name:'sync-check', syn:'arah sync-check', desc:'Roda todos os gates localmente, exatamente como o CI os roda.', reads:'contratos + árvore de trabalho', writes:'relatórios de gate em .arah/audit/', ex:'arah sync-check', out:'gates: 7/7 aprovados'},
+    {name:'domain sync', syn:'arah domain sync', desc:'Materializa candidatos a domínio aprovados em contratos explícitos.', reads:'docs/_meta/discovery.proposed.yaml, arah.config.yaml', writes:'docs/_meta/domains.yaml, .agents/advisors/', ex:'arah domain sync', out:'3 domínios sincronizados'},
+    {name:'export-graph', syn:'arah export-graph', desc:'Deriva o grafo de agentes a partir dos manifests.', reads:'.agents/, .skills/, docs/_meta/domains.yaml', writes:'docs/_meta/graph.json', ex:'arah export-graph', out:'nós: 42 · arestas: 61'},
+    {name:'validate-runtime', syn:'arah validate-runtime', desc:'Verifica o ambiente de execução: versão do PowerShell, git, ferramentas opcionais.', reads:'ambiente', writes:'—', ex:'arah validate-runtime', out:'runtime ok'},
+    {name:'discover', syn:'arah discover', desc:'Observa stack, frameworks, estrutura e diretórios; propõe domínios e especialistas.', reads:'árvore do repositório, manifests, lockfiles', writes:'docs/_meta/discovery.proposed.yaml', ex:'arah discover', out:'candidatos: payments, catalog, infra'},
+    {name:'organism bootstrap', syn:'arah organism bootstrap', desc:'Cria o estado do organismo a partir dos contratos atuais: células, tecidos, tópicos do bus.', reads:'domínios, agentes, skills', writes:'.arah/organism/', ex:'arah organism bootstrap', out:'organismo pronto'},
+    {name:'organism status', syn:'arah organism status', desc:'Mostra o estado vivo: células ativas, sinais recentes, resultados de gates, drift.', reads:'.arah/', writes:'—', ex:'arah organism status', out:'6 células · 14 sinais hoje · sem drift'},
+    {name:'organism signal', syn:'arah organism signal --type <type> [--body <json>]', desc:'Anexa um evento tipado ao bus.', reads:'—', writes:'.arah/bus/*.jsonl', ex:'arah organism signal --type consultation.request', out:'sinal anexado'},
+    {name:'evolve', syn:'arah evolve', desc:'Analisa ledger, sinais e telemetria; propõe melhorias para seleção humana.', reads:'.arah/audit/, .arah/bus/', writes:'docs/_meta/evolution/proposal-*.md', ex:'arah evolve', out:'1 proposta → PR #142'},
+    {name:'regenerate', syn:'arah regenerate -Target <path> [-UpdateKernel]', desc:'Atualiza o kernel, reexecuta o discovery, sincroniza domínios, regenera grafos, valida.', reads:'kernel + instalação', writes:'arquivos do kernel, docs/_meta/', ex:'arah regenerate -Target . -UpdateKernel', out:'regenerado · instalação válida'}
+  ];
+  renderVals() {
+    const { section, page, query } = this.state;
+    const cur = this.docs[section].pages[page];
+    const flat = [];
+    this.docs.forEach((s, si) => s.pages.forEach((p, pi) => flat.push({ s: si, p: pi, title: p.title, section: s.name })));
+    const flatIdx = flat.findIndex(f => f.s === section && f.p === page);
+    const q = query.trim().toLowerCase();
+    const results = q ? flat.filter(f => f.title.toLowerCase().includes(q) || f.section.toLowerCase().includes(q)) : [];
+    let blockId = 0;
+    const blocks = (cur.blocks || []).map(b => {
+      const id = blockId++;
+      if (b.cli) return null;
+      return {
+        isHeading: !!b.h, isPara: !!b.p, isCode: !!b.c, isList: !!b.l,
+        text: b.h || b.p || b.c || '', label: b.label || '', items: b.l || [],
+        copy: () => { navigator.clipboard.writeText(b.c || ''); this.setState({ copied: id }); clearTimeout(this._ct); this._ct = setTimeout(() => this.setState({ copied: -1 }), 1500); },
+        copyLabel: this.state.copied === id ? 'Copiado ✓' : 'Copiar'
+      };
+    }).filter(Boolean);
+    const isCli = (cur.blocks || []).some(b => b.cli);
+    return {
+      query,
+      onSearch: e => this.setState({ query: e.target.value }),
+      searching: q.length > 0, notSearching: q.length === 0,
+      results: results.map(r => ({ title: r.title, section: r.section, open: () => this.setState({ section: r.s, page: r.p, query: '' }) })),
+      noResults: results.length === 0,
+      sections: this.docs.map((s, si) => ({
+        name: s.name,
+        pages: s.pages.map((p, pi) => {
+          const active = si === section && pi === page;
+          return { title: p.title, bg: active ? '#10151C' : 'none', mark: active ? 'oklch(78% 0.09 200)' : 'transparent', color: active ? '#E7ECF1' : '#8C97A5', open: () => this.setState({ section: si, page: pi, query: '' }) };
+        })
+      })),
+      crumbSection: this.docs[section].name, crumbPage: cur.title,
+      page: { title: cur.title, intro: cur.intro, blocks },
+      isCli,
+      cliList: this.cli.map((c, ci) => ({
+        name: c.name,
+        border: ci === this.state.cli ? 'oklch(75% 0.09 200 / .5)' : '#1E2630',
+        bg: ci === this.state.cli ? 'oklch(75% 0.09 200 / .08)' : 'transparent',
+        color: ci === this.state.cli ? 'oklch(84% 0.07 200)' : '#9AA5B1',
+        select: () => this.setState({ cli: ci })
+      })),
+      selCli: this.cli[this.state.cli],
+      hasPrev: flatIdx > 0, noPrev: flatIdx === 0, hasNext: flatIdx < flat.length - 1,
+      prevTitle: flatIdx > 0 ? flat[flatIdx - 1].title : '',
+      nextTitle: flatIdx < flat.length - 1 ? flat[flatIdx + 1].title : '',
+      goPrev: () => { const f = flat[flatIdx - 1]; this.setState({ section: f.s, page: f.p }); },
+      goNext: () => { const f = flat[flatIdx + 1]; this.setState({ section: f.s, page: f.p }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

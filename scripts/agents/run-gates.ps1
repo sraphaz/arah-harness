@@ -55,13 +55,34 @@ try {
 
     if ($Gate -in 'security', 'all') {
         Invoke-Step 'secrets-scan' {
-            $patterns = @('api_key\s*=', 'password\s*=\s*[''"][^''"]+', 'secret\s*=\s*[''"]')
+            $patterns = @(
+                'api_key\s*=',
+                'password\s*=\s*[''"][^''"]+',
+                'secret\s*=\s*[''"]',
+                '(?i)(ghp_|sk-|AKIA)[A-Za-z0-9]{16,}'
+            )
             $hits = @()
             foreach ($p in $patterns) {
                 $m = git diff "$BaseRef...HEAD" 2>$null | Select-String -Pattern $p -SimpleMatch:$false
                 if ($m) { $hits += $m }
             }
-            if ($hits.Count -gt 0) { throw "Possível secret no diff ($($hits.Count) linha(s))" }
+            # Also scan versioned cold evidence under docs/_meta/runs and any tracked .arah (not local/)
+            $extraRoots = @(
+                (Join-Path $Root 'docs/_meta/runs'),
+                (Join-Path $Root '.arah')
+            )
+            foreach ($er in $extraRoots) {
+                if (-not (Test-Path $er)) { continue }
+                Get-ChildItem -Path $er -Recurse -File -ErrorAction SilentlyContinue |
+                    Where-Object { $_.FullName -notmatch '[\\/]\.arah[\\/]local[\\/]' } |
+                    ForEach-Object {
+                        foreach ($p in $patterns) {
+                            $m = Select-String -Path $_.FullName -Pattern $p -ErrorAction SilentlyContinue
+                            if ($m) { $hits += $m }
+                        }
+                    }
+            }
+            if ($hits.Count -gt 0) { throw "Possível secret no diff/artefatos ($($hits.Count) linha(s))" }
         }
         Invoke-Step 'dep-audit' {
             $sln = Get-ChildItem -Path $Root -Filter '*.sln' -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -First 1

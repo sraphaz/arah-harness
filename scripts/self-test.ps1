@@ -50,8 +50,17 @@ try {
 
     $signalBus = Join-RepoPath $Tmp @('scripts', 'agents', 'signal-bus.ps1')
     & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $signalBus `
-        -From orchestrator -SignalTo backend -SignalType attract -Topic delivery
+        -From orchestrator -SignalTo backend -SignalType attract -Topic delivery `
+        -Payload '{"note":"ok","api_key":"SUPERSECRETVALUE12345"}'
     if ($LASTEXITCODE -ne 0) { throw "organism signal failed" }
+
+    $pendingDir = Join-RepoPath $Tmp @('.arah', 'local', 'bus', 'pending')
+    $pendingFiles = @(Get-ChildItem -LiteralPath $pendingDir -Filter '*.json' -ErrorAction SilentlyContinue)
+    if ($pendingFiles.Count -lt 1) { throw "signal pending file missing under .arah/local/bus/pending" }
+    $sigRaw = Get-Content -LiteralPath $pendingFiles[0].FullName -Raw
+    if ($sigRaw -notmatch '"v"\s*:') { throw "signal missing wire field v" }
+    if ($sigRaw -match 'SUPERSECRETVALUE12345') { throw "secret scrubbing failed — raw secret on disk" }
+    if ($sigRaw -notmatch 'REDACTED') { throw "secret scrubbing failed — expected REDACTED marker" }
 
     & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli evolve -Target $Tmp
     if ($LASTEXITCODE -ne 0) { throw "evolve failed" }
@@ -59,6 +68,24 @@ try {
     if (-not (Test-Path -LiteralPath $evolution)) {
         throw "evolution.proposed.yaml missing"
     }
+
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli compact -Target $Tmp -Kind bus
+    if ($LASTEXITCODE -ne 0) { throw "compact failed" }
+    $archiveDir = Join-RepoPath $Tmp @('.arah', 'local', 'bus', 'archive')
+    $archives = @(Get-ChildItem -LiteralPath $archiveDir -Filter '*.jsonl' -ErrorAction SilentlyContinue)
+    if ($archives.Count -lt 1) { throw "compact did not produce archive jsonl" }
+    $pendingAfter = @(Get-ChildItem -LiteralPath $pendingDir -Filter '*.json' -ErrorAction SilentlyContinue)
+    if ($pendingAfter.Count -ne 0) { throw "compact left pending files behind" }
+
+    # Seed legacy jsonl and migrate
+    $legacyBus = Join-RepoPath $Tmp @('.arah', 'bus')
+    New-Item -ItemType Directory -Path $legacyBus -Force | Out-Null
+    Set-Content -Path (Join-Path $legacyBus 'signals.jsonl') -Value '{"ts":"2026-01-01T00:00:00Z","type":"status","from":"legacy"}' -Encoding UTF8
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli migrate-state -Target $Tmp
+    if ($LASTEXITCODE -ne 0) { throw "migrate-state failed" }
+    $runsRoot = Join-RepoPath $Tmp @('docs', '_meta', 'runs')
+    $runSummaries = @(Get-ChildItem -LiteralPath $runsRoot -Recurse -Filter 'summary.json' -ErrorAction SilentlyContinue)
+    if ($runSummaries.Count -lt 1) { throw "migrate-state did not write cold summary" }
 
     & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli export-graph -Target $Tmp
     if ($LASTEXITCODE -ne 0) { throw "export-graph failed" }
@@ -72,6 +99,30 @@ try {
 
     & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli doctor -Target $Tmp
     if ($LASTEXITCODE -ne 0) { throw "doctor failed" }
+
+    # Minimal install smoke
+    $TmpMin = Join-Path ([System.IO.Path]::GetTempPath()) ("arah-selftest-min-" + [guid]::NewGuid().ToString('n').Substring(0, 8))
+    New-Item -ItemType Directory -Path $TmpMin -Force | Out-Null
+    git -C $TmpMin init -q
+    try {
+        & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli install -Target $TmpMin -ProjectName minitest -Force -Minimal
+        if ($LASTEXITCODE -ne 0) { throw "install -Minimal failed" }
+        $cfg = Get-Content (Join-Path $TmpMin 'arah.config.yaml') -Raw
+        if ($cfg -notmatch 'enabled:\s*false') { throw "minimal install missing organism.enabled=false" }
+        $gi = Get-Content (Join-Path $TmpMin '.gitignore') -Raw
+        if ($gi -notmatch '\.arah/local/') { throw "minimal install missing .arah/local/ gitignore" }
+        & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli hooks install -Target $TmpMin -Force
+        if ($LASTEXITCODE -ne 0) { throw "hooks install failed" }
+        if (-not (Test-Path (Join-Path (Join-Path $TmpMin '.git') (Join-Path 'hooks' 'pre-commit')))) {
+            throw "pre-commit hook missing"
+        }
+    } finally {
+        Remove-Item $TmpMin -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    # capabilities.yaml present in harness
+    $caps = Join-Path $HarnessRoot 'capabilities.yaml'
+    if (-not (Test-Path -LiteralPath $caps)) { throw "capabilities.yaml missing" }
 
     Write-Host "self-test: OK"
     exit 0

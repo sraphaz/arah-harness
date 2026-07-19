@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Como Funciona — ARAH Harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#0A0C0F;color:#E7ECF1;font-family:'Schibsted Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E7ECF1;text-decoration:none}
+a:hover{color:oklch(80% 0.09 200)}
+*{box-sizing:border-box}
+::selection{background:oklch(70% 0.09 200 / .35)}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0A0C0F">
+<nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:28px;padding:10px 32px;min-height:64px;row-gap:6px;flex-wrap:wrap;background:rgba(10,12,15,.82);backdrop-filter:blur(14px);border-bottom:1px solid #161C24">
+  <a href="Home PT.dc.html" style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.02em">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="3" y1="19" x2="11" y2="11" stroke="oklch(78% 0.09 200)" stroke-width="1.6"></line><line x1="11" y1="3" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><line x1="19" y1="19" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><circle cx="11" cy="11" r="3" fill="oklch(78% 0.09 200)"></circle><circle cx="3" cy="19" r="2" fill="#3A4553"></circle><circle cx="19" cy="19" r="2" fill="#3A4553"></circle><circle cx="11" cy="3" r="2" fill="#3A4553"></circle></svg>
+    <span>ARAH Harness</span>
+  </a>
+  <div style="display:flex;gap:22px;font-size:14px;color:#9AA5B1;margin-left:12px;flex:1;flex-wrap:wrap">
+    <a href="Home PT.dc.html" style="color:#9AA5B1">Produto</a>
+    <a href="Architecture PT.dc.html" style="color:#9AA5B1">Arquitetura</a>
+    <a href="How It Works PT.dc.html" style="color:#E7ECF1">Como Funciona</a>
+    <a href="TechOrganism PT.dc.html" style="color:#9AA5B1">TechOrganism</a>
+    <a href="Use Cases PT.dc.html" style="color:#9AA5B1">Casos de Uso</a>
+    <a href="Docs PT.dc.html" style="color:#9AA5B1">Documentação</a>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center"><div style="display:flex;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #232B36;border-radius:7px;padding:2px"><a href="How It Works.dc.html" style="padding:4px 9px;border-radius:5px;color:#5A6675">EN</a><span style="padding:4px 9px;border-radius:5px;background:#1E2630;color:#E7ECF1">PT</span></div>
+    <a href="https://github.com/sraphaz/arah-harness" style="font-size:13.5px;font-family:'IBM Plex Mono',monospace;color:#9AA5B1;border:1px solid #232B36;padding:7px 14px;border-radius:6px;white-space:nowrap" style-hover="border-color:#3A4553;color:#E7ECF1">Ver no GitHub</a>
+    <a href="Docs PT.dc.html" style="font-size:13.5px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:8px 16px;border-radius:6px" style-hover="background:oklch(84% 0.09 200)">Começar</a>
+  </div>
+</nav>
+
+<header style="max-width:1200px;margin:0 auto;padding:88px 32px 56px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:oklch(78% 0.09 200);margin-bottom:20px">Como funciona</div>
+  <h1 style="font-size:clamp(32px,5vw,48px);line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:0 0 20px;max-width:820px;text-wrap:balance">O ciclo de vida operacional</h1>
+  <p style="font-size:18px;line-height:1.6;color:#9AA5B1;margin:0;max-width:720px;text-wrap:pretty">Doze operações conectam a instalação à evolução contínua. Selecione uma etapa para ver seu comando, entradas, saídas e artefatos gerados.</p>
+</header>
+
+<section style="max-width:1200px;margin:0 auto;padding:0 32px 90px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">
+    <sc-for list="{{ steps }}" as="st" hint-placeholder-count="12">
+      <button onClick="{{ st.select }}" style="border:1px solid {{ st.border }};background:{{ st.bg }};color:{{ st.color }};border-radius:8px;padding:10px 14px;font-size:13px;font-family:'IBM Plex Mono',monospace;cursor:pointer;display:flex;gap:8px;align-items:baseline" style-hover="border-color:#3A4553"><span style="font-size:10.5px;color:#5A6675">{{ st.num }}</span><span>{{ st.name }}</span></button>
+    </sc-for>
+  </div>
+  <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;padding:34px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:36px;align-items:start">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:oklch(78% 0.09 200);margin-bottom:10px">Etapa {{ selStep.num }} de 12</div>
+      <h3 style="font-size:28px;font-weight:700;margin:0 0 14px">{{ selStep.name }}</h3>
+      <p style="font-size:15.5px;line-height:1.65;color:#B7C0CB;margin:0 0 24px;text-wrap:pretty">{{ selStep.desc }}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="border:1px solid #1A212B;border-radius:9px;padding:16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;margin-bottom:8px">ENTRADA</div><div style="font-size:13.5px;line-height:1.6;color:#9AA5B1">{{ selStep.input }}</div></div>
+        <div style="border:1px solid #1A212B;border-radius:9px;padding:16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;margin-bottom:8px">SAÍDA</div><div style="font-size:13.5px;line-height:1.6;color:#9AA5B1">{{ selStep.output }}</div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;margin-bottom:8px">COMANDO</div>
+      <pre style="margin:0 0 18px;background:#080A0D;border:1px solid #1A212B;border-radius:9px;padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.7;color:#A9C7D2;overflow:auto">{{ selStep.cmd }}</pre>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;margin-bottom:8px">ARTEFATOS GERADOS</div>
+      <pre style="margin:0;background:#080A0D;border:1px solid #1A212B;border-radius:9px;padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#8C97A5;overflow:auto">{{ selStep.artifacts }}</pre>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:90px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:760px;margin-bottom:44px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Passo a passo</div>
+      <h2 style="font-size:clamp(27px,4vw,34px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 16px">Uma mudança atravessando o harness</h2>
+      <p style="font-size:16px;line-height:1.65;color:#9AA5B1;margin:0">Cenário: uma mudança toca <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:oklch(84% 0.07 200)">backend/payments/**</span>. Avance pelas etapas do que o harness faz.</p>
+    </div>
+    <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #1A212B;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;gap:5px;align-items:center">
+          <sc-for list="{{ demoDots }}" as="d" hint-placeholder-count="9">
+            <button onClick="{{ d.go }}" style="width:26px;height:26px;border-radius:6px;border:1px solid {{ d.border }};background:{{ d.bg }};color:{{ d.color }};font-family:'IBM Plex Mono',monospace;font-size:10.5px;cursor:pointer;padding:0" style-hover="border-color:#3A4553">{{ d.n }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onClick="{{ demoPrev }}" style="border:1px solid #2A3340;background:none;color:#B7C0CB;border-radius:7px;padding:9px 18px;font-size:13.5px;font-family:'Schibsted Grotesk',sans-serif;cursor:pointer" style-hover="border-color:#4A5563;color:#E7ECF1">← Voltar</button>
+          <button onClick="{{ demoNext }}" style="border:1px solid oklch(75% 0.09 200 / .5);background:oklch(75% 0.09 200 / .08);color:oklch(84% 0.07 200);border-radius:7px;padding:9px 18px;font-size:13.5px;font-weight:600;font-family:'Schibsted Grotesk',sans-serif;cursor:pointer" style-hover="background:oklch(75% 0.09 200 / .15)">Avançar →</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0;min-height:340px">
+        <div style="padding:34px 36px;border-right:1px solid #141A22">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:oklch(78% 0.09 200);margin-bottom:12px">{{ demoStep.phase }}</div>
+          <h3 style="font-size:24px;font-weight:700;margin:0 0 14px">{{ demoStep.title }}</h3>
+          <p style="font-size:15px;line-height:1.7;color:#9AA5B1;margin:0">{{ demoStep.body }}</p>
+        </div>
+        <div style="padding:28px 32px;background:#080A0D">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;margin-bottom:12px">TERMINAL · SINAIS · ARTEFATOS</div>
+          <pre style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.75;color:#A9C7D2;white-space:pre-wrap">{{ demoStep.term }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:80px 32px;text-align:center">
+  <div style="max-width:680px;margin:0 auto">
+    <p style="font-size:20px;line-height:1.5;font-weight:500;color:#DDE4EB;margin:0 0 28px">O repositório governa o agente.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="Docs PT.dc.html" style="font-size:15px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:13px 24px;border-radius:7px" style-hover="background:oklch(84% 0.09 200)">Instale — Início Rápido</a>
+      <a href="TechOrganism PT.dc.html" style="font-size:15px;font-weight:500;border:1px solid #2A3340;color:#E7ECF1;padding:13px 24px;border-radius:7px" style-hover="border-color:#4A5563">O modelo operacional →</a>
+    </div>
+  </div>
+</section>
+<footer style="border-top:1px solid #141A22;padding:36px 32px;background:#080A0D">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:#5A6675">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-weight:700;color:#8C97A5">ARAH Harness</span><span>· Engenharia humano-agente governada, enraizada no repositório.</span></div>
+    <div style="display:flex;gap:20px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+      <a href="https://github.com/sraphaz/arah-harness" style="color:#5A6675" style-hover="color:#E7ECF1">GitHub</a>
+      <a href="https://github.com/sraphaz/arah-harness/releases" style="color:#5A6675" style-hover="color:#E7ECF1">Releases</a>
+      <a href="https://github.com/sraphaz/arah-harness/blob/main/CONTRIBUTING.md" style="color:#5A6675" style-hover="color:#E7ECF1">Contribuir</a>
+    </div>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { step: 1, demo: 0 };
+  stepsData = [
+    {name:'Instalar', desc:'Instala o kernel no repositório consumidor: templates, configuração, agentes, skills, scripts e workflows de CI.', cmd:'arah install -ProjectName "my-project"', input:'O kernel do arah-harness e um repositório existente.', output:'Um repositório governado, com contratos versionados.', artifacts:'arah.config.yaml\nAGENTS.md\n.agents/ · .skills/\nscripts/ · .github/workflows/'},
+    {name:'Descobrir', desc:'Observa stack, frameworks, estrutura, diretórios e indícios de domínio para propor domínios e especialistas.', cmd:'arah discover', input:'O repositório como ele é — código, estrutura, dependências.', output:'Uma proposta revisável de domínios e especialistas.', artifacts:'docs/_meta/discovery.proposed.yaml'},
+    {name:'Configurar', desc:'Humanos revisam a proposta e definem políticas: níveis de autonomia, gates por domínio, regras de escalonamento.', cmd:'editar arah.config.yaml', input:'discovery.proposed.yaml e decisões organizacionais.', output:'Política explícita e versionada.', artifacts:'arah.config.yaml (revisado em PR)'},
+    {name:'Sincronizar Domínios', desc:'Transforma candidatos aprovados em domínios explícitos com responsabilidades, paths, referências e validações.', cmd:'arah domain sync', input:'Discovery aprovado + config.', output:'Contratos de domínio materializados.', artifacts:'docs/_meta/domains.yaml\n.agents/advisors/*'},
+    {name:'Coreografar', desc:'Uma mudança entra. A coreografia por paths mapeia os arquivos afetados para domínios e seleciona agentes, skills e gates.', cmd:'(automático a cada mudança)\narah organism status', input:'Um diff — ex.: backend/payments/**', output:'Um conjunto de ativação: agentes, especialistas, skills, gates.', artifacts:'.arah/bus/choreography.*.jsonl'},
+    {name:'Executar', desc:'Agentes operacionais agem por skills determinísticas, dentro do escopo e da autonomia declarados.', cmd:'(sessão de agente via Claude Code,\n Cursor, Copilot ou agente próprio)', input:'Conjunto de ativação + contexto do repositório.', output:'Uma mudança proposta.', artifacts:'branch de trabalho\n.arah/audit/run-*/ (registro da sessão)'},
+    {name:'Validar', desc:'Gates executáveis rodam: manifests, specs, docs, grafo, segurança, dependências, build.', cmd:'arah sync-check', input:'A mudança proposta.', output:'Aprovado/reprovado por gate; falhas bloqueiam o pipeline.', artifacts:'relatórios de gate em .arah/audit/\nresultados de checks no CI'},
+    {name:'Sinalizar', desc:'Agentes e células se comunicam por eventos persistentes, tipados e append-only — consultas, veredictos, handoffs.', cmd:'arah organism signal --type <type>', input:'Payloads de eventos tipados.', output:'Coordenação durável, visível para qualquer ferramenta.', artifacts:'.arah/bus/*.jsonl'},
+    {name:'Auditar', desc:'Toda ação, resultado, decisão de autonomia e evento de sessão é registrado no ledger.', cmd:'(contínuo)\narah organism status', input:'Toda a atividade do harness.', output:'Uma história operacional inspecionável.', artifacts:'.arah/audit/ledger.jsonl'},
+    {name:'Evoluir', desc:'O harness analisa ledger, sinais e telemetria para propor melhorias — novos domínios, mudanças de skills, ajustes de política.', cmd:'arah evolve', input:'Evidência acumulada.', output:'Propostas de evolução, nunca autoaplicadas.', artifacts:'docs/_meta/evolution/proposal-*.md'},
+    {name:'Revisão Humana', desc:'Humanos revisam propostas e mudanças em pull requests. A autoridade de merge é humana, sempre.', cmd:'(revisão de pull request)', input:'Mudanças + evidências + resultados de gates.', output:'Um merge selecionado e responsável.', artifacts:'PR mesclado com evidência vinculada'},
+    {name:'Regenerar', desc:'Homeostase: atualiza o kernel, reexecuta o discovery, sincroniza domínios, regenera grafos, valida a instalação.', cmd:'arah regenerate -Target . -UpdateKernel', input:'Instalação atual + kernel mais recente.', output:'Um harness consistente, sem drift.', artifacts:'arquivos do kernel atualizados\ndocs/_meta/graph.json\nrelatório do doctor'}
+  ];
+  demoData = [
+    {phase:'01 · Coreografia', title:'O path é identificado', body:'Um diff chega tocando backend/payments/**. A coreografia compara o path com os contratos de domínio e resolve a quais células a mudança pertence.', term:'$ git diff --name-only\nbackend/payments/refunds.ts\nbackend/payments/refunds.spec.ts\n\nmatch da coreografia:\n  domínio: payments\n  regra:   "backend/payments/**"'},
+    {phase:'02 · Seleção', title:'Agentes relacionados são selecionados', body:'O contrato do domínio nomeia seu agente operacional e o especialista consultivo. Nenhum outro agente é ativado — o escopo é explícito.', term:'activate:\n  agents:   [backend-payments]\n  advisors: [payments-specialist]\nexcluídos: 12 outros agentes (fora de escopo)'},
+    {phase:'03 · Capacidades', title:'As skills autorizadas são carregadas', body:'O agente só pode usar as skills que seu manifest declara. Capacidades são procedimentos versionados, não improviso.', term:'skills carregadas para backend-payments:\n  ✓ test-first\n  ✓ refactor\n  ✗ schema-migration (não autorizada)'},
+    {phase:'04 · Consulta', title:'Especialistas de domínio são consultados', body:'Antes de mudar a lógica de reembolso, o agente operacional consulta o especialista de pagamentos pelo signal bus.', term:'→ signal consultation.request\n   para: payments-specialist\n← signal consultation.answer\n   "reembolsos devem preservar idempotência;\n    spec obrigatória antes do código"'},
+    {phase:'05 · Validação', title:'Gates executam', body:'Manifests, specs, docs, grafo, segurança, dependências e build são validados como código. Um gate reprovado interrompe o fluxo aqui.', term:'$ arah sync-check\n✓ manifests   ✓ specs\n✓ docs        ✓ grafo\n✓ segurança   ✓ dependências\n✓ build\ngates: 7/7 aprovados'},
+    {phase:'06 · Sinais', title:'Eventos são registrados', body:'Cada passo de coordenação é anexado ao bus — tipado, com timestamp, portável entre ferramentas e sessões.', term:'.arah/bus/payments.jsonl\n+ consultation.request\n+ consultation.answer\n+ gates.passed\n+ change.ready'},
+    {phase:'07 · Evidência', title:'Evidências são geradas', body:'O ledger de auditoria vincula a mudança à sessão, ao nível de autonomia, aos resultados de gates e à trilha de consulta.', term:'.arah/audit/run-8f31/\n  session.json    autonomy: propose-only\n  gates.report    7/7\n  consultation.md payments-specialist\n  diff.summary'},
+    {phase:'08 · Pull request', title:'A mudança é preparada para PR', body:'Branch, evidências e resultados de gates são empacotados em um pull request. O agente propõe; ele não pode mesclar.', term:'$ gh pr create\nPR #147: refunds idempotency guard\n  evidência: .arah/audit/run-8f31/\n  gates: 7/7 · autonomia: propose-only'},
+    {phase:'09 · Seleção humana', title:'Um humano revisa e decide', body:'Um humano revisa a proposta com a trilha completa de evidências e detém a autoridade de merge. O repositório lembra de tudo.', term:'revisão: @maintainer\ndecisão: aprovar + merge\nledger: + selection.merge #147\n\nAgentes propõem. Humanos selecionam.\nO repositório lembra.'}
+  ];
+  renderVals() {
+    const s = this.state.step;
+    const d = this.state.demo, dlen = this.demoData.length;
+    return {
+      steps: this.stepsData.map((st, idx) => ({
+        name: st.name, num: String(idx + 1).padStart(2, '0'),
+        border: idx === s ? 'oklch(75% 0.09 200 / .5)' : '#1E2630',
+        bg: idx === s ? 'oklch(75% 0.09 200 / .08)' : 'transparent',
+        color: idx === s ? 'oklch(84% 0.07 200)' : '#B7C0CB',
+        select: () => this.setState({ step: idx })
+      })),
+      selStep: Object.assign({ num: String(s + 1).padStart(2, '0') }, this.stepsData[s]),
+      demoStep: this.demoData[d],
+      demoDots: this.demoData.map((_, idx) => ({
+        n: idx + 1,
+        border: idx === d ? 'oklch(75% 0.09 200 / .6)' : '#232B36',
+        bg: idx === d ? 'oklch(75% 0.09 200 / .12)' : 'transparent',
+        color: idx === d ? 'oklch(84% 0.07 200)' : '#5A6675',
+        go: () => this.setState({ demo: idx })
+      })),
+      demoPrev: () => this.setState({ demo: (d - 1 + dlen) % dlen }),
+      demoNext: () => this.setState({ demo: (d + 1) % dlen })
+    };
+  }
+}
+</script>
+</body>
+</html>
