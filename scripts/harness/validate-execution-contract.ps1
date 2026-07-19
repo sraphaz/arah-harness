@@ -14,6 +14,7 @@ param(
     [switch]$AllActive,
     [string]$ProposedState = '',
     [string[]]$ProposedEvidence = @(),
+    [string[]]$ProposedChangedFiles = @(),
     [string]$ProposedBlockingReason = '',
     [switch]$Json,
     [switch]$Strict
@@ -101,12 +102,18 @@ function Test-OneContract {
     $checkState = $c.state
     $evidence = @($c.execution.completion_evidence)
     $blocking = $c.result.blocking_reason
+    $changedFiles = @($c.result.changed_files)
     if ($ProposedState) {
         if (-not (Test-EcpTransitionAllowed -From $c.state -To $ProposedState)) {
             Add-Violation 'invalid_state_transition' "${path}: proposed $($c.state)->$ProposedState"
         }
         $checkState = $ProposedState
         if ($ProposedEvidence.Count -gt 0) { $evidence = @($ProposedEvidence) }
+        if ($ProposedChangedFiles.Count -gt 0) {
+            $changedFiles = @($changedFiles) + @($ProposedChangedFiles)
+        } elseif ($ProposedEvidence.Count -gt 0) {
+            $changedFiles = @($changedFiles) + @(Get-EcpPathsFromEvidence -Evidence $ProposedEvidence)
+        }
         if ($ProposedBlockingReason) { $blocking = $ProposedBlockingReason }
     }
 
@@ -126,23 +133,10 @@ function Test-OneContract {
         }
     }
 
-    # Scope: changed files outside allowed_paths (prefix/glob lite)
-    foreach ($cf in @($c.result.changed_files)) {
-        $ok = $false
-        $paths = @($c.scope.allowed_paths)
-        if ($paths.Count -eq 0) { $ok = $true }
-        foreach ($p in $paths) {
-            $prefix = ($p -replace '\*\*.*$', '' -replace '\*$', '').TrimEnd('/')
-            if (-not $prefix -or $cf.Replace('\', '/') -like ($prefix + '*')) { $ok = $true; break }
-            if ($p -eq '**') { $ok = $true; break }
-        }
-        foreach ($fp in @($c.scope.forbidden_paths)) {
-            if ($cf.Replace('\', '/') -like ($fp.TrimEnd('*') + '*')) {
-                Add-Violation 'path_out_of_scope' "${path}: changed $cf is forbidden"
-                $ok = $true
-            }
-        }
-        if (-not $ok) {
+    # Scope: changed files outside allowed_paths (includes proposed paths on complete)
+    foreach ($cf in @($changedFiles | Select-Object -Unique)) {
+        if (-not $cf) { continue }
+        if (-not (Test-EcpPathInScope -FilePath $cf -AllowedPaths @($c.scope.allowed_paths) -ForbiddenPaths @($c.scope.forbidden_paths))) {
             Add-Violation 'path_out_of_scope' "${path}: changed $cf outside allowed_paths"
         }
     }

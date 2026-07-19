@@ -111,7 +111,53 @@ function Get-EcpConfig {
 }
 
 function New-EcpTaskId {
-    return ('task-{0}' -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+    param([string]$RepoRoot = '')
+    # Second granularity alone collides under automation; millis + short suffix keep IDs unique.
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmssfff'
+    $suffix = ([guid]::NewGuid().ToString('n')).Substring(0, 6)
+    $id = 'task-{0}-{1}' -f $stamp, $suffix
+    if ($RepoRoot) {
+        $n = 0
+        while ((Find-EcpContractPath -RepoRoot $RepoRoot -TaskId $id) -and $n -lt 5) {
+            $suffix = ([guid]::NewGuid().ToString('n')).Substring(0, 6)
+            $id = 'task-{0}-{1}' -f $stamp, $suffix
+            $n++
+        }
+    }
+    return $id
+}
+
+function Get-EcpPathsFromEvidence {
+    param([string[]]$Evidence)
+    $paths = @()
+    foreach ($e in @($Evidence)) {
+        if ($e -match '([\w./\\-]+\.(?:ts|tsx|js|go|ps1|yaml|yml|md|json))') {
+            $paths += ($Matches[1] -replace '\\', '/')
+        }
+    }
+    return @($paths | Select-Object -Unique)
+}
+
+function Test-EcpPathInScope {
+    param(
+        [string]$FilePath,
+        [string[]]$AllowedPaths,
+        [string[]]$ForbiddenPaths = @()
+    )
+    $cf = $FilePath.Replace('\', '/')
+    foreach ($fp in @($ForbiddenPaths)) {
+        $fprefix = ($fp -replace '\*\*.*$', '' -replace '\*$', '').TrimEnd('/')
+        if ($fprefix -and $cf -like ($fprefix + '*')) { return $false }
+        if ($fp -eq '**') { return $false }
+    }
+    $paths = @($AllowedPaths)
+    if ($paths.Count -eq 0) { return $true }
+    foreach ($p in $paths) {
+        if ($p -eq '**' -or $p -eq '**/*') { return $true }
+        $prefix = ($p -replace '\*\*.*$', '' -replace '\*$', '').TrimEnd('/')
+        if (-not $prefix -or $cf -like ($prefix + '*')) { return $true }
+    }
+    return $false
 }
 
 function Get-EcpWorkClassPolicy {
@@ -571,7 +617,28 @@ function Resolve-EcpPrimaryExecutor {
         $PreferredExecutor = $areaExec[$areaKey]
     }
     if ($PreferredExecutor) {
-        $executors = @($PreferredExecutor) + @($executors | Where-Object { $_ -ne $PreferredExecutor })
+        # Exactly one primary; demote other operational candidates from mismatched overlays
+        foreach ($extra in @($executors | Where-Object { $_ -ne $PreferredExecutor })) {
+            if ($consultants -notcontains $extra) { $consultants += $extra }
+        }
+        $executors = @($PreferredExecutor)
+        # Prefer choreography rule that declares this primary_executor
+        foreach ($rule in $rules) {
+            if ($rule.when -eq 'pull_request') { continue }
+            if ($rule.primary_executor -eq $PreferredExecutor) {
+                $matched = $rule
+                $ruleId = $rule.id
+                foreach ($a in @($rule.agents)) {
+                    if ($a.id -eq $PreferredExecutor) { continue }
+                    if ($a.type -eq 'domain' -or ($a.role -eq 'consultant') -or ($a.autonomy -contains 'consult') -or ($a.autonomy -contains 'consult_post')) {
+                        if ($consultants -notcontains $a.id) { $consultants += $a.id }
+                    } elseif ($a.role -eq 'reviewer' -or $a.id -in @('qa', 'pr-steward', 'security')) {
+                        if ($reviewers -notcontains $a.id) { $reviewers += $a.id }
+                    }
+                }
+                break
+            }
+        }
     } elseif ($executors.Count -eq 0) {
         throw 'exactly_one_primary_executor_required:no_eligible_executor'
     }
@@ -640,7 +707,7 @@ function New-EcpContract {
 
     $contract = [ordered]@{
         version = '1.0'
-        task_id = (New-EcpTaskId)
+        task_id = (New-EcpTaskId -RepoRoot $RepoRoot)
         objective = $Objective
         work_class = $WorkClass.ToLowerInvariant()
         intent_type = $IntentType.ToLowerInvariant()

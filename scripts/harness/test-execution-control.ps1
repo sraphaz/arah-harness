@@ -120,7 +120,7 @@ Assert-True ([int]$c7.limits.max_consultations -eq 0) 'trivial max_consultations
 Assert-True ($c7.policy.spec_required -eq $false -or -not $c7.policy.Contains('spec_required') -or $c7.policy.spec_required -eq $false) 'no full spec'
 # policy may store spec_required: false
 Assert-True ($true) 'trivial policy applied'
-$code = Invoke-Task @{ Action = 'complete'; TaskId = $j.task_id; Evidence = 'README.md updated'; RepoRoot = $Root }
+$code = Invoke-Task @{ Action = 'complete'; TaskId = $j.task_id; Evidence = 'docs/README.md updated'; RepoRoot = $Root }
 Assert-True ($code -eq 0) 'trivial done'
 
 # --- Scenario 8: invalid transition executing→routed ---
@@ -171,8 +171,49 @@ if (@($j.consultants) -contains 'solutions-architect') {
     Assert-True ($code -ne 0) 'consult over limit rejected'
 }
 
-# --- Scenario 10: regenerate/install presence ---
-Write-Host "`n[10] distribution artifacts"
+# --- Scenario 10: unique task IDs under burst create ---
+Write-Host "`n[10] unique task IDs"
+$ids = @()
+1..3 | ForEach-Object {
+    $r = & $Pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Agents 'execute-task.ps1') `
+        -Objective "burst $_" -Area backend -WorkClass trivial -RepoRoot $Root -Json 2>$null
+    $ids += (($r | ConvertFrom-Json).task_id)
+}
+Assert-True (($ids | Select-Object -Unique).Count -eq 3) "unique ids ($($ids -join ', '))"
+
+# --- Scenario 11: out-of-scope evidence rejected before done ---
+Write-Host "`n[11] out-of-scope evidence"
+$r = & $Pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Agents 'execute-task.ps1') `
+    -Objective 'Backend only' -Area backend -WorkClass standard -RepoRoot $Root -Json 2>$null
+$tid11 = ($r | ConvertFrom-Json).task_id
+$code = Invoke-Task @{
+    Action = 'complete'; TaskId = $tid11
+    Evidence = 'docs/out-of-scope.md updated'; RepoRoot = $Root
+}
+Assert-True ($code -ne 0) 'path_out_of_scope rejected on complete'
+$st11 = Read-EcpContract -Path (Find-EcpContractPath -RepoRoot $Root -TaskId $tid11)
+Assert-True ($st11.state -ne 'done') 'task remains not done after out-of-scope evidence'
+
+# --- Scenario 12: no consult after terminal ---
+Write-Host "`n[12] consult after terminal forbidden"
+$r = & $Pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Agents 'execute-task.ps1') `
+    -Objective 'Will complete then consult' -Area backend -WorkClass architectural -RepoRoot $Root -Json 2>$null
+$j12 = $r | ConvertFrom-Json
+$tid12 = $j12.task_id
+$code = Invoke-Task @{ Action = 'complete'; TaskId = $tid12; Evidence = 'backend/x.go updated'; RepoRoot = $Root }
+Assert-True ($code -eq 0) 'complete for terminal consult test'
+if (@($j12.consultants) -contains 'solutions-architect') {
+    $code = Invoke-Task @{
+        Action = 'consult'; TaskId = $tid12; Consultant = 'solutions-architect'
+        Summary = 'too late'; RepoRoot = $Root
+    }
+    Assert-True ($code -ne 0) 'consultation_after_terminal_forbidden'
+} else {
+    Assert-True $true 'no consultant on contract — skip consult-after-done'
+}
+
+# --- Scenario 13: distribution artifacts ---
+Write-Host "`n[13] distribution artifacts"
 Assert-True (Test-Path (Join-Path $Root 'schemas/arah-harness/execution-contract.schema.yaml')) 'execution-contract schema'
 Assert-True (Test-Path (Join-Path $Root 'schemas/arah-harness/consultation-result.schema.yaml')) 'consultation-result schema'
 Assert-True (Test-Path (Join-Path $Root '.cursor/rules/arah-execution-control.mdc')) 'cursor rule'

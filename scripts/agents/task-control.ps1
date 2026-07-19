@@ -96,18 +96,21 @@ switch ($Action) {
         }
         $pack = Get-ContractOrThrow -Id $TaskId
         $c = $pack.contract
+        if ($c.state -in @('done', 'blocked')) {
+            Write-Error "terminal_state_immutable:$($c.state)"
+            exit 1
+        }
+        # Extract paths before validation so scope checks see proposed changes
+        $extracted = @(Get-EcpPathsFromEvidence -Evidence $ev)
         $validator = Join-Path $RepoRoot 'scripts/harness/validate-execution-contract.ps1'
         & $validator -ContractPath $pack.path -RepoRoot $RepoRoot `
-            -ProposedState done -ProposedEvidence $ev
+            -ProposedState done -ProposedEvidence $ev -ProposedChangedFiles $extracted
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
         if ($c.state -eq 'executing') {
             Set-EcpState -Contract $c -NewState 'verifying' -Note 'verification started'
         }
         if ($c.state -eq 'verifying' -or $c.state -eq 'executing') {
-            if ($c.state -eq 'executing') {
-                # already may have moved
-            }
             try {
                 if ($c.state -ne 'verifying') { Set-EcpState -Contract $c -NewState 'verifying' -Note 'verify' }
             } catch { }
@@ -117,12 +120,7 @@ switch ($Action) {
         }
         $c.execution.completion_evidence = @($c.execution.completion_evidence) + $ev
         $c.result.evidence = @($c.result.evidence) + $ev
-        # Heuristic: paths in evidence
-        foreach ($e in $ev) {
-            if ($e -match '([\w./\\-]+\.(?:ts|tsx|js|go|ps1|yaml|yml|md|json))') {
-                $c.result.changed_files = @($c.result.changed_files) + $Matches[1]
-            }
-        }
+        $c.result.changed_files = @(@($c.result.changed_files) + @($extracted) | Select-Object -Unique)
         $path = Save-EcpContract -RepoRoot $RepoRoot -Contract $c
         if ($Json) {
             @{ task_id = $c.task_id; state = 'done'; path = $path; evidence = $ev } | ConvertTo-Json
@@ -163,6 +161,14 @@ switch ($Action) {
         }
         $pack = Get-ContractOrThrow -Id $TaskId
         $c = $pack.contract
+        if ($c.state -in @('done', 'blocked')) {
+            Write-Error "consultation_after_terminal_forbidden:$($c.state)"
+            exit 1
+        }
+        if ($c.state -notin @('routed', 'executing', 'verifying')) {
+            Write-Error "consultation_invalid_state:$($c.state)"
+            exit 1
+        }
         if (@($c.participants.consultants) -notcontains $Consultant) {
             Write-Error "consultant_not_in_contract:$Consultant"
             exit 1
