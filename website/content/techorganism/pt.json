@@ -1,0 +1,115 @@
+{
+  "locale": "pt",
+  "meta": {
+    "title": "TechOrganism — ARAH Harness",
+    "version": "0.3.1"
+  },
+  "hero": {
+    "eyebrow": "Modelo operacional — não o nome do produto",
+    "headline": "TechOrganism",
+    "body": "TechOrganism é o modelo pelo qual um repositório percebe sua estrutura, organiza responsabilidades, comunica sinais, preserva memória e propõe sua própria evolução — sob seleção humana."
+  },
+  "cycle": {
+    "nodes": [
+      {
+        "slug": "descobrir",
+        "name": "Descobrir"
+      },
+      {
+        "slug": "organizar",
+        "name": "Organizar"
+      },
+      {
+        "slug": "sinalizar",
+        "name": "Sinalizar"
+      },
+      {
+        "slug": "observar",
+        "name": "Observar"
+      },
+      {
+        "slug": "propor",
+        "name": "Propor"
+      },
+      {
+        "slug": "selecionar",
+        "name": "Selecionar"
+      },
+      {
+        "slug": "regenerar",
+        "name": "Regenerar"
+      }
+    ]
+  },
+  "mapping": [
+    {
+      "metaphor": "Percepção",
+      "mechanism": "discovery",
+      "slug": "discovery"
+    },
+    {
+      "metaphor": "Células",
+      "mechanism": "agentes",
+      "slug": "agentes"
+    },
+    {
+      "metaphor": "Tecidos",
+      "mechanism": "domínios",
+      "slug": "dominios"
+    },
+    {
+      "metaphor": "Capacidades",
+      "mechanism": "skills",
+      "slug": "skills"
+    },
+    {
+      "metaphor": "Sistema nervoso",
+      "mechanism": "signal bus",
+      "slug": "signal-bus"
+    },
+    {
+      "metaphor": "Memória",
+      "mechanism": "ledger de auditoria",
+      "slug": "ledger-de-auditoria"
+    },
+    {
+      "metaphor": "Sistema imune",
+      "mechanism": "gates",
+      "slug": "gates"
+    },
+    {
+      "metaphor": "Mapa",
+      "mechanism": "grafo de agentes",
+      "slug": "grafo-de-agentes"
+    },
+    {
+      "metaphor": "Homeostase",
+      "mechanism": "regeneração",
+      "slug": "regeneracao"
+    },
+    {
+      "metaphor": "Evolução",
+      "mechanism": "propostas",
+      "slug": "propostas"
+    },
+    {
+      "metaphor": "Seleção",
+      "mechanism": "revisão humana",
+      "slug": "revisao-humana"
+    }
+  ],
+  "boundaries": {
+    "body": "O vocabulário do organismo descreve a mecânica de coordenação, não senciência. As fronteiras são explícitas:",
+    "items": [
+      "O software não é consciente",
+      "Ele não está literalmente vivo",
+      "Ele não aprende sozinho de forma irrestrita",
+      "Ele não substitui humanos",
+      "Ele nunca decide merges de forma autônoma"
+    ]
+  },
+  "cta": {
+    "headline": "O sistema propõe. Humanos selecionam. A evolução acontece em pull requests.",
+    "body": "O sistema propõe. Humanos selecionam. A evolução acontece em pull requests."
+  }
+}

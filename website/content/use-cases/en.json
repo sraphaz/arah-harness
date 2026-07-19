@@ -1,0 +1,70 @@
+{
+  "locale": "en",
+  "meta": {
+    "title": "Use Cases — ARAH Harness",
+    "version": "0.3.1"
+  },
+  "hero": {
+    "eyebrow": "Use cases",
+    "headline": "Where a repo-first harness earns its place",
+    "body": "Eight situations where governance, persistence and coordination matter more than raw generation."
+  },
+  "useCases": [
+    {
+      "id": "uc-01",
+      "slug": "new-repository",
+      "name": "New Repository",
+      "title": "New Repository",
+      "description": "Governance structure from the first commit: domains, agents, autonomy and gates exist before the first feature does."
+    },
+    {
+      "id": "uc-02",
+      "slug": "legacy-repository",
+      "name": "Legacy Repository",
+      "title": "Legacy Repository",
+      "description": "Progressive discovery without rebuilding the project — the harness proposes domains from the structure that already exists."
+    },
+    {
+      "id": "uc-03",
+      "slug": "monorepo",
+      "name": "Monorepo",
+      "title": "Monorepo",
+      "description": "Different responsibilities for different areas and products: path-based choreography gives each territory its own agents, advisors and gates."
+    },
+    {
+      "id": "uc-04",
+      "slug": "regulated-engineering",
+      "name": "Regulated Engineering",
+      "title": "Regulated Engineering",
+      "description": "Specs, evidence, executable gates and human approval — an audit trail that exists because the workflow produces it, not as an afterthought."
+    },
+    {
+      "id": "uc-05",
+      "slug": "multi-agent-engineering",
+      "name": "Multi-agent Engineering",
+      "title": "Multi-agent Engineering",
+      "description": "Explicit coordination between operational and consultative agents: roles, boundaries and shared signals instead of overlapping sessions."
+    },
+    {
+      "id": "uc-06",
+      "slug": "consulting",
+      "name": "Consulting",
+      "title": "Consulting",
+      "description": "A common kernel with client-specific overlays: the same governance machinery, adapted per engagement without forking the practice."
+    },
+    {
+      "id": "uc-07",
+      "slug": "product-platform",
+      "name": "Product Platform",
+      "title": "Product Platform",
+      "description": "Shared policies across different products: one policy surface, many repositories, consistent gates and autonomy rules."
+    },
+    {
+      "id": "uc-08",
+      "slug": "model-migration",
+      "name": "Model Migration",
+      "title": "Model Migration",
+      "description": "Swap models and tools while context, procedures and governance stay in the repository — nothing to re-teach, nothing lost."
+    }
+  ]
+}

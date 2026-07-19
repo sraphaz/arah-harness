@@ -1,0 +1,952 @@
+{
+  "locale": "pt",
+  "version": "0.3.1",
+  "nav": [
+    {
+      "slug": "primeiros-passos",
+      "name": "Primeiros Passos",
+      "pages": [
+        {
+          "slug": "introducao",
+          "title": "Introdução"
+        },
+        {
+          "slug": "requisitos",
+          "title": "Requisitos"
+        },
+        {
+          "slug": "instalacao",
+          "title": "Instalação"
+        },
+        {
+          "slug": "primeira-execucao",
+          "title": "Primeira Execução"
+        },
+        {
+          "slug": "inicio-rapido",
+          "title": "Início Rápido"
+        },
+        {
+          "slug": "atualizacao",
+          "title": "Atualização"
+        },
+        {
+          "slug": "desinstalacao",
+          "title": "Desinstalação"
+        }
+      ]
+    },
+    {
+      "slug": "conceitos-centrais",
+      "name": "Conceitos Centrais",
+      "pages": [
+        {
+          "slug": "repo-first",
+          "title": "Repo-first"
+        },
+        {
+          "slug": "agentes",
+          "title": "Agentes"
+        },
+        {
+          "slug": "skills",
+          "title": "Skills"
+        },
+        {
+          "slug": "dominios",
+          "title": "Domínios"
+        },
+        {
+          "slug": "especialistas",
+          "title": "Especialistas"
+        },
+        {
+          "slug": "coreografia",
+          "title": "Coreografia"
+        },
+        {
+          "slug": "autonomia",
+          "title": "Autonomia"
+        },
+        {
+          "slug": "gates-humanos",
+          "title": "Gates Humanos"
+        },
+        {
+          "slug": "techorganism",
+          "title": "TechOrganism"
+        }
+      ]
+    },
+    {
+      "slug": "operacoes",
+      "name": "Operações",
+      "pages": [
+        {
+          "slug": "discover",
+          "title": "Discover"
+        },
+        {
+          "slug": "domain-sync",
+          "title": "Domain Sync"
+        },
+        {
+          "slug": "export-graph",
+          "title": "Export Graph"
+        },
+        {
+          "slug": "signal-bus",
+          "title": "Signal Bus"
+        },
+        {
+          "slug": "auditoria",
+          "title": "Auditoria"
+        },
+        {
+          "slug": "evolve",
+          "title": "Evolve"
+        },
+        {
+          "slug": "regenerate",
+          "title": "Regenerate"
+        },
+        {
+          "slug": "doctor",
+          "title": "Doctor"
+        },
+        {
+          "slug": "sync-check",
+          "title": "Sync Check"
+        }
+      ]
+    },
+    {
+      "slug": "validacao",
+      "name": "Validação",
+      "pages": [
+        {
+          "slug": "visao-geral-dos-gates",
+          "title": "Visão Geral dos Gates"
+        }
+      ]
+    },
+    {
+      "slug": "configuracao",
+      "name": "Configuração",
+      "pages": [
+        {
+          "slug": "arah-config-yaml",
+          "title": "arah.config.yaml"
+        },
+        {
+          "slug": "schemas",
+          "title": "Schemas"
+        }
+      ]
+    },
+    {
+      "slug": "integracoes",
+      "name": "Integrações",
+      "pages": [
+        {
+          "slug": "ambientes-de-ia",
+          "title": "Ambientes de IA"
+        },
+        {
+          "slug": "github-e-ci",
+          "title": "GitHub e CI"
+        }
+      ]
+    },
+    {
+      "slug": "referencia",
+      "name": "Referência",
+      "pages": [
+        {
+          "slug": "referencia-da-cli",
+          "title": "Referência da CLI"
+        },
+        {
+          "slug": "tipos-de-sinal",
+          "title": "Tipos de Sinal"
+        },
+        {
+          "slug": "niveis-de-autonomia",
+          "title": "Níveis de Autonomia"
+        },
+        {
+          "slug": "codigos-de-saida",
+          "title": "Códigos de Saída"
+        },
+        {
+          "slug": "artefatos-gerados",
+          "title": "Artefatos Gerados"
+        }
+      ]
+    },
+    {
+      "slug": "exemplos",
+      "name": "Exemplos",
+      "pages": [
+        {
+          "slug": "repositorio-minimo",
+          "title": "Repositório Mínimo"
+        },
+        {
+          "slug": "monorepo",
+          "title": "Monorepo"
+        },
+        {
+          "slug": "ambiente-regulado",
+          "title": "Ambiente Regulado"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "slug": "introducao",
+      "section": "Primeiros Passos",
+      "sectionSlug": "primeiros-passos",
+      "title": "Introdução",
+      "intro": "O ARAH Harness é um harness repo-first para governança, coordenação e evolução da engenharia de software realizada por humanos e agentes de inteligência artificial.",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "O que ele instala"
+        },
+        {
+          "type": "paragraph",
+          "text": "O harness instala e mantém uma camada operacional dentro do seu repositório: manifests de agentes, skills, domínios, especialistas, coreografia por paths, políticas de autonomia, gates executáveis, um signal bus, um ledger de auditoria, um grafo de agentes, discovery, evolução e regeneração."
+        },
+        {
+          "type": "heading",
+          "text": "A ideia central"
+        },
+        {
+          "type": "paragraph",
+          "text": "A maior parte das ferramentas de IA parte do agente: um prompt concede autoridade, ferramentas executam, o código muda. O ARAH inverte essa relação. O repositório identifica o contexto, seleciona os agentes, define limites, aplica procedimentos, valida resultados e registra evidências. O repositório governa o agente."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Repo-first: contratos são arquivos versionados, não configurações de plataforma",
+            "Agnóstico a modelo: funciona com Claude Code, Cursor, Copilot, Codex, modelos locais",
+            "Humano no comando: a autoridade de merge é sempre humana"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "requisitos",
+      "section": "Primeiros Passos",
+      "sectionSlug": "primeiros-passos",
+      "title": "Requisitos",
+      "intro": "O que você precisa antes de instalar o harness.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "Windows com PowerShell 5.1+ (ou PowerShell 7+ em qualquer SO)",
+            "Git 2.30+",
+            "Um repositório alvo (novo ou existente)",
+            "Opcional: GitHub CLI (gh) para automação de PRs",
+            "Opcional: um ambiente de IA — Claude Code, Cursor ou Copilot"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Observações"
+        },
+        {
+          "type": "paragraph",
+          "text": "A CLI é baseada em PowerShell. No macOS e no Linux, instale o PowerShell 7 (pwsh) e substitua powershell por pwsh nos comandos."
+        }
+      ]
+    },
+    {
+      "slug": "instalacao",
+      "section": "Primeiros Passos",
+      "sectionSlug": "primeiros-passos",
+      "title": "Instalação",
+      "intro": "Clone o harness uma vez, depois instale-o em qualquer repositório consumidor.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\\arah-harness",
+          "label": "CLONAR"
+        },
+        {
+          "type": "code",
+          "code": "cd C:\\path\\to\\your-project\n\npowershell -ExecutionPolicy Bypass `\n  -File $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 `\n  install `\n  -ProjectName \"my-project\"",
+          "label": "INSTALAR"
+        },
+        {
+          "type": "heading",
+          "text": "O que o install cria"
+        },
+        {
+          "type": "list",
+          "items": [
+            "arah.config.yaml — políticas e autonomia",
+            "AGENTS.md — o contrato de entrada para ambientes de IA",
+            ".agents/ e .skills/ — manifests instalados",
+            "scripts/ — gates executáveis",
+            ".github/workflows/ — integração com CI",
+            ".arah/ — estado de auditoria, bus e organismo"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "primeira-execucao",
+      "section": "Primeiros Passos",
+      "sectionSlug": "primeiros-passos",
+      "title": "Primeira Execução",
+      "intro": "Valide a instalação e deixe o harness observar seu repositório.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah doctor",
+          "label": "VALIDAR A INSTALAÇÃO"
+        },
+        {
+          "type": "paragraph",
+          "text": "O doctor verifica integridade do kernel, validade da config, conformidade com schemas e estrutura de diretórios. Corrija o que ele apontar antes de continuar."
+        },
+        {
+          "type": "code",
+          "code": "arah discover",
+          "label": "RODAR O DISCOVERY"
+        },
+        {
+          "type": "paragraph",
+          "text": "O discover inspeciona stack, frameworks, estrutura e diretórios, e escreve uma proposta revisável em docs/_meta/discovery.proposed.yaml. Nada é aplicado sem a sua revisão."
+        }
+      ]
+    },
+    {
+      "slug": "inicio-rapido",
+      "section": "Primeiros Passos",
+      "sectionSlug": "primeiros-passos",
+      "title": "Início Rápido",
+      "intro": "O ciclo completo, de ponta a ponta, em cinco comandos.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah doctor\narah discover\narah domain sync\narah export-graph\narah evolve",
+          "label": "O CICLO"
+        },
+        {
+          "type": "list",
+          "items": [
+            "doctor — valida a instalação",
+            "discover — propõe domínios a partir do repositório",
+            "domain sync — materializa os domínios aprovados",
+            "export-graph — deriva o grafo de agentes",
+            "evolve — propõe melhorias a partir de evidências"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Cada comando escreve artefatos versionados que você revisa em pull requests. O harness nunca aplica mudanças estruturais sem seleção humana."
+        }
+      ]
+    },
+    {
+      "slug": "atualizacao",
+      "section": "Primeiros Passos",
+      "sectionSlug": "primeiros-passos",
+      "title": "Atualização",
+      "intro": "Mantenha o consumidor consistente com o kernel por meio da regeneração.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "powershell -File `\n  $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 `\n  regenerate `\n  -Target . `\n  -UpdateKernel",
+          "label": "REGENERAR"
+        },
+        {
+          "type": "paragraph",
+          "text": "O regenerate atualiza o kernel, reexecuta o discovery, sincroniza domínios, regenera grafos e valida a instalação. Revise o diff resultante como qualquer outra mudança."
+        }
+      ]
+    },
+    {
+      "slug": "desinstalacao",
+      "section": "Primeiros Passos",
+      "sectionSlug": "primeiros-passos",
+      "title": "Desinstalação",
+      "intro": "O harness é um conjunto de arquivos no seu repositório — remover é um commit.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Exclua os diretórios instalados e a config: .agents/, .skills/, .arah/, arah.config.yaml, AGENTS.md, as entradas do harness em scripts/ e .github/workflows/. Seu código, docs e histórico ficam intactos."
+        },
+        {
+          "type": "code",
+          "code": "git rm -r .agents .skills .arah arah.config.yaml AGENTS.md\ngit commit -m \"remove arah harness\"",
+          "label": "REMOVER"
+        }
+      ]
+    },
+    {
+      "slug": "repo-first",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "Repo-first",
+      "intro": "O repositório é a fonte de verdade operacional — não uma plataforma, um modelo ou uma sessão.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Todo contrato que o harness aplica é um arquivo versionado: revisável em PRs, diffável, portável entre ferramentas e modelos. Não há banco de dados externo nem estado oculto."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Propriedade do contexto: o conhecimento pertence ao repositório",
+            "Independência: troque de modelo sem perder procedimentos",
+            "Auditabilidade: a história é o histórico do git mais o ledger"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "agentes",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "Agentes",
+      "intro": "Um agente é um manifest antes de ser um modelo.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "# .agents/backend-payments.yaml\nrole: operational\ndomains: [payments]\npaths: [\"backend/payments/**\"]\nskills: [refactor, test-first]\nautonomy: propose-only\nescalation: payments-specialist",
+          "label": ".agents/backend-payments.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "Manifests declaram papel (operacional ou consultivo), escopo (domínios e paths), capacidades (skills) e autonomia. Gates validam cada manifest contra schemas/."
+        }
+      ]
+    },
+    {
+      "slug": "skills",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "Skills",
+      "intro": "Procedimentos determinísticos e executáveis — não prompts livres.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "# .skills/test-first/skill.yaml\nname: test-first\ninputs: [spec]\nsteps:\n  - generate failing test\n  - implement\n  - run gates\noutputs: [diff, test-report]",
+          "label": ".skills/test-first/skill.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "Uma skill codifica \"como fazemos as coisas aqui\" como uma unidade versionada que um agente é explicitamente autorizado a executar. Skills não autorizadas simplesmente não estão disponíveis."
+        }
+      ]
+    },
+    {
+      "slug": "dominios",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "Domínios",
+      "intro": "Áreas explícitas do repositório com responsabilidades, paths, referências e validações.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "# docs/_meta/domains.yaml\npayments:\n  paths: [\"backend/payments/**\"]\n  owners: [platform-team]\n  advisors: [payments-specialist]\n  gates: [spec, security]",
+          "label": "docs/_meta/domains.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "Domínios dão aos agentes o mapa organizacional que humanos carregam na cabeça. O discovery os propõe; o domain sync materializa o que humanos aprovam."
+        }
+      ]
+    },
+    {
+      "slug": "especialistas",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "Especialistas",
+      "intro": "Agentes consultivos vinculados a um domínio.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Especialistas codificam o julgamento de domínio: restrições, invariantes, critérios de decisão. Agentes operacionais os consultam pelo signal bus antes de mudar código do domínio. As respostas persistem como eventos tipados."
+        }
+      ]
+    },
+    {
+      "slug": "coreografia",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "Coreografia",
+      "intro": "Seleção de agentes, skills e gates baseada em paths.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "match: \"backend/payments/**\"\nactivate:\n  agents: [backend-payments]\n  advisors: [payments-specialist]\n  gates: [spec, security, build]",
+          "label": "harness/choreography.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "Uma mudança é roteada pelos arquivos que ela toca. Agentes fora de escopo nunca são ativados — o escopo é estrutural, não comportamental."
+        }
+      ]
+    },
+    {
+      "slug": "autonomia",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "Autonomia",
+      "intro": "Níveis de autoridade declarados por agente e por path.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "autonomy:\n  default: propose-only\n  overrides:\n    - paths: [\"docs/**\"]\n      level: execute-with-audit",
+          "label": "arah.config.yaml"
+        },
+        {
+          "type": "list",
+          "items": [
+            "propose-only — o agente produz uma proposta; humanos aplicam",
+            "execute-with-audit — o agente aplica dentro do escopo; o ledger registra tudo",
+            "escalate — o agente precisa consultar antes de agir"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "gates-humanos",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "Gates Humanos",
+      "intro": "A autoridade de merge é humana, estruturalmente.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Nenhum mecanismo do harness consegue mesclar. Propostas de evolução, mudanças de agentes e mudanças de código terminam em um pull request revisado por um humano. Isso é um invariante de design, não uma opção de configuração."
+        }
+      ]
+    },
+    {
+      "slug": "techorganism",
+      "section": "Conceitos Centrais",
+      "sectionSlug": "conceitos-centrais",
+      "title": "TechOrganism",
+      "intro": "O modelo operacional: perceber, organizar, sinalizar, observar, propor, selecionar, regenerar.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "TechOrganism é o modelo pelo qual um repositório percebe sua estrutura, organiza responsabilidades, comunica sinais, preserva memória e propõe sua própria evolução — sob seleção humana. Veja a página TechOrganism para o mapeamento completo."
+        }
+      ]
+    },
+    {
+      "slug": "discover",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Discover",
+      "intro": "Observa o repositório e propõe domínios e especialistas.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah discover",
+          "label": "COMANDO"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Observa: stack, frameworks, estrutura, diretórios, indícios de domínio",
+            "Produz: docs/_meta/discovery.proposed.yaml",
+            "Nunca aplica nada sem revisão"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "domain-sync",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Domain Sync",
+      "intro": "Materializa candidatos a domínio aprovados em contratos.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah domain sync",
+          "label": "COMANDO"
+        },
+        {
+          "type": "paragraph",
+          "text": "Lê o resultado aprovado do discovery e a config, escreve docs/_meta/domains.yaml e os manifests de especialistas. Reexecute após mudanças estruturais."
+        }
+      ]
+    },
+    {
+      "slug": "export-graph",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Export Graph",
+      "intro": "Deriva o grafo de agentes a partir dos manifests.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah export-graph",
+          "label": "COMANDO"
+        },
+        {
+          "type": "paragraph",
+          "text": "Gera docs/_meta/graph.json — nós para agentes, skills e domínios; arestas para autorização e responsabilidade. Um gate falha se o grafo divergir das fontes."
+        }
+      ]
+    },
+    {
+      "slug": "signal-bus",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Signal Bus",
+      "intro": "Comunicação persistente, tipada e append-only.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah organism signal --type consultation.request",
+          "label": "COMANDO"
+        },
+        {
+          "type": "code",
+          "code": "{\"type\":\"consultation.answer\",\n \"from\":\"payments-specialist\",\n \"to\":\"backend-payments\",\n \"ts\":\"2026-07-18T14:02:11Z\",\n \"body\":{\"verdict\":\"approve-with-spec\"}}",
+          "label": ".arah/bus/payments.jsonl"
+        }
+      ]
+    },
+    {
+      "slug": "auditoria",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Auditoria",
+      "intro": "O ledger append-only de ações, resultados e decisões de autonomia.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Cada sessão escreve em .arah/audit/: ações executadas, gates rodados, nível de autonomia vigente, artefatos produzidos. O ledger é a base de evidências para as propostas de evolução."
+        }
+      ]
+    },
+    {
+      "slug": "evolve",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Evolve",
+      "intro": "Propõe melhorias a partir de evidência acumulada.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah evolve",
+          "label": "COMANDO"
+        },
+        {
+          "type": "paragraph",
+          "text": "Analisa ledger, sinais e telemetria. Escreve propostas em docs/_meta/evolution/ — por exemplo, dividir um domínio sobrecarregado. Propostas viram PRs; humanos selecionam."
+        }
+      ]
+    },
+    {
+      "slug": "regenerate",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Regenerate",
+      "intro": "Homeostase para a instalação.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah regenerate -Target . -UpdateKernel",
+          "label": "COMANDO"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Atualiza o kernel para a versão mais recente",
+            "Reexecuta o discovery e sincroniza domínios",
+            "Regenera os grafos",
+            "Valida a instalação"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "doctor",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Doctor",
+      "intro": "Diagnostica a instalação.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah doctor",
+          "label": "COMANDO"
+        },
+        {
+          "type": "paragraph",
+          "text": "Verifica integridade do kernel, conformidade com schemas, validade da config e estrutura de diretórios. Código de saída 0 significa saudável; códigos diferentes de zero identificam a checagem que falhou."
+        }
+      ]
+    },
+    {
+      "slug": "sync-check",
+      "section": "Operações",
+      "sectionSlug": "operacoes",
+      "title": "Sync Check",
+      "intro": "Roda todos os gates localmente, exatamente como o CI os roda.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "arah sync-check",
+          "label": "COMANDO"
+        },
+        {
+          "type": "code",
+          "code": "✓ manifests   ✓ specs\n✓ docs        ✓ grafo\n✓ segurança   ✓ dependências\n✓ build\ngates: 7/7 aprovados",
+          "label": "SAÍDA"
+        }
+      ]
+    },
+    {
+      "slug": "visao-geral-dos-gates",
+      "section": "Validação",
+      "sectionSlug": "validacao",
+      "title": "Visão Geral dos Gates",
+      "intro": "Validações executáveis que rodam localmente e no CI. Um gate reprovado bloqueia o pipeline.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "Validação de manifests — agentes, skills e domínios contra schemas/",
+            "Gates de spec — mudanças relevantes exigem specs satisfeitas",
+            "Gates de documentação — docs consistentes com os contratos",
+            "Gates de segurança — secrets, padrões perigosos, violações de escopo",
+            "Auditoria de dependências — pacotes vulneráveis ou não aprovados",
+            "Gates de build — o projeto precisa compilar e testar",
+            "Validação do grafo — o grafo precisa corresponder às fontes"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Onde eles rodam"
+        },
+        {
+          "type": "paragraph",
+          "text": "Os mesmos scripts rodam em três lugares: sob demanda (arah sync-check), no pre-commit (hooks) e no CI (.github/workflows/). Um PR que falha na validação não pode ser mesclado."
+        }
+      ]
+    },
+    {
+      "slug": "arah-config-yaml",
+      "section": "Configuração",
+      "sectionSlug": "configuracao",
+      "title": "arah.config.yaml",
+      "intro": "A superfície de política do lado do consumidor.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "project: my-project\nkernel: 0.3.1\nautonomy:\n  default: propose-only\nprofiles: [default]\noverlays: []\ngates:\n  required: [manifests, build]\n  per-domain: true",
+          "label": "arah.config.yaml"
+        },
+        {
+          "type": "paragraph",
+          "text": "Profiles selecionam conjuntos de política predefinidos; overlays aplicam ajustes por cliente ou por produto sobre o kernel compartilhado, sem bifurcá-lo."
+        }
+      ]
+    },
+    {
+      "slug": "schemas",
+      "section": "Configuração",
+      "sectionSlug": "configuracao",
+      "title": "Schemas",
+      "intro": "Todo contrato valida contra um schema.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "schemas/ é distribuído com o kernel e define a forma dos manifests de agentes e skills, das regras de coreografia, dos contratos de domínio e da config. A validação de schema é o primeiro gate de toda execução."
+        }
+      ]
+    },
+    {
+      "slug": "ambientes-de-ia",
+      "section": "Integrações",
+      "sectionSlug": "integracoes",
+      "title": "Ambientes de IA",
+      "intro": "Claude Code, Cursor, Copilot, Codex e agentes próprios — governados, não substituídos.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "AGENTS.md é o contrato de entrada que todo ambiente lê. As regras .cursor/ instaladas vinculam o Cursor; Claude Code e Copilot leem AGENTS.md e os manifests diretamente. Agentes próprios se integram lendo os mesmos arquivos e escrevendo no mesmo bus."
+        },
+        {
+          "type": "heading",
+          "text": "A garantia"
+        },
+        {
+          "type": "paragraph",
+          "text": "Como os contratos vivem no repositório, trocar de ambiente não perde nada: os mesmos papéis, skills, gates e histórico valem para qualquer ferramenta apontada ao repositório."
+        }
+      ]
+    },
+    {
+      "slug": "github-e-ci",
+      "section": "Integrações",
+      "sectionSlug": "integracoes",
+      "title": "GitHub e CI",
+      "intro": "Gates em workflows; evidência em pull requests.",
+      "blocks": [
+        {
+          "type": "code",
+          "code": "# .github/workflows/arah-gates.yml\non: [pull_request]\njobs:\n  gates:\n    runs-on: windows-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: powershell -File scripts/arah-gates.ps1",
+          "label": ".github/workflows/arah-gates.yml"
+        },
+        {
+          "type": "paragraph",
+          "text": "O passo de instalação escreve esse workflow. Branch protection mais o job de gates torna a validação estruturalmente inevitável."
+        }
+      ]
+    },
+    {
+      "slug": "referencia-da-cli",
+      "section": "Referência",
+      "sectionSlug": "referencia",
+      "title": "Referência da CLI",
+      "intro": "Selecione um comando para ver sintaxe, descrição, arquivos lidos e gerados.",
+      "blocks": [
+        {
+          "type": "cli-reference"
+        }
+      ]
+    },
+    {
+      "slug": "tipos-de-sinal",
+      "section": "Referência",
+      "sectionSlug": "referencia",
+      "title": "Tipos de Sinal",
+      "intro": "O vocabulário tipado do bus.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "consultation.request / consultation.answer — ida e volta com especialistas",
+            "choreography.activated — conjuntos de ativação por mudança",
+            "gates.passed / gates.failed — resultados de validação",
+            "change.ready — uma mudança preparada para PR",
+            "selection.merge — decisões humanas de merge",
+            "evolution.proposal — propostas de melhoria",
+            "session.start / session.end — fronteiras de telemetria"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "niveis-de-autonomia",
+      "section": "Referência",
+      "sectionSlug": "referencia",
+      "title": "Níveis de Autonomia",
+      "intro": "Os três níveis e o que cada um permite.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "propose-only — o agente produz propostas; humanos as aplicam",
+            "execute-with-audit — o agente aplica mudanças dentro do escopo; o ledger registra cada ação",
+            "escalate — o agente precisa consultar seu especialista antes de agir"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Os níveis são definidos por agente e substituíveis por path no arah.config.yaml. O padrão é propose-only."
+        }
+      ]
+    },
+    {
+      "slug": "codigos-de-saida",
+      "section": "Referência",
+      "sectionSlug": "referencia",
+      "title": "Códigos de Saída",
+      "intro": "Códigos de saída da CLI para scripts e CI.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "0 — sucesso",
+            "1 — falha de validação (gate reprovado)",
+            "2 — erro de configuração",
+            "3 — drift de kernel detectado",
+            "4 — violação de schema",
+            "10 — erro de ambiente (dependência ausente)"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "artefatos-gerados",
+      "section": "Referência",
+      "sectionSlug": "referencia",
+      "title": "Artefatos Gerados",
+      "intro": "Tudo o que o harness escreve, e onde.",
+      "blocks": [
+        {
+          "type": "list",
+          "items": [
+            "docs/_meta/discovery.proposed.yaml — saída do discovery",
+            "docs/_meta/domains.yaml — domínios materializados",
+            "docs/_meta/graph.json — grafo de agentes derivado",
+            "docs/_meta/evolution/proposal-*.md — propostas de evolução",
+            ".arah/bus/*.jsonl — sinais tipados",
+            ".arah/audit/ — ledger e registros de sessão"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "repositorio-minimo",
+      "section": "Exemplos",
+      "sectionSlug": "exemplos",
+      "title": "Repositório Mínimo",
+      "intro": "A menor instalação útil.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Um domínio, um agente operacional, gates padrão. Bom para avaliar o ciclo de ponta a ponta em uma tarde."
+        },
+        {
+          "type": "code",
+          "code": "arah install -ProjectName \"minimal\"\narah discover\narah domain sync",
+          "label": "SETUP"
+        }
+      ]
+    },
+    {
+      "slug": "monorepo",
+      "section": "Exemplos",
+      "sectionSlug": "exemplos",
+      "title": "Monorepo",
+      "intro": "Territórios com regras diferentes.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Cada área de produto vira um domínio com seus próprios agentes, especialistas, gates e autonomia. A coreografia mantém agentes dentro do seu território; políticas compartilhadas vivem uma única vez no arah.config.yaml."
+        }
+      ]
+    },
+    {
+      "slug": "ambiente-regulado",
+      "section": "Exemplos",
+      "sectionSlug": "exemplos",
+      "title": "Ambiente Regulado",
+      "intro": "Evidência como subproduto do fluxo de trabalho.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Defina autonomia propose-only em tudo, exija gates de spec e segurança por domínio e habilite telemetria completa de sessão. Todo merge carrega sua trilha de evidências: specs, relatórios de gates, registros de consulta, aprovação humana."
+        }
+      ]
+    }
+  ]
+}

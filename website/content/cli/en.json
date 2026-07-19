@@ -1,0 +1,146 @@
+{
+  "locale": "en",
+  "version": "0.3.1",
+  "commands": [
+    {
+      "slug": "install",
+      "name": "install",
+      "syntax": "arah install -ProjectName <name>",
+      "description": "Installs the kernel into the consumer repository: templates, config, agents, skills, scripts, CI.",
+      "reads": "kernel/, templates/",
+      "writes": "arah.config.yaml, AGENTS.md, .agents/, .skills/, scripts/, .github/workflows/",
+      "example": "arah install -ProjectName \"my-project\"",
+      "output": "installed kernel 0.3.1 · 18 agents · 22 skills"
+    },
+    {
+      "slug": "init",
+      "name": "init",
+      "syntax": "arah init",
+      "description": "Initializes harness state in an already-installed repository (bus, audit, organism directories).",
+      "reads": "arah.config.yaml",
+      "writes": ".arah/audit/, .arah/bus/, .arah/organism/",
+      "example": "arah init",
+      "output": "state initialized"
+    },
+    {
+      "slug": "update",
+      "name": "update",
+      "syntax": "arah update",
+      "description": "Updates the kernel files without re-running discovery.",
+      "reads": "kernel/",
+      "writes": ".agents/, .skills/, scripts/",
+      "example": "arah update",
+      "output": "kernel 0.3.0 → 0.3.1"
+    },
+    {
+      "slug": "doctor",
+      "name": "doctor",
+      "syntax": "arah doctor",
+      "description": "Diagnoses the installation: kernel integrity, schemas, config, structure.",
+      "reads": "entire installation",
+      "writes": "—",
+      "example": "arah doctor",
+      "output": "✓ healthy (exit 0)"
+    },
+    {
+      "slug": "sync-check",
+      "name": "sync-check",
+      "syntax": "arah sync-check",
+      "description": "Runs all gates locally, exactly as CI runs them.",
+      "reads": "contracts + working tree",
+      "writes": "gate reports in .arah/audit/",
+      "example": "arah sync-check",
+      "output": "gates: 7/7 passed"
+    },
+    {
+      "slug": "domain-sync",
+      "name": "domain sync",
+      "syntax": "arah domain sync",
+      "description": "Materializes approved domain candidates into explicit contracts.",
+      "reads": "docs/_meta/discovery.proposed.yaml, arah.config.yaml",
+      "writes": "docs/_meta/domains.yaml, .agents/advisors/",
+      "example": "arah domain sync",
+      "output": "3 domains synced"
+    },
+    {
+      "slug": "export-graph",
+      "name": "export-graph",
+      "syntax": "arah export-graph",
+      "description": "Derives the agent graph from manifests.",
+      "reads": ".agents/, .skills/, docs/_meta/domains.yaml",
+      "writes": "docs/_meta/graph.json",
+      "example": "arah export-graph",
+      "output": "nodes: 42 · edges: 61"
+    },
+    {
+      "slug": "validate-runtime",
+      "name": "validate-runtime",
+      "syntax": "arah validate-runtime",
+      "description": "Verifies the runtime environment: PowerShell version, git, optional tools.",
+      "reads": "environment",
+      "writes": "—",
+      "example": "arah validate-runtime",
+      "output": "runtime ok"
+    },
+    {
+      "slug": "discover",
+      "name": "discover",
+      "syntax": "arah discover",
+      "description": "Observes stack, frameworks, structure and directories; proposes domains and specialists.",
+      "reads": "repository tree, manifests, lockfiles",
+      "writes": "docs/_meta/discovery.proposed.yaml",
+      "example": "arah discover",
+      "output": "candidates: payments, catalog, infra"
+    },
+    {
+      "slug": "organism-bootstrap",
+      "name": "organism bootstrap",
+      "syntax": "arah organism bootstrap",
+      "description": "Creates the organism state from current contracts: cells, tissues, bus topics.",
+      "reads": "domains, agents, skills",
+      "writes": ".arah/organism/",
+      "example": "arah organism bootstrap",
+      "output": "organism ready"
+    },
+    {
+      "slug": "organism-status",
+      "name": "organism status",
+      "syntax": "arah organism status",
+      "description": "Shows live state: active cells, recent signals, gate results, drift.",
+      "reads": ".arah/",
+      "writes": "—",
+      "example": "arah organism status",
+      "output": "6 cells · 14 signals today · no drift"
+    },
+    {
+      "slug": "organism-signal",
+      "name": "organism signal",
+      "syntax": "arah organism signal --type <type> [--body <json>]",
+      "description": "Appends a typed event to the bus.",
+      "reads": "—",
+      "writes": ".arah/bus/*.jsonl",
+      "example": "arah organism signal --type consultation.request",
+      "output": "signal appended"
+    },
+    {
+      "slug": "evolve",
+      "name": "evolve",
+      "syntax": "arah evolve",
+      "description": "Analyzes ledger, signals and telemetry; proposes improvements for human selection.",
+      "reads": ".arah/audit/, .arah/bus/",
+      "writes": "docs/_meta/evolution/proposal-*.md",
+      "example": "arah evolve",
+      "output": "1 proposal → PR #142"
+    },
+    {
+      "slug": "regenerate",
+      "name": "regenerate",
+      "syntax": "arah regenerate -Target <path> [-UpdateKernel]",
+      "description": "Updates kernel, re-runs discovery, syncs domains, regenerates graphs, validates.",
+      "reads": "kernel + installation",
+      "writes": "kernel files, docs/_meta/",
+      "example": "arah regenerate -Target . -UpdateKernel",
+      "output": "regenerated · install valid"
+    }
+  ]
+}

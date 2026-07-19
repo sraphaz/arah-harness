@@ -1,0 +1,962 @@
+{
+  "locale": "en",
+  "meta": {
+    "title": "ARAH Harness — Governed human-agent engineering",
+    "version": "0.3.1",
+    "agents": 18,
+    "skills": 22
+  },
+  "hero": {
+    "eyebrow": "Repo-first harness · Open source",
+    "headline": "Governed human-agent engineering, rooted in the repository.",
+    "body": "ARAH Harness transforms your repository into the operational source of truth for agents, skills, policies, validation and human authority.",
+    "pipeline": [
+      {
+        "num": "01",
+        "name": "Human Intent",
+        "hint": "goal · criteria"
+      },
+      {
+        "num": "02",
+        "name": "Repository Context",
+        "hint": "domains · paths"
+      },
+      {
+        "num": "03",
+        "name": "ARAH Harness",
+        "hint": "choreography"
+      },
+      {
+        "num": "04",
+        "name": "Agents + Skills + Policies"
+      },
+      {
+        "num": "05",
+        "name": "Gates + Evidence",
+        "hint": "validated"
+      },
+      {
+        "num": "06",
+        "name": "Pull Request"
+      },
+      {
+        "num": "07",
+        "name": "Human Selection",
+        "hint": "review · merge"
+      }
+    ],
+    "ctas": [
+      {
+        "label": "Get Started",
+        "href": "/docs"
+      },
+      {
+        "label": "Explore Architecture",
+        "href": "/architecture"
+      },
+      {
+        "label": "View on GitHub →",
+        "href": "https://github.com/sraphaz/arah-harness"
+      }
+    ]
+  },
+  "shift": {
+    "eyebrow": "The shift",
+    "headline": "Software engineering is becoming human-agent engineering",
+    "body": "The work is no longer just writing code. It is coordinating humans, agents, models, tools, policies, context, validation and persistent memory — as one system of engineering.",
+    "quote": "The future of software engineering is not autonomous. It is coordinated.",
+    "tiles": [
+      {
+        "kind": "COORDINATE",
+        "label": "Humans"
+      },
+      {
+        "kind": "COORDINATE",
+        "label": "Agents"
+      },
+      {
+        "kind": "COORDINATE",
+        "label": "Models"
+      },
+      {
+        "kind": "COORDINATE",
+        "label": "Tools"
+      },
+      {
+        "kind": "GOVERN",
+        "label": "Policies"
+      },
+      {
+        "kind": "GOVERN",
+        "label": "Validation"
+      },
+      {
+        "kind": "PRESERVE",
+        "label": "Context"
+      },
+      {
+        "kind": "PRESERVE",
+        "label": "Persistent memory"
+      }
+    ]
+  },
+  "problem": {
+    "eyebrow": "The problem",
+    "headline": "Code generation is not the hardest problem",
+    "body": "The harder problem is coordinating intelligence without losing context, authority and accountability.",
+    "items": [
+      {
+        "id": "p-01",
+        "title": "Agents without organizational context",
+        "description": "Models read code locally but do not know responsibilities, architecture, domain boundaries or decision criteria."
+      },
+      {
+        "id": "p-02",
+        "title": "Ephemeral prompts",
+        "description": "Knowledge produced in AI sessions disappears when the conversation ends or the tool changes."
+      },
+      {
+        "id": "p-03",
+        "title": "Autonomy without accountability",
+        "description": "Agents execute changes with no explicit authority, scope, approval path or evidence."
+      },
+      {
+        "id": "p-04",
+        "title": "Knowledge locked to vendors",
+        "description": "Context and workflows get trapped inside copilots, proprietary platforms and specific runtimes."
+      },
+      {
+        "id": "p-05",
+        "title": "Policies that are only documents",
+        "description": "Rules live in wikis and PDFs, with no executable form an agent is forced to obey."
+      },
+      {
+        "id": "p-06",
+        "title": "Uncoordinated multi-agent activity",
+        "description": "Multiple agents act on the same repository without roles, boundaries or shared signals."
+      },
+      {
+        "id": "p-07",
+        "title": "Absence of evidence",
+        "description": "Changes land without artifacts proving what was validated, by whom, under which policy."
+      },
+      {
+        "id": "p-08",
+        "title": "Context lost between sessions",
+        "description": "Every new session starts from zero: decisions, constraints and history must be re-explained."
+      }
+    ]
+  },
+  "inversion": {
+    "eyebrow": "The inversion",
+    "headline": "The repository governs the agent.",
+    "body": "The agent does not receive unrestricted authority. The repository provides its role, context, scope, capabilities, policies, validations and approval paths.",
+    "agentFirst": {},
+    "repositoryFirst": {}
+  },
+  "whatIs": {
+    "eyebrow": "What it is",
+    "headline": "One operational layer, installed in your repository",
+    "body": "ARAH Harness is a repo-first harness for governing, coordinating and evolving human-agent software engineering. It installs and maintains a versioned operational layer inside the repository. Select a component to inspect it."
+  },
+  "layersSection": {
+    "eyebrow": "Layered architecture",
+    "headline": "A layer of authority between environments and the repository",
+    "body": "Select a layer to inspect what lives there. Full detail on the Architecture page."
+  },
+  "principles": {
+    "eyebrow": "Principles",
+    "headline": "Eight commitments the harness enforces",
+    "items": [
+      {
+        "slug": "repository-first",
+        "name": "Repository-first",
+        "description": "The repository is the operational source of truth."
+      },
+      {
+        "slug": "human-in-command",
+        "name": "Human in command",
+        "description": "Accountability and merge authority remain human."
+      },
+      {
+        "slug": "governed-agency",
+        "name": "Governed agency",
+        "description": "Every agent has an explicit role, scope and autonomy level."
+      },
+      {
+        "slug": "spec-before-code",
+        "name": "Spec before code",
+        "description": "Relevant changes start from intent and verifiable criteria."
+      },
+      {
+        "slug": "context-on-demand",
+        "name": "Context on demand",
+        "description": "Each agent receives the context appropriate to its function."
+      },
+      {
+        "slug": "evidence-before-trust",
+        "name": "Evidence before trust",
+        "description": "Confidence is sustained by validations and artifacts."
+      },
+      {
+        "slug": "persistent-intelligence",
+        "name": "Persistent intelligence",
+        "description": "Knowledge survives sessions, tools and models."
+      },
+      {
+        "slug": "evolution-by-selection",
+        "name": "Evolution by selection",
+        "description": "The system proposes; humans select."
+      }
+    ]
+  },
+  "lifecycle": {
+    "eyebrow": "Lifecycle",
+    "headline": "Twelve operations, from install to regeneration",
+    "steps": [
+      {
+        "num": "01",
+        "name": "Install",
+        "slug": "install"
+      },
+      {
+        "num": "02",
+        "name": "Discover",
+        "slug": "discover"
+      },
+      {
+        "num": "03",
+        "name": "Configure",
+        "slug": "configure"
+      },
+      {
+        "num": "04",
+        "name": "Domain Sync",
+        "slug": "domain-sync"
+      },
+      {
+        "num": "05",
+        "name": "Choreograph",
+        "slug": "choreograph"
+      },
+      {
+        "num": "06",
+        "name": "Execute",
+        "slug": "execute"
+      },
+      {
+        "num": "07",
+        "name": "Validate",
+        "slug": "validate"
+      },
+      {
+        "num": "08",
+        "name": "Signal",
+        "slug": "signal"
+      },
+      {
+        "num": "09",
+        "name": "Audit",
+        "slug": "audit"
+      },
+      {
+        "num": "10",
+        "name": "Evolve",
+        "slug": "evolve"
+      },
+      {
+        "num": "11",
+        "name": "Human Review",
+        "slug": "human-review"
+      },
+      {
+        "num": "12",
+        "name": "Regenerate",
+        "slug": "regenerate"
+      }
+    ]
+  },
+  "capabilityMap": {
+    "eyebrow": "Capability map",
+    "headline": "Eight areas of capability",
+    "body": "{{ selArea.desc }}"
+  },
+  "positioning": {
+    "eyebrow": "Positioning",
+    "headline": "A different category, not a replacement",
+    "body": "ARAH can govern how these tools participate in the repository. It does not need to replace them."
+  },
+  "notList": {
+    "eyebrow": "Scope",
+    "headline": "What ARAH is not",
+    "body": "ARAH is a repo-first layer of governance and coordination for engineering between humans and agents. It is not:",
+    "quote": "Autonomy without governance does not scale.",
+    "items": [
+      "A language model",
+      "A chatbot",
+      "A coding copilot",
+      "Just a prompt framework",
+      "Just a multi-agent runtime",
+      "A CI/CD platform",
+      "A GitHub replacement",
+      "Unrestricted auto-merge",
+      "A promise of software development without humans"
+    ]
+  },
+  "status": {
+    "eyebrow": "Capability status",
+    "headline": "What exists today, what is coming",
+    "body": "The site distinguishes shipped capability from vision. So does the product.",
+    "buckets": {
+      "available": [
+        "kernel installation",
+        "CLI",
+        "configuration",
+        "agent manifests",
+        "skills",
+        "path-based choreography",
+        "domain sync",
+        "repository discovery",
+        "signal bus",
+        "agent graph",
+        "audit events",
+        "executable gates",
+        "doctor",
+        "sync-check",
+        "evolve proposals",
+        "regeneration",
+        "CI integration"
+      ],
+      "experimental": [
+        "ARAH Live",
+        "richer telemetry",
+        "extended domain advisors",
+        "deeper evolution analysis"
+      ],
+      "planned": [
+        "org-wide governance",
+        "multi-repository control",
+        "agent & skill scoring",
+        "semantic domain discovery",
+        "enterprise policy engine",
+        "analytics",
+        "shared skill registry",
+        "visual studio"
+      ]
+    }
+  },
+  "quickstart": {
+    "eyebrow": "Quick start",
+    "headline": "Install it in an existing repository",
+    "body": "Three commands to install the kernel, then a small CLI surface to discover, sync, validate and evolve. Full guide in the documentation.",
+    "commands": [
+      "arah doctor",
+      "arah discover",
+      "arah domain sync",
+      "arah export-graph",
+      "arah evolve"
+    ],
+    "steps": [
+      {
+        "label": "1 · CLONE THE HARNESS",
+        "code": "git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\\arah-harness"
+      },
+      {
+        "label": "2 · INSTALL INTO YOUR PROJECT",
+        "code": "cd C:\\path\\to\\your-project\n\npowershell -ExecutionPolicy Bypass `\n  -File $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 `\n  install `\n  -ProjectName \"my-project\""
+      },
+      {
+        "label": "3 · REGENERATE / UPDATE",
+        "code": "powershell -File `\n  $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 `\n  regenerate `\n  -Target . `\n  -UpdateKernel"
+      }
+    ]
+  },
+  "cta": {
+    "headline": "Agents propose. Humans select. The repository remembers.",
+    "body": "Your engineering context should belong to your repository, not to a model provider."
+  },
+  "parts": [
+    {
+      "slug": "agent-manifests",
+      "name": "Agent manifests",
+      "file": ".agents/*.yaml",
+      "stage": "available",
+      "definition": "Versioned contracts declaring each agent: role, scope, allowed paths, skills, autonomy level and escalation rules.",
+      "role": "Defines who an agent is and what it may touch before any model is invoked.",
+      "maturity": "Available — validated by executable gates on every change.",
+      "example": "# .agents/backend-payments.yaml\nrole: operational\ndomains: [payments]\npaths: [\"backend/payments/**\"]\nskills: [refactor, test-first]\nautonomy: propose-only",
+      "order": 1
+    },
+    {
+      "slug": "skills",
+      "name": "Skills",
+      "file": ".skills/*",
+      "stage": "available",
+      "definition": "Deterministic, executable procedures an agent is authorized to run — not free-form prompts.",
+      "role": "Turns \"how we do things here\" into versioned, testable capability units.",
+      "maturity": "Available — manifest-validated, invoked through choreography.",
+      "example": "# .skills/test-first/skill.yaml\nname: test-first\ninputs: [spec]\nsteps:\n  - generate failing test\n  - implement\n  - run gates",
+      "order": 2
+    },
+    {
+      "slug": "domains",
+      "name": "Domains",
+      "file": "docs/_meta/domains.yaml",
+      "stage": "available",
+      "definition": "Explicit areas of the repository with responsibilities, paths, references and validations.",
+      "role": "Gives agents the organizational map humans carry in their heads.",
+      "maturity": "Available — proposed by discovery, synced via domain sync.",
+      "example": "payments:\n  paths: [\"backend/payments/**\"]\n  owners: [platform-team]\n  advisors: [payments-specialist]\n  gates: [spec, security]",
+      "order": 3
+    },
+    {
+      "slug": "specialists",
+      "name": "Specialists",
+      "file": ".agents/advisors/*",
+      "stage": "available",
+      "definition": "Consultative agents bound to a domain, consulted by operational agents before changes.",
+      "role": "Encodes domain judgment: constraints, invariants, decision criteria.",
+      "maturity": "Available — extended advisors are experimental.",
+      "example": "# consulted automatically when\n# choreography matches the domain\narah organism signal \\\n  --type consultation.request \\\n  --domain payments",
+      "order": 4
+    },
+    {
+      "slug": "path-based-choreography",
+      "name": "Path-based choreography",
+      "file": "harness/choreography.yaml",
+      "stage": "available",
+      "definition": "Selection of agents and skills based on the files and areas affected by a change.",
+      "role": "Routes work: a diff in backend/payments/** activates payment agents, their skills and gates.",
+      "maturity": "Available — core coordination mechanism.",
+      "example": "match: \"backend/payments/**\"\nactivate:\n  agents: [backend-payments]\n  advisors: [payments-specialist]\n  gates: [spec, security, build]",
+      "order": 5
+    },
+    {
+      "slug": "autonomy-policies",
+      "name": "Autonomy policies",
+      "file": "arah.config.yaml",
+      "stage": "available",
+      "definition": "Declared autonomy levels per agent and per path: what may be proposed, executed or must escalate.",
+      "role": "Replaces implicit trust with explicit, versioned authority.",
+      "maturity": "Available — enforced at choreography and gate time.",
+      "example": "autonomy:\n  default: propose-only\n  overrides:\n    - paths: [\"docs/**\"]\n      level: execute-with-audit",
+      "order": 6
+    },
+    {
+      "slug": "executable-gates",
+      "name": "Executable gates",
+      "file": "scripts/gates/*",
+      "stage": "available",
+      "definition": "Validations that run as code: manifests, specs, docs, graph, security, dependencies, build.",
+      "role": "Makes policy enforceable — a change that fails a gate does not reach a pull request.",
+      "maturity": "Available — runs locally and in CI.",
+      "example": "$ arah sync-check\n✓ manifests valid\n✓ specs satisfied\n✓ graph consistent\n✗ security: secret in diff\ngate failed → change blocked",
+      "order": 7
+    },
+    {
+      "slug": "signal-bus",
+      "name": "Signal bus",
+      "file": ".arah/bus/",
+      "stage": "available",
+      "definition": "Persistent, typed, append-only events for communication between agents and cells.",
+      "role": "Lets agents coordinate across sessions and tools without sharing a chat window.",
+      "maturity": "Available — richer telemetry is experimental.",
+      "example": "{\"type\":\"consultation.answer\",\n \"from\":\"payments-specialist\",\n \"to\":\"backend-payments\",\n \"ts\":\"2026-07-18T14:02:11Z\",\n \"body\":{\"verdict\":\"approve-with-spec\"}}",
+      "order": 8
+    },
+    {
+      "slug": "audit-ledger",
+      "name": "Audit ledger",
+      "file": ".arah/audit/",
+      "stage": "available",
+      "definition": "Append-only record of actions, results, autonomy decisions and session events.",
+      "role": "Answers: what happened, by which agent, under which policy, with what evidence.",
+      "maturity": "Available — feeds evolution analysis.",
+      "example": "2026-07-18 14:03 agent=backend-payments\naction=skill.test-first result=pass\nautonomy=propose-only gates=4/4\nevidence=.arah/audit/run-8f31/",
+      "order": 9
+    },
+    {
+      "slug": "agent-graph",
+      "name": "Agent graph",
+      "file": "docs/_meta/graph.json",
+      "stage": "available",
+      "definition": "Auditable representation of relations between agents, skills, domains and responsibilities.",
+      "role": "Makes the whole system inspectable — and validatable as a gate.",
+      "maturity": "Available — visual studio is planned.",
+      "example": "$ arah export-graph\nnodes: 18 agents · 22 skills · 6 domains\nedges: 61\n→ docs/_meta/graph.json",
+      "order": 10
+    },
+    {
+      "slug": "discovery",
+      "name": "Discovery",
+      "file": "docs/_meta/discovery.*",
+      "stage": "available",
+      "definition": "Inspection of stack, frameworks, structure and directories to propose domains and specialists.",
+      "role": "Bootstraps governance from what the repository already is.",
+      "maturity": "Available — semantic discovery is planned.",
+      "example": "$ arah discover\nstack: node20 + pnpm + nest\ncandidates: payments, catalog, infra\n→ docs/_meta/discovery.proposed.yaml",
+      "order": 11
+    },
+    {
+      "slug": "evolution",
+      "name": "Evolution",
+      "file": "docs/_meta/evolution/*",
+      "stage": "available",
+      "definition": "Analysis of ledger, signals and telemetry to propose system improvements — always under human selection.",
+      "role": "The harness improves itself the same way code changes: by reviewed proposals.",
+      "maturity": "Available — deeper analysis is experimental.",
+      "example": "$ arah evolve\nproposal: split \"backend\" domain\nevidence: 78% of signals scoped to payments\n→ PR #142 (awaiting human review)",
+      "order": 12
+    },
+    {
+      "slug": "regeneration",
+      "name": "Regeneration",
+      "file": "cli/arah.ps1 regenerate",
+      "stage": "available",
+      "definition": "Updates the kernel, re-runs discovery, syncs domains, regenerates graphs and validates the installation.",
+      "role": "Homeostasis: keeps the installed harness consistent as the repository evolves.",
+      "maturity": "Available — drift checks included.",
+      "example": "$ arah regenerate --update-kernel\nkernel 0.3.0 → 0.3.1\ndiscovery re-run · domains synced\ngraph regenerated · install valid",
+      "order": 13
+    }
+  ],
+  "layers": [
+    {
+      "slug": "human-intent",
+      "name": "Human Intent",
+      "items": "goals · decisions · approval · merge",
+      "detail": "Where authority originates and returns. Humans set goals, decide direction, review proposals and hold merge authority.",
+      "itemsLong": "goals · architectural decisions · reviews · approval · merge",
+      "order": 1
+    },
+    {
+      "slug": "ai-environments",
+      "name": "AI Environments",
+      "items": "Claude Code · Cursor · Copilot · local",
+      "detail": "The tools where models run. ARAH does not replace them — it governs how they participate in the repository.",
+      "itemsLong": "Claude Code · Cursor · GitHub Copilot · Codex · local models · custom agents",
+      "order": 2
+    },
+    {
+      "slug": "arah-harness",
+      "name": "ARAH Harness",
+      "items": "agents · skills · gates · signals",
+      "detail": "The governance and coordination layer: versioned contracts that define who may act, where, with which capabilities, under which validation.",
+      "itemsLong": "agents · skills · choreography · policies · gates · signals · graph · audit · evolution",
+      "order": 3
+    },
+    {
+      "slug": "repository",
+      "name": "Repository",
+      "items": "code · domain · specs · CI",
+      "detail": "The operational source of truth: everything the harness knows and enforces lives here, versioned and portable.",
+      "itemsLong": "code · architecture · domain · specifications · documentation · tests · infrastructure · CI",
+      "order": 4
+    },
+    {
+      "slug": "delivery",
+      "name": "Delivery",
+      "items": "pull request · review · deploy",
+      "detail": "Changes only reach production through the human path: pull request, review, merge, deployment.",
+      "itemsLong": "pull request · review · merge · deployment",
+      "order": 5
+    }
+  ],
+  "areas": [
+    {
+      "slug": "discover",
+      "name": "Discover",
+      "description": "The harness observes what the repository already is before proposing structure.",
+      "capabilities": [
+        "stack detection",
+        "framework detection",
+        "repository structure",
+        "domain candidates",
+        "specialist candidates"
+      ],
+      "order": 1
+    },
+    {
+      "slug": "model",
+      "name": "Model",
+      "description": "What was discovered becomes explicit, versioned contracts.",
+      "capabilities": [
+        "domains",
+        "agents",
+        "specialists",
+        "schemas",
+        "graph"
+      ],
+      "order": 2
+    },
+    {
+      "slug": "coordinate",
+      "name": "Coordinate",
+      "description": "Work is routed to the right agents and capabilities by the paths it touches.",
+      "capabilities": [
+        "path-based choreography",
+        "skills",
+        "signals",
+        "agent consultation"
+      ],
+      "order": 3
+    },
+    {
+      "slug": "execute",
+      "name": "Execute",
+      "description": "Agents act through deterministic, authorized procedures.",
+      "capabilities": [
+        "operational agents",
+        "deterministic skills",
+        "CLI",
+        "hooks"
+      ],
+      "order": 4
+    },
+    {
+      "slug": "validate",
+      "name": "Validate",
+      "description": "Every relevant change passes executable gates before reaching review.",
+      "capabilities": [
+        "manifests",
+        "specs",
+        "graph",
+        "documentation",
+        "security",
+        "dependencies",
+        "build"
+      ],
+      "order": 5
+    },
+    {
+      "slug": "observe",
+      "name": "Observe",
+      "description": "Everything that happens is recorded and inspectable.",
+      "capabilities": [
+        "audit ledger",
+        "live events",
+        "session telemetry",
+        "agent graph"
+      ],
+      "order": 6
+    },
+    {
+      "slug": "govern",
+      "name": "Govern",
+      "description": "Authority is explicit, and merge remains human.",
+      "capabilities": [
+        "autonomy",
+        "human gates",
+        "pull requests",
+        "merge authority",
+        "policy as code"
+      ],
+      "order": 7
+    },
+    {
+      "slug": "evolve",
+      "name": "Evolve",
+      "description": "The system proposes improvements from evidence; humans select.",
+      "capabilities": [
+        "evolution proposals",
+        "regeneration",
+        "drift checks",
+        "kernel updates",
+        "homeostasis"
+      ],
+      "order": 8
+    }
+  ],
+  "matrix": {
+    "columns": [
+      "coding-copilots",
+      "multi-agent-frameworks",
+      "spec-driven-kits",
+      "ci-cd-platforms",
+      "observability-tools",
+      "arah-harness"
+    ],
+    "rows": [
+      {
+        "dimension": "Repository-first",
+        "slug": "repository-first",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "no",
+          "spec-driven-kits": "partial",
+          "ci-cd-platforms": "no",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 0,
+          "spec-driven-kits": 1,
+          "ci-cd-platforms": 0,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Model agnostic",
+        "slug": "model-agnostic",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "yes",
+          "spec-driven-kits": "yes",
+          "ci-cd-platforms": "yes",
+          "observability-tools": "partial",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 2,
+          "spec-driven-kits": 2,
+          "ci-cd-platforms": 2,
+          "observability-tools": 1,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Persistent context",
+        "slug": "persistent-context",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "partial",
+          "spec-driven-kits": "partial",
+          "ci-cd-platforms": "no",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 1,
+          "spec-driven-kits": 1,
+          "ci-cd-platforms": 0,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Agent manifests",
+        "slug": "agent-manifests",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "partial",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "no",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 1,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 0,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Executable skills",
+        "slug": "executable-skills",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "partial",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "no",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 1,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 0,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Path-based choreography",
+        "slug": "path-based-choreography",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "no",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "partial",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 0,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 1,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Domain advisors",
+        "slug": "domain-advisors",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "no",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "no",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 0,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 0,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Autonomy policies",
+        "slug": "autonomy-policies",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "partial",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "no",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 1,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 0,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Executable gates",
+        "slug": "executable-gates",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "no",
+          "spec-driven-kits": "partial",
+          "ci-cd-platforms": "yes",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 0,
+          "spec-driven-kits": 1,
+          "ci-cd-platforms": 2,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Signal bus",
+        "slug": "signal-bus",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "partial",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "no",
+          "observability-tools": "partial",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 1,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 0,
+          "observability-tools": 1,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Audit ledger",
+        "slug": "audit-ledger",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "no",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "partial",
+          "observability-tools": "yes",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 0,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 1,
+          "observability-tools": 2,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Agent graph",
+        "slug": "agent-graph",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "partial",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "no",
+          "observability-tools": "partial",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 1,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 0,
+          "observability-tools": 1,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Human merge authority",
+        "slug": "human-merge-authority",
+        "values": {
+          "coding-copilots": "partial",
+          "multi-agent-frameworks": "no",
+          "spec-driven-kits": "partial",
+          "ci-cd-platforms": "yes",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 1,
+          "multi-agent-frameworks": 0,
+          "spec-driven-kits": 1,
+          "ci-cd-platforms": 2,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      },
+      {
+        "dimension": "Evolution proposals",
+        "slug": "evolution-proposals",
+        "values": {
+          "coding-copilots": "no",
+          "multi-agent-frameworks": "no",
+          "spec-driven-kits": "no",
+          "ci-cd-platforms": "no",
+          "observability-tools": "no",
+          "arah-harness": "yes"
+        },
+        "scores": {
+          "coding-copilots": 0,
+          "multi-agent-frameworks": 0,
+          "spec-driven-kits": 0,
+          "ci-cd-platforms": 0,
+          "observability-tools": 0,
+          "arah-harness": 2
+        }
+      }
+    ]
+  }
+}
