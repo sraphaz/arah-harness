@@ -1,6 +1,11 @@
 id: orchestrator
 name: Orquestrador
 description: Roteia intenções para agentes especializados; não altera código de produto.
+execution_role:
+  can_route: true
+  can_execute: false
+  can_consult: false
+  can_review: false
 triggers:
   - issue:labeled
   - pull_request:opened

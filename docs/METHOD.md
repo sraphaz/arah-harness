@@ -1,21 +1,23 @@
 # Método ARAH
 
 **ARAH** — *Agent Runtime Autonomous Harness*  
-**Versão do método** alinhada ao harness **0.3.1**
+**Versão do método** alinhada ao harness **0.4.0**
 
-Framework de bootstrap para repositórios gerenciados por agentes: autonomia coreografada, auditável, observável, com economia de tokens **medida** (Economy Intelligence) — e dimensão **TechOrganism** para discovery, organização e evolução contínua.
+Framework de bootstrap para repositórios gerenciados por agentes: autonomia coreografada, auditável, observável, com economia de tokens **medida** (Economy Intelligence), **Execution Control** (terminalidade) — e dimensão **TechOrganism** para discovery, organização e evolução contínua.
 
 ---
 
 ## Promessa
 
-Um humano define a intenção. O organismo ARAH roteia, co-ativa, implementa, valida e propõe a próxima melhoria. O humano faz o merge.
+Um humano define a intenção. O organismo ARAH roteia para **um executor primário**, consulta com limites, implementa, valida e propõe a próxima melhoria. O humano faz o merge.
 
 ```text
-Intenção → Orquestrador → Célula + skills → PR → CI + gates → ready-for-merge → Merge (humano)
+Intenção → Orquestrador → contrato + executor → consultas limitadas → alteração → done|blocked → PR → Merge
                 │
                 └── TechOrganism: discover · organism · signals · evolve · regenerate
 ```
+
+Agentes formam uma organização orientada a **contratos**, não uma rede livre de conversação. Ver [EXECUTION_CONTROL.md](EXECUTION_CONTROL.md).
 
 ---
 
@@ -48,12 +50,13 @@ Intenção → Orquestrador → Célula + skills → PR → CI + gates → ready
 ## Fluxo operacional
 
 1. Humano define intenção (issue, fase, pedido).
-2. **Orquestrador** roteia para a célula operacional.
-3. **Coreografia** co-ativa domínio/specialists e skills.
-4. Célula implementa no escopo → abre PR.
-5. **QA** + **PR Steward** + CI + gates SDD.
-6. Humano faz merge → **next-phase** (opcional).
-7. Periodicamente: **evolve** / **regenerate** → novas propostas.
+2. **Orquestrador** classifica, resolve coreografia e cria o **contrato de execução** com um `primary_executor`.
+3. Orquestrador **encerra o comando da sessão**; o executor conduz.
+4. Consultores (se houver) devolvem parecer estruturado ao executor — sem conversas entre si.
+5. Executor altera o repositório, verifica e fecha `done` ou `blocked`.
+6. **QA** + **PR Steward** + CI + gates SDD no PR.
+7. Humano faz merge → **next-phase** (opcional).
+8. Periodicamente: **evolve** / **regenerate** → novas propostas.
 
 ---
 

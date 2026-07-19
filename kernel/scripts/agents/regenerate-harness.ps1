@@ -33,6 +33,42 @@ $PwshExe = if (Get-Command pwsh -ErrorAction SilentlyContinue) { 'pwsh' } else {
 
 Write-Host "regenerate: organism homeostasis -> $Root"
 
+# 0) Migrate execution_control if absent (preserve consumer overlays)
+$cfgPath = Join-Path $Root 'arah.config.yaml'
+if ((Test-Path -LiteralPath $cfgPath) -and -not $DryRun) {
+    $cfgRaw = Get-Content -LiteralPath $cfgPath -Raw
+    if ($cfgRaw -notmatch '(?m)^execution_control:') {
+        $cfgRaw = $cfgRaw.TrimEnd() + @"
+
+
+# Execution Control Protocol (added by regenerate — safe defaults)
+execution_control:
+  enabled: true
+  terminal_states:
+    - done
+    - blocked
+  limits:
+    max_handoffs: 2
+    max_consultations: 2
+    max_analysis_cycles: 1
+  behavior:
+    require_primary_executor: true
+    forbid_consultant_to_consultant_handoff: true
+    require_completion_evidence: true
+    require_blocking_reason: true
+    prevent_reroute_after_execution_started: true
+"@
+        Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
+        Write-Host "regenerate: migrated execution_control into arah.config.yaml"
+    }
+}
+foreach ($sub in @('active', 'completed', 'blocked')) {
+    $d = Join-Path $Root ".arah/local/execution/$sub"
+    if (-not (Test-Path -LiteralPath $d) -and -not $DryRun) {
+        New-Item -ItemType Directory -Path $d -Force | Out-Null
+    }
+}
+
 function Invoke-Step {
     param([string]$Name, [scriptblock]$Block)
     Write-Host ""

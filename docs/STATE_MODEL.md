@@ -6,9 +6,9 @@ O passivo técnico do harness era versionar **todo** estado operacional (bus, le
 
 | Camada | O quê | Onde | Git |
 |--------|-------|------|-----|
-| **Quente** | Sinais operacionais, auditoria bruta, telemetria | `.arah/local/` | **Ignorado** |
+| **Quente** | Sinais operacionais, auditoria bruta, telemetria, **contratos de execução** | `.arah/local/` (+ `execution/`) | **Ignorado** |
 | **Frio** | Resumo compacto por run + decisões | `docs/_meta/runs/<run-id>/summary.json` | Versionável |
-| **Contratos** | Manifests, schemas, approvals humanas | `docs/_meta/`, `.arah/approvals.yaml` | Versionável |
+| **Contratos (versão)** | Manifests, schemas, approvals humanas | `docs/_meta/`, `.arah/approvals.yaml`, `schemas/` | Versionável |
 
 ## Layout
 
@@ -19,6 +19,11 @@ O passivo técnico do harness era versionar **todo** estado operacional (bus, le
     bus/archive/YYYY-MM.jsonl # compactado
     audit/pending/<ULID>.json
     audit/archive/YYYY-MM.jsonl
+    execution/                # Execution Control Protocol
+      active/<task-id>.yaml
+      completed/
+      blocked/
+      <task-id>/consultations/
   observability/summary.yaml  # agregado quente (gitignored)
   organism/state.json         # runtime (gitignored)
   approvals.yaml              # gates humanos (versionável)

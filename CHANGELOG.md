@@ -2,6 +2,31 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.4.0] - 2026-07-19
+
+### Added
+
+- **Execution Control Protocol** — terminalidade determinística (Spec-Id: `arah-execution-control`)
+  - Schemas `execution-contract` + `consultation-result`
+  - Ledger `.arah/local/execution/{active,completed,blocked}/`
+  - Runtime `execute-task.ps1` / `task-control.ps1` + validator
+  - Autonomia `execute_change` (rank 4); ranks `invoke_skill`+ deslocados
+  - `execution_role` nos manifests; `execution.primary_executor` na coreografia
+  - CLI `arah task create|status|validate|complete|block`
+  - Cursor rule `.cursor/rules/arah-execution-control.mdc`
+  - Docs [EXECUTION_CONTROL.md](docs/EXECUTION_CONTROL.md); testes `test-execution-control.ps1`
+- Migração: `init`/`regenerate` adicionam `execution_control` sem sobrescrever overlays do consumidor
+- `init` passa a distribuir `schemas/arah-harness/`
+
+### Changed
+
+- Fluxo documentado: intenção → um executor → consultas limitadas → done|blocked (não rede livre de handoffs)
+- `spec_before_work` pula classe `trivial`; aplica-se a `execute_change`
+
+### Migration notes
+
+Consumidores existentes: rode `arah regenerate -UpdateKernel` (ou `update`) para receber scripts, rule Cursor e bloco `execution_control` na config. Customizações em `arah.config.yaml` são preservadas; apenas a seção ausente é acrescentada. Para desligar temporariamente: `execution_control.enabled: false`.
+
 ## [0.3.1] - 2026-07-19
 
 ### Added

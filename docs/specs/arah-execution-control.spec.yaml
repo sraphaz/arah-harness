@@ -1,0 +1,96 @@
+id: arah-execution-control
+title: Execution Control Protocol — terminalidade e executor primário
+status: active
+owner: spec-steward
+version: 1
+updated_at: 2026-07-19
+covers:
+  - schemas/arah-harness/execution-contract.schema.yaml
+  - schemas/arah-harness/consultation-result.schema.yaml
+  - scripts/agents/execute-task.ps1
+  - scripts/agents/execution-lib.ps1
+  - scripts/agents/task-control.ps1
+  - scripts/harness/validate-execution-contract.ps1
+  - scripts/harness/test-execution-control.ps1
+  - kernel/scripts/agents/execute-task.ps1
+  - kernel/scripts/agents/execution-lib.ps1
+  - kernel/scripts/agents/task-control.ps1
+  - kernel/scripts/harness/validate-execution-contract.ps1
+  - .agents/choreography.yaml
+  - .agents/autonomy.yaml
+  - kernel/.agents/choreography.yaml
+  - kernel/.agents/autonomy.yaml
+  - cli/arah.ps1
+  - .cursor/rules/arah-execution-control.mdc
+  - docs/EXECUTION_CONTROL.md
+  - AGENTS.md
+
+description: |
+  Protocolo determinístico que garante: intenção humana → um executor primário
+  → alteração concreta (quando intent_type=execution) → verificação → done|blocked.
+
+  Resolve loops de análise/consulta/handoff sem entrega. Preserva coreografia,
+  consultores e gates humanos; aplica no runtime a separação operacional/consultivo.
+
+  Princípio: uma tarefa pode ter vários participantes, mas exatamente um executor.
+
+acceptance:
+  - id: AC-01
+    when: tarefa executável é criada com área conhecida
+    then: contrato resolve exatamente um primary_executor e estado routed|executing
+    status: covered
+    covered_by: scripts/agents/execute-task.ps1
+
+  - id: AC-02
+    when: consultor tenta handoff para outro consultor
+    then: validação falha com consultant_to_consultant_handoff_forbidden
+    status: covered
+    covered_by: scripts/harness/validate-execution-contract.ps1
+
+  - id: AC-03
+    when: regra resolve múltiplos executores sem seleção canônica
+    then: falha exactly_one_primary_executor_required
+    status: covered
+    covered_by: scripts/agents/execute-task.ps1
+
+  - id: AC-04
+    when: intent_type=execution tenta done sem evidência concreta
+    then: falha completion_evidence_required
+    status: covered
+    covered_by: scripts/harness/validate-execution-contract.ps1
+
+  - id: AC-05
+    when: falta dependência externa indispensável
+    then: estado blocked com blocking_reason específico
+    status: covered
+    covered_by: scripts/agents/task-control.ps1
+
+  - id: AC-06
+    when: work_class=trivial
+    then: max_consultations=0, sem spec completa, execução direta
+    status: covered
+    covered_by: scripts/agents/execution-lib.ps1
+
+  - id: AC-07
+    when: transição executing → routed
+    then: falha invalid_state_transition
+    status: covered
+    covered_by: scripts/harness/validate-execution-contract.ps1
+
+  - id: AC-08
+    when: terceira consulta com limite 2
+    then: consulta recusada; executor prossegue ou bloqueia
+    status: covered
+    covered_by: scripts/harness/validate-execution-contract.ps1
+
+  - id: AC-09
+    when: arah init/regenerate em consumidor
+    then: schemas, rule Cursor, config execution_control e scripts presentes; doctor OK
+    status: covered
+    covered_by: scripts/harness/test-execution-control.ps1
+
+  - id: AC-10
+    when: CLI arah task complete sem -Evidence
+    then: exit non-zero
+    status: covered
+    covered_by: cli/arah.ps1

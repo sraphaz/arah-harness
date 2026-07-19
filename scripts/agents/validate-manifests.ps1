@@ -39,6 +39,23 @@ Get-ChildItem -Path (Join-Path $Root '.agents') -Recurse -Filter '*.agent.yaml' 
             $errors += "$($_.FullName): skill '$skillId' not found in .skills/"
         }
     }
+    # Execution Control Protocol — execution_role consistency
+    if ($raw -match '(?ms)^execution_role:\s*\r?\n(.*?)(?=^[A-Za-z_]|\z)') {
+        $er = $Matches[1]
+        $canRoute = $er -match '(?m)^\s+can_route:\s*true'
+        $canExec = $er -match '(?m)^\s+can_execute:\s*true'
+        $canConsult = $er -match '(?m)^\s+can_consult:\s*true'
+        $canReview = $er -match '(?m)^\s+can_review:\s*true'
+        if ($canRoute -and $canExec) {
+            $errors += "$($_.FullName): invalid execution_role — can_route and can_execute cannot both be true (orchestrator routes only)"
+        }
+        if (-not $canRoute -and -not $canExec -and -not $canConsult -and -not $canReview) {
+            $errors += "$($_.FullName): invalid execution_role — at least one capability must be true"
+        }
+        if ($raw -match '(?m)^type:\s*domain' -and $canExec) {
+            $errors += "$($_.FullName): domain agents cannot have can_execute: true (use consultant/reviewer)"
+        }
+    }
 }
 
 Get-ChildItem -Path (Join-Path $Root '.skills') -Filter '*.skill.yaml' -ErrorAction SilentlyContinue | ForEach-Object {

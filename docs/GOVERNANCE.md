@@ -1,27 +1,29 @@
 # GOVERNANCE — ARAH Harness
 
-**Versão**: 1.1 · **Data**: 2026-07-06
+**Versão**: 1.2 · **Data**: 2026-07-19
 
-O ARAH Harness governa repositórios mantidos por agentes. **Domain agents, governança, observabilidade e auditoria fazem parte do harness-model** — ver [MODEL.md](MODEL.md).
+O ARAH Harness governa repositórios mantidos por agentes. **Domain agents, governança, observabilidade e auditoria fazem parte do harness-model** — ver [MODEL.md](MODEL.md). Terminalidade de tarefas: [EXECUTION_CONTROL.md](EXECUTION_CONTROL.md).
 
 ## Princípios
 
-1. **Spec-before-work** — mudanças estruturais exigem spec ou ADR.
-2. **Domínio consultivo** — agentes de domínio nunca ultrapassam `consult`.
+1. **Spec-before-work** — proporcional à classe (`trivial` dispensa ritual completo; `architectural` exige spec).
+2. **Domínio consultivo** — agentes de domínio nunca ultrapassam `consult` / `can_execute: false`.
 3. **Human-in-the-loop** — merge, release e ações destrutivas são humanas.
 4. **Auditabilidade** — toda ação relevante gera evento em `.arah/audit/events.jsonl`.
+5. **Um executor primário** — consultores não assumem nem reabrem o roteamento.
 
-## Níveis de autonomia (0–6)
+## Níveis de autonomia (0–7)
 
 | Nível | ID | Capacidade |
 |-------|-----|------------|
 | 0 | `observe` | Ler specs, coreografia, código |
 | 1 | `consult` | Parecer consultivo (domínio) |
 | 2 | `route` | Handoff e opções (orquestrador) |
-| 3 | `activate` | Escrever docs, specs, manifests |
-| 4 | `invoke_skill` | Executar skills/scripts |
-| 5 | `side_effect` | Release, deploy, registry externo |
-| 6 | `public` | Release público — gate humano obrigatório |
+| 3 | `activate` | Artefatos preparatórios (manifests, specs, docs) |
+| 4 | `execute_change` | Alterar arquivos de produto/repo e evidenciar conclusão |
+| 5 | `invoke_skill` | Executar skills/scripts determinísticos |
+| 6 | `side_effect` | Release, deploy, registry externo |
+| 7 | `public` | Release público — gate humano obrigatório |
 
 Fonte: [`.agents/autonomy.yaml`](../.agents/autonomy.yaml)
 

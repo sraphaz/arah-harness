@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.3.1-green.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.4.0-green.svg)](VERSION)
 [![TechOrganism](https://img.shields.io/badge/TechOrganism-v0.3-0A7A5A.svg)](docs/TECHORGANISM.md)
 
 **ARAH** — *Agent Runtime Autonomous Harness*  
@@ -163,6 +163,7 @@ flowchart TB
 | `organism signal` | Emite sinal tipado no bus |
 | `evolve [-Apply]` | Ciclo de self-learning |
 | `metrics rollup\|report` | Economy Intelligence (scorecard) |
+| `task create\|status\|validate\|complete\|block` | Execution Control Protocol |
 | `regenerate [-UpdateKernel]` | Homeostase completa no consumidor |
 
 ```powershell
@@ -210,6 +211,7 @@ arah-harness/
 |-----------|----------|
 | **[TECHORGANISM.md](docs/TECHORGANISM.md)** | Dimensão viva — discovery, organismo, sinais, evolução |
 | **[ECONOMY.md](docs/ECONOMY.md)** | Economy Intelligence — scorecard e eficiência |
+| **[EXECUTION_CONTROL.md](docs/EXECUTION_CONTROL.md)** | Terminalidade — um executor, done\|blocked |
 | [STATE_MODEL.md](docs/STATE_MODEL.md) | Estado quente × evidência fria |
 | [backlog/](docs/backlog/) | Control Plane — épicos W/C/H |
 | [website/](website/) | Site EN/PT + docs + Live Console (UI) → [GitHub Pages](https://sraphaz.github.io/arah-harness/) |

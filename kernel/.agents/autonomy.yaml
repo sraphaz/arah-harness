@@ -1,7 +1,7 @@
 # Autonomy levels — ARAH Harness
 # Source of truth for choreography, audit trails, and human gates.
 version: "1.0"
-updated: 2026-07-06
+updated: 2026-07-19
 
 levels:
   observe:
@@ -15,27 +15,35 @@ levels:
     description: Suggest handoff and options — orchestrator
   activate:
     rank: 3
-    description: Write manifests, specs, docs in scope
-  invoke_skill:
+    description: >
+      Produce or update preparatory artifacts in scope
+      (manifests, specs, planning docs) — not product delivery itself
+  execute_change:
     rank: 4
-    description: Run skills/scripts (run-tests, spec-validate, etc.)
-  side_effect:
+    description: >
+      Edit product or repository files within the declared scope,
+      execute the requested change and produce completion evidence
+  invoke_skill:
     rank: 5
+    description: Run deterministic skills/scripts (run-tests, spec-validate, etc.)
+  side_effect:
+    rank: 6
     description: Release, deploy hooks, external registry
   public:
-    rank: 6
+    rank: 7
     description: Public release — always requires explicit human gate
 
 agent_defaults:
   orchestrator: route
   planner: activate
   spec-steward: invoke_skill
-  solutions-architect: activate
+  solutions-architect: execute_change
   architecture-documenter: consult
   clean-craft-advisor: consult
   test-architect: consult
-  backend: activate
-  frontend: activate
+  backend: execute_change
+  frontend: execute_change
+  docs-steward: execute_change
   qa: invoke_skill
   pr-steward: activate
   release: side_effect
@@ -43,7 +51,8 @@ agent_defaults:
 
 human_gates:
   spec_before_work:
-    required_before: [invoke_skill, side_effect]
+    required_before: [execute_change, invoke_skill, side_effect]
+    skip_for_work_class: [trivial]
     approval_stage: spec_before_work
   release_approval:
     required_before: [side_effect]
@@ -59,6 +68,7 @@ actions:
   - domain.consult
   - route.handoff
   - skill.invoke
+  - execute.change
   - pr.comment
   - release.cut
   - deploy.trigger
@@ -67,3 +77,5 @@ actions:
   - human.gate.denied
   - choreography.resolve
   - autonomy.blocked
+  - execution.complete
+  - execution.block

@@ -1,6 +1,11 @@
 id: frontend
 name: Frontend Agent
 description: Implementa UI web ou mobile dentro do escopo permitido.
+execution_role:
+  can_route: false
+  can_execute: true
+  can_consult: true
+  can_review: false
 triggers:
   - issue:labeled
   - manual

@@ -13,9 +13,21 @@ Fonte de verdade para agentes (Cursor, CI). Procedimentos em `.skills/`; operaç
 2. **Tudo via Pull Request** — sem commit direto em `main`  
 3. **Escopo mínimo** — cada agente só toca paths do seu manifest  
 4. **Doc como código** — documentação no mesmo PR  
-5. **Spec-before-code** — fases S0+ com `Spec-Id:` no PR  
+5. **Spec-before-code** — proporcional à classe de trabalho  
 6. **Contexto sob demanda** — arquivo + CI + sinais tipados  
 7. **Agentes propõem; humanos aplicam** — sem spawn silencioso  
+8. **Um executor primário** — vários participantes, uma responsabilidade de entrega  
+
+---
+
+## Execution Control Protocol
+
+Toda tarefa executável deve possuir exatamente um primary_executor. O orquestrador encerra o comando da sessão após criar o contrato (`routed` → `executing`). Consultores devolvem parecer estruturado ao executor; não conversam entre si. Conclusão só como `done` (com evidência) ou `blocked` (com motivo). Análise sozinha não fecha intenção executável.
+
+```powershell
+arah task create -Objective "…" -Area backend -Class standard
+arah task complete -TaskId task-… -Evidence "…"
+```
 
 ---
 
@@ -24,7 +36,7 @@ Fonte de verdade para agentes (Cursor, CI). Procedimentos em `.skills/`; operaç
 ### Entrega
 
 ```text
-Intenção → Orquestrador → Célula + skills → PR → CI + PR Steward → ready-for-merge → Merge
+Intenção → Orquestrador → contrato + executor → alteração → verificação → done|blocked → PR → CI → Merge
 ```
 
 ### Organismo (homeostase)

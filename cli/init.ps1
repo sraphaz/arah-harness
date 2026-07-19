@@ -21,7 +21,7 @@ $ErrorActionPreference = 'Stop'
 $HarnessRoot = Split-Path $PSScriptRoot -Parent
 $KernelRoot = Join-Path $HarnessRoot 'kernel'
 $TemplatesRoot = Join-Path $HarnessRoot 'templates'
-$Version = '0.3.1'
+$Version = '0.4.0'
 
 if (-not (Test-Path $KernelRoot)) {
     Write-Error "Kernel not found at $KernelRoot"
@@ -57,6 +57,22 @@ Copy-Tree -From (Join-Path $KernelRoot '.agents') -To (Join-Path $Target '.agent
 Copy-Tree -From (Join-Path $KernelRoot '.skills') -To (Join-Path $Target '.skills') -Overwrite:$Force
 Copy-Tree -From (Join-Path $KernelRoot '.cursor') -To (Join-Path $Target '.cursor') -Overwrite:$Force
 Copy-Tree -From (Join-Path $KernelRoot 'scripts') -To (Join-Path $Target 'scripts') -Overwrite:$Force
+
+# Schemas (Execution Control + harness contracts) — optional but required for validators
+$schemasFrom = Join-Path $HarnessRoot 'schemas/arah-harness'
+$schemasTo = Join-Path $Target 'schemas/arah-harness'
+if (Test-Path -LiteralPath $schemasFrom) {
+    Copy-Tree -From $schemasFrom -To $schemasTo -Overwrite:$Force
+}
+
+# Execution ledger dirs (hot state; gitignored via .arah/local/)
+foreach ($sub in @('active', 'completed', 'blocked')) {
+    $d = Join-Path $Target ".arah/local/execution/$sub"
+    if (-not (Test-Path -LiteralPath $d)) {
+        New-Item -ItemType Directory -Path $d -Force | Out-Null
+        Write-Host "  installed: .arah/local/execution/$sub/"
+    }
+}
 
 # Templates
 $configTpl = Join-Path $TemplatesRoot 'arah.config.yaml'
@@ -149,6 +165,38 @@ if (Test-Path -LiteralPath $giPath) {
 } else {
     Set-Content -LiteralPath $giPath -Value $giBlock.TrimStart() -Encoding UTF8
     Write-Host "  installed: .gitignore"
+}
+
+# Migrate execution_control into existing arah.config.yaml (preserve customizations)
+if (-not $KernelOnly) {
+    $cfgPath = Join-Path $Target 'arah.config.yaml'
+    if (Test-Path -LiteralPath $cfgPath) {
+        $cfgRaw = Get-Content -LiteralPath $cfgPath -Raw
+        if ($cfgRaw -notmatch '(?m)^execution_control:') {
+            $cfgRaw = $cfgRaw.TrimEnd() + @"
+
+
+# Execution Control Protocol (added by arah init/update — safe defaults)
+execution_control:
+  enabled: true
+  terminal_states:
+    - done
+    - blocked
+  limits:
+    max_handoffs: 2
+    max_consultations: 2
+    max_analysis_cycles: 1
+  behavior:
+    require_primary_executor: true
+    forbid_consultant_to_consultant_handoff: true
+    require_completion_evidence: true
+    require_blocking_reason: true
+    prevent_reroute_after_execution_started: true
+"@
+            Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
+            Write-Host "  migrated: arah.config.yaml (+execution_control)"
+        }
+    }
 }
 
 # Minimal mode: annotate config — organism optional; upgrade path documented

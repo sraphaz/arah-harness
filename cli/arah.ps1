@@ -1,19 +1,23 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks
+  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks, task
 #>
 param(
     [Parameter(Position = 0)]
     [ValidateSet(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
         'export-graph', 'validate-runtime', 'discover', 'organism',
-        'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks', 'help'
+        'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks',
+        'task', 'help'
     )]
     [string]$Command = 'help',
 
     [Parameter(Position = 1)]
-    [ValidateSet('sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', 'install', '')]
+    [ValidateSet(
+        'sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', 'install',
+        'create', 'validate', 'complete', 'block', ''
+    )]
     [string]$SubCommand = '',
 
     [string]$Target = '',
@@ -37,7 +41,16 @@ param(
     [ValidateSet('attract', 'consult', 'propose', 'acknowledge', 'coalesce', 'evolve', 'status', '')]
     [string]$SignalType = '',
     [string]$Topic = 'general',
-    [string]$Payload = ''
+    [string]$Payload = '',
+
+    # Execution Control Protocol (arah task …)
+    [string]$Objective = '',
+    [string]$Area = 'backend',
+    [ValidateSet('trivial', 'standard', 'architectural', 'release', '')]
+    [string]$Class = '',
+    [string]$TaskId = '',
+    [string]$Evidence = '',
+    [string]$Reason = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -249,6 +262,32 @@ switch ($Command) {
         & $script @hookSplat
         if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
+    'task' {
+        $script = Get-TargetScript 'scripts/agents/task-control.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'task-control.ps1'
+        }
+        $action = $SubCommand
+        if (-not $action) {
+            Write-Error 'Use: arah task create|status|validate|complete|block'
+            exit 10
+        }
+        $splat = @{ Action = $action; RepoRoot = $targetPath }
+        if ($TaskId) { $splat.TaskId = $TaskId }
+        if ($Objective) { $splat.Objective = $Objective }
+        if ($Area) { $splat.Area = $Area }
+        if ($Class) { $splat.Class = $Class }
+        if ($Evidence) { $splat.Evidence = $Evidence }
+        if ($Reason) { $splat.Reason = $Reason }
+        Push-Location $targetPath
+        try {
+            & $script @splat
+            if (-not $?) { exit 1 }
+            if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        } finally {
+            Pop-Location
+        }
+    }
     default {
         Write-Host @"
 ARAH Harness CLI — TechOrganism
@@ -276,6 +315,13 @@ ARAH Harness CLI — TechOrganism
   powershell -File cli/arah.ps1 compact [-Target path] [-Kind all|bus|audit] [-RetainDays 90] [-DryRun]
   powershell -File cli/arah.ps1 migrate-state [-Target path] [-DryRun]
   powershell -File cli/arah.ps1 hooks install [-Target path] [-Force]
+
+  # Execution Control Protocol
+  powershell -File cli/arah.ps1 task create -Objective "…" [-Area backend] [-Class standard|trivial|architectural|release]
+  powershell -File cli/arah.ps1 task status -TaskId task-…
+  powershell -File cli/arah.ps1 task validate -TaskId task-…
+  powershell -File cli/arah.ps1 task complete -TaskId task-… -Evidence "…"
+  powershell -File cli/arah.ps1 task block -TaskId task-… -Reason "…"
 "@
     }
 }
