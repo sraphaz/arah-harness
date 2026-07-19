@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:pages": "BASE_PATH=/arah-harness NEXT_PUBLIC_SITE_URL=https://sraphaz.github.io/arah-harness next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"

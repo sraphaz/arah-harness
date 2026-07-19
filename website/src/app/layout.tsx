@@ -23,7 +23,10 @@ export const metadata: Metadata = {
   },
   description:
     "Governed human-agent engineering, rooted in the repository. Agents propose. Humans select.",
-  metadataBase: new URL("https://arah-harness.vercel.app"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      "https://sraphaz.github.io/arah-harness",
+  ),
 };
 
 export default function RootLayout({

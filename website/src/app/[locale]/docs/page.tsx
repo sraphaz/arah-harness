@@ -1,4 +1,5 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { ClientRedirect } from "@/components/ClientRedirect";
 import { getDocsIndex } from "@/lib/content";
 import { isLocale, localePath, type Locale } from "@/lib/i18n";
 
@@ -17,7 +18,11 @@ export default function DocsRootPage({
   const first = index.nav[0]?.pages[0];
   const firstSection = index.nav[0]?.slug;
   if (first && firstSection) {
-    redirect(localePath(locale, `/docs/${firstSection}/${first.slug}`));
+    return (
+      <ClientRedirect
+        href={localePath(locale, `/docs/${firstSection}/${first.slug}`)}
+      />
+    );
   }
   notFound();
 }

@@ -14,13 +14,30 @@ pnpm install
 pnpm dev
 ```
 
-Abra `http://localhost:3000` (redireciona para `/pt`).
+Abra `http://localhost:3000` (redireciona para `/pt`). Localmente **sem** `basePath`.
 
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm build
+pnpm build          # export estático → out/ (sem basePath)
+pnpm build:pages    # igual ao CI (BASE_PATH=/arah-harness)
 ```
+
+## Deploy — GitHub Pages (sem domínio próprio)
+
+URL do projeto: **https://sraphaz.github.io/arah-harness/**
+
+Workflow: [`.github/workflows/website.yml`](../.github/workflows/website.yml)
+
+- Em todo PR que toca `website/`: lint + typecheck + build estático
+- Em push para `main`: build + deploy automático via Actions
+
+**Ativar uma vez no GitHub** (Settings do repo):
+
+1. **Settings → Pages → Build and deployment → Source:** GitHub Actions  
+2. Merge deste PR (ou rode o workflow `website` via *workflow_dispatch* em `main`)
+
+Sem custom domain por enquanto — quando houver, basta apontar o DNS e configurar em Pages → Custom domain (sem alterar o `BASE_PATH` do project site, ou migrar para user site).
 
 ## Rotas
 

@@ -8,6 +8,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 - **Website** (`website/`) — Next.js bilíngue EN/PT: Home, Architecture, How It Works, TechOrganism, Use Cases, portal de docs + CLI explorer, Live Console (mock)
 - Conteúdo extraído dos protótipos Control Plane em `website/content/`; CI `.github/workflows/website.yml`
+- **Deploy GitHub Pages** — export estático (`output: 'export'`) + Actions (`deploy-pages`); URL `https://sraphaz.github.io/arah-harness/` (sem domínio próprio)
 - **Estado quente × evidência fria** — `.arah/local/` (gitignored) + `docs/_meta/runs/*/summary.json`
 - **Arquivo-por-evento** — bus/audit em `<ULID>.json`; `arah compact` e `arah migrate-state`
 - **Scrubbing de secrets** antes de persistir payloads (`arah-event-io.ps1`)

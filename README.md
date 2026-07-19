@@ -210,7 +210,7 @@ arah-harness/
 | **[TECHORGANISM.md](docs/TECHORGANISM.md)** | Dimensão viva — discovery, organismo, sinais, evolução |
 | [STATE_MODEL.md](docs/STATE_MODEL.md) | Estado quente × evidência fria |
 | [backlog/](docs/backlog/) | Control Plane — épicos W/C/H |
-| [website/](website/) | Site EN/PT + docs + Live Console (UI) |
+| [website/](website/) | Site EN/PT + docs + Live Console (UI) → [GitHub Pages](https://sraphaz.github.io/arah-harness/) |
 | [METHOD.md](docs/METHOD.md) | Método ARAH completo |
 | [INSTALL.md](docs/INSTALL.md) | Instalar em qualquer repo |
 | [BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-install |

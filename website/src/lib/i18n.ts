@@ -11,7 +11,17 @@ export function otherLocale(locale: Locale): Locale {
 
 export function localePath(locale: Locale, path = ""): string {
   const clean = path.startsWith("/") ? path : path ? `/${path}` : "";
-  return `/${locale}${clean}`;
+  // trailingSlash: true in next.config — keep trailing slash for GH Pages static export
+  const joined = `/${locale}${clean}`;
+  if (joined.endsWith("/")) return joined;
+  // preserve hash/query if present
+  const hashIdx = joined.indexOf("#");
+  const queryIdx = joined.indexOf("?");
+  const cut =
+    hashIdx >= 0 ? hashIdx : queryIdx >= 0 ? queryIdx : joined.length;
+  const base = joined.slice(0, cut);
+  const rest = joined.slice(cut);
+  return `${base}/${rest}`;
 }
 
 export function swapLocalePath(pathname: string, next: Locale): string {
