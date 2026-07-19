@@ -52,20 +52,23 @@ experimental:
   - id: agent-graph-export
     name: Agent graph export
     notes: JSON + Mermaid derivados
+  - id: portable-cli-go
+    name: CLI binária portátil (Go) fase 1
+    notes: cmd/arah — doctor/sync-check/version; PS canônico para writes
+  - id: live-console
+    name: ARAH Live Console
+    notes: live/arah-live + website/console (mock fallback)
 
 planned:
-  - id: portable-cli-go
-    name: CLI binária portátil (Go)
-    notes: ADR-001; doctor/sync-check/export-graph
   - id: arahd-daemon
     name: Daemon arahd
     notes: Watch + batch + WebSocket
-  - id: live-console
-    name: ARAH Live Console
-    notes: Épico C — backlog de UI
+  - id: live-console-packaging
+    name: Empacotamento arah-live
+    notes: C-10 — binário / npx + AuthZ
   - id: product-site
     name: Site de produto + docs MDX
-    notes: Épico W — backlog de UI
+    notes: Épico W — MDX filesystem / FlexSearch build
   - id: semantic-discovery
     name: Discovery semântico
     notes: Monorepos heterogêneos

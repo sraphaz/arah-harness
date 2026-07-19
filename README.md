@@ -213,6 +213,8 @@ arah-harness/
 | [STATE_MODEL.md](docs/STATE_MODEL.md) | Estado quente × evidência fria |
 | [backlog/](docs/backlog/) | Control Plane — épicos W/C/H |
 | [website/](website/) | Site EN/PT + docs + Live Console (UI) → [GitHub Pages](https://sraphaz.github.io/arah-harness/) |
+| [live/](live/) | Live Service Go (`arah-live`) — API read-only para o console |
+| [cmd/arah/](cmd/arah/) | CLI portátil Go fase 1 (`doctor` / `sync-check`) |
 | [METHOD.md](docs/METHOD.md) | Método ARAH completo |
 | [INSTALL.md](docs/INSTALL.md) | Instalar em qualquer repo |
 | [BOOTSTRAP.md](docs/BOOTSTRAP.md) | Checklist pós-install |

@@ -6,6 +6,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ### Added
 
+- **ARAH Live Service** (`live/`) — Go read-only: REST + WebSocket, FS watch, SQLite descartável, adapter GitHub (C-01→C-06)
+- **Schemas console** — `schemas/console/` (event, summary, gate-run, domain-health)
+- **Live Console wired** — `website` tenta `127.0.0.1:8787` (ou `?api=` / `NEXT_PUBLIC_LIVE_API`); fallback mock
+- **CLI Go fase 1** (`cmd/arah`) — `doctor`, `sync-check`, `version` (H-07); CI `.github/workflows/go.yml`
 - **Economy Intelligence** — scorecard de eficiência do harness (Spec-Id: `arah-economy-metrics`)
 - `arah metrics rollup|report` — agrega audit/live/signals → `.arah/observability/summary.yaml`
 - Schema `metrics-summary`; campos opcionais de tokens/custo em `audit-event`

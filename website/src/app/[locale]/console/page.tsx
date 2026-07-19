@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { LiveConsole } from "@/components/console/LiveConsole";
+import { LiveConsoleApp } from "@/components/console/LiveConsoleApp";
 import { getConsoleMock } from "@/lib/content";
 import { isLocale, type Locale } from "@/lib/i18n";
 
@@ -9,12 +9,15 @@ const ui = {
     metaTitle: "Live Console — ARAH Harness",
     eyebrow: "Live Console",
     headline: "Observability for a governed repository",
-    body: "A read-only observability surface: signal feed, gate results, territories, human selection queue and evolution proposals. This page renders a static mock — no data leaves your machine.",
+    body: "A read-only observability surface: signal feed, gate results, territories, human selection queue and evolution proposals. Auto-connects to local arah-live (127.0.0.1:8787); falls back to the static mock.",
     experimental: "Experimental",
     kernel: "kernel",
     drift: "drift",
     live: "live",
     readonly: "Read-only mock · demo data from content/console/mock.json",
+    connecting: "Connecting to arah-live…",
+    liveMode: "Live service connected",
+    mockMode: "Mock mode · start: go run ./live/cmd/arah-live -repo .",
     signalFeed: "Signal feed",
     gatesPanel: "Gates",
     gatesLastRun: "Last run",
@@ -41,12 +44,15 @@ const ui = {
     metaTitle: "Live Console — ARAH Harness",
     eyebrow: "Live Console",
     headline: "Observabilidade para um repositório governado",
-    body: "Uma superfície de observabilidade somente-leitura: feed de sinais, resultados de gates, territórios, fila de seleção humana e propostas de evolução. Esta página renderiza um mock estático — nenhum dado sai da sua máquina.",
+    body: "Superfície somente-leitura: feed de sinais, gates, territórios, fila de seleção e propostas. Conecta automaticamente ao arah-live local (127.0.0.1:8787); sem serviço, usa o mock.",
     experimental: "Experimental",
     kernel: "kernel",
     drift: "drift",
     live: "ao vivo",
     readonly: "Mock somente-leitura · dados de demonstração de content/console/mock.json",
+    connecting: "Conectando ao arah-live…",
+    liveMode: "Serviço ao vivo conectado",
+    mockMode: "Modo mock · inicie: go run ./live/cmd/arah-live -repo .",
     signalFeed: "Feed de sinais",
     gatesPanel: "Gates",
     gatesLastRun: "Última execução",
@@ -105,7 +111,7 @@ export default function ConsolePage({
           {t.body}
         </p>
       </header>
-      <LiveConsole mock={mock} labels={t} />
+      <LiveConsoleApp mock={mock} labels={t} />
     </>
   );
 }
