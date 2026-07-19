@@ -1,6 +1,6 @@
 # Épico C — ARAH Live Console
 
-**Status:** backlog (interface visual + serviço — não implementar UI neste ciclo)  
+**Status:** UI mock em `website/` (C-07–C-09); serviço C-02+ ainda backlog  
 **Meta:** MVP do console read-only plugável.  
 **Referência:** [`ARAH Live Console.dc.html`](../design/control-plane/design-files/ARAH%20Live%20Console.dc.html) (UI + C4).  
 **Decisões travadas:** read-only; artefatos como contrato; índice SQLite descartável; 3 implantações (extensão IDE → app local → serviço org — MVP = app local).
@@ -33,13 +33,13 @@ Schemas de contrato (pré-requisito harness): ver `schemas/console/` quando C-01
 ### C-06 · GitHub Adapter (fila de seleção) `M`
 - [ ] Poll/webhook de PRs com evidência; token read-only; ações = links
 
-### C-07 · Console Web — shell + KPIs + seletor de repo `M`
+### C-07 · Console Web — shell + KPIs + seletor de repo `M` — **UI mock done**
 - [ ] Header, chips kernel/drift, indicador ao-vivo; 5 KPIs via REST+WS
 
-### C-08 · Console Web — Signal Feed + Gate Panel `M`
+### C-08 · Console Web — Signal Feed + Gate Panel `M` — **UI mock done**
 - [ ] Feed com filtros; painel de gates ✓/✗
 
-### C-09 · Console Web — Territory Map + Selection Queue + Proposals `M`
+### C-09 · Console Web — Territory Map + Selection Queue + Proposals `M` — **UI mock done**
 - [ ] Territórios, fila, propostas com evidência; barras de autonomia
 
 ### C-10 · AuthZ + empacotamento app local `M`

@@ -1,4 +1,7 @@
 node_modules/
+website/node_modules/
+website/.next/
+website/out/
 .DS_Store
 *.log
 .env

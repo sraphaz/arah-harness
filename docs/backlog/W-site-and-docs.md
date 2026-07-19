@@ -1,6 +1,6 @@
 # Épico W — Site de produto + portal de docs
 
-**Status:** backlog (interface visual — não implementar neste ciclo)  
+**Status:** em implementação (`website/`) — MVP neste PR  
 **Meta:** publicar o site bilíngue com docs em MDX mantidas no repositório.  
 **Stack alvo:** Next.js (App Router) + TypeScript + Tailwind + MDX.  
 **Referências:** [`docs/design/control-plane/design-files/*.dc.html`](../design/control-plane/design-files/) · [HANDOFF.md](../design/control-plane/HANDOFF.md)
@@ -9,20 +9,20 @@
 
 ### W-01 · Scaffold do site `M`
 Next.js + TS + Tailwind + MDX (contentlayer ou next-mdx-remote). ESLint/Prettier. Deploy preview (Vercel ou Pages).
-- [ ] `pnpm dev` roda; página exemplo com fontes Schibsted Grotesk + IBM Plex Mono via `next/font`
-- [ ] Tokens do handoff (cores/raios/espaços) em `tailwind.config.ts` (`arah.bg`, `arah.surface`, `arah.line`, `arah.accent`…)
-- [ ] CI: lint + typecheck + build em PR
+- [x] `pnpm dev` roda; página exemplo com fontes Schibsted Grotesk + IBM Plex Mono via `next/font`
+- [x] Tokens do handoff (cores/raios/espaços) em `tailwind.config.ts` (`arah.bg`, `arah.surface`, `arah.line`, `arah.accent`…)
+- [x] CI: lint + typecheck + build em PR
 
 ### W-02 · Layout global: Nav, Footer, seletor de idioma `M`
-- [ ] Nav sticky com blur, wrap em telas estreitas, logo SVG do grafo, CTAs GitHub/Get Started
-- [ ] Seletor EN|PT liga rotas `/en/*` ↔ `/pt/*`
-- [ ] Footer com tagline + GitHub/Releases/Changelog/Contributing/License
+- [x] Nav sticky com blur, wrap em telas estreitas, logo SVG do grafo, CTAs GitHub/Get Started
+- [x] Seletor EN|PT liga rotas `/en/*` ↔ `/pt/*`
+- [x] Footer com tagline + GitHub/Releases/Changelog/Contributing/License
 - [ ] Acessível por teclado; foco visível; contraste AA nos tons `#9AA5B1`+
 
 ### W-03 · i18n `M`
-- [ ] `/en` e `/pt` estáticos (SSG), `hreflang` correto
-- [ ] Código/comandos/paths nunca traduzidos
-- [ ] 404 localizada
+- [x] `/en` e `/pt` estáticos (SSG), `hreflang` correto
+- [x] Código/comandos/paths nunca traduzidos
+- [x] 404 localizada
 
 ### W-04 · Home §1–4: hero animado, shift, problema, inversão `G`
 - [ ] Pipeline de 7 estágios com `flowDot` + `stagePulse` (CSS puro; `prefers-reduced-motion`)

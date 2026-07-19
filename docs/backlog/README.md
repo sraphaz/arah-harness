@@ -4,9 +4,9 @@ Fonte: handoff **ARAH Control Plane** (jul/2026). Três épicos paralelizáveis.
 
 | Épico | Escopo | Status neste PR |
 |-------|--------|-----------------|
-| **[W](./W-site-and-docs.md)** | Site de produto + portal de docs (UI) | **Backlog** — não implementar agora |
-| **[C](./C-live-console.md)** | ARAH Live Console (UI + serviço) | **Backlog** — não implementar agora |
-| **[H](./H-harness-improvements.md)** | Melhorias do harness (CLI, estado, segurança) | **Em andamento** — curto prazo neste PR |
+| **[W](./W-site-and-docs.md)** | Site de produto + portal de docs (UI) | **MVP em `website/`** |
+| **[C](./C-live-console.md)** | ARAH Live Console (UI + serviço) | **UI mock em `/console`**; serviço C-02+ backlog |
+| **[H](./H-harness-improvements.md)** | Melhorias do harness (CLI, estado, segurança) | **Entregue** (H-07/H-08 backlog) |
 
 Design tokens, fidelidade e protótipos HTML: [`docs/design/control-plane/`](../design/control-plane/README.md).
 
