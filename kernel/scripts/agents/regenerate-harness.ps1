@@ -61,6 +61,36 @@ execution_control:
         Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
         Write-Host "regenerate: migrated execution_control into arah.config.yaml"
     }
+    $cfgRaw = Get-Content -LiteralPath $cfgPath -Raw
+    if ($cfgRaw -notmatch '(?m)^update_check:') {
+        $cfgRaw = $cfgRaw.TrimEnd() + @"
+
+
+# Harness update notifications (added by regenerate)
+update_check:
+  enabled: true
+  repository: sraphaz/arah-harness
+  notify:
+    issue: true
+    label: arah-harness-update
+"@
+        Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
+        Write-Host "regenerate: migrated update_check into arah.config.yaml"
+    }
+}
+# Ensure update-check workflow present (do not overwrite custom consumer edits unless missing)
+$updWf = Join-Path $Root '.github/workflows/harness-update-check.yml'
+$updTpl = $null
+if ($HarnessRoot) {
+    $updTpl = Join-Path $HarnessRoot 'templates/github/workflows/harness-update-check.yml'
+} elseif ($env:ARAH_HARNESS_PATH) {
+    $updTpl = Join-Path $env:ARAH_HARNESS_PATH 'templates/github/workflows/harness-update-check.yml'
+}
+if (-not (Test-Path -LiteralPath $updWf) -and $updTpl -and (Test-Path -LiteralPath $updTpl) -and -not $DryRun) {
+    $wfDir = Split-Path $updWf -Parent
+    if (-not (Test-Path $wfDir)) { New-Item -ItemType Directory -Path $wfDir -Force | Out-Null }
+    Copy-Item $updTpl $updWf -Force
+    Write-Host "regenerate: installed .github/workflows/harness-update-check.yml"
 }
 foreach ($sub in @('active', 'completed', 'blocked')) {
     $d = Join-Path $Root ".arah/local/execution/$sub"

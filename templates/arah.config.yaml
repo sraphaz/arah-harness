@@ -46,6 +46,14 @@ specialists: []
 #   choreography: choreography.yaml
 #   autonomy: autonomy.yaml
 
+# Harness update notifications — GitHub Releases + scheduled issue (see docs/UPDATE_NOTIFICATIONS.md)
+update_check:
+  enabled: true
+  repository: sraphaz/arah-harness
+  notify:
+    issue: true
+    label: arah-harness-update
+
 # Execution Control Protocol — terminalidade (intenção → um executor → done|blocked)
 execution_control:
   enabled: true

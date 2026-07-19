@@ -157,6 +157,28 @@ try {
     & $PwshExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $HarnessRoot 'scripts/harness/test-execution-control.ps1')
     if ($LASTEXITCODE -ne 0) { throw "test-execution-control failed" }
 
+    # Harness update notifications
+    Write-Host "=== Harness update-check ==="
+    if (-not (Test-Path (Join-Path $Tmp 'scripts/agents/check-harness-update.ps1'))) {
+        throw "check-harness-update.ps1 missing after init"
+    }
+    if (-not (Test-Path (Join-Path $Tmp '.github/workflows/harness-update-check.yml'))) {
+        throw "harness-update-check.yml missing after init"
+    }
+    if ($cfgEcp -notmatch '(?m)^update_check:') {
+        $cfgEcp = Get-Content (Join-Path $Tmp 'arah.config.yaml') -Raw
+    }
+    $cfgAll = Get-Content (Join-Path $Tmp 'arah.config.yaml') -Raw
+    if ($cfgAll -notmatch '(?m)^update_check:') { throw "update_check missing in consumer config" }
+    # Offline: pin equals injected latest → up_to_date (exit 0)
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Tmp 'scripts/agents/check-harness-update.ps1') `
+        -Target $Tmp -LatestVersion 0.0.1
+    # pin (0.4.x) > 0.0.1 → ahead → still exit 0
+    if ($LASTEXITCODE -notin @(0, 2)) { throw "update-check unexpected exit $LASTEXITCODE" }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Tmp 'scripts/agents/check-harness-update.ps1') `
+        -Target $Tmp -LatestVersion 99.0.0
+    if ($LASTEXITCODE -ne 2) { throw "update-check should exit 2 when outdated (got $LASTEXITCODE)" }
+
     Write-Host "self-test: OK"
     exit 0
 } finally {

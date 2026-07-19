@@ -1,7 +1,7 @@
 ﻿# AGENTS.md — Operação por agentes (ARAH)
 
 **Projeto:** arah-harness  
-**Harness:** ARAH **0.4.0** · TechOrganism + Execution Control
+**Harness:** ARAH **0.4.1** · TechOrganism + Execution Control
 
 Fonte de verdade para agentes (Cursor, CI). Procedimentos em `.skills/`; operação profunda em `docs/ops/` (crie se necessário).
 
@@ -106,9 +106,12 @@ powershell -File ./cli/arah.ps1 organism status
 powershell -File ./cli/arah.ps1 evolve
 powershell -File ./cli/arah.ps1 regenerate
 powershell -File ./cli/arah.ps1 task create -Objective "…" -Area backend
+powershell -File ./cli/arah.ps1 update-check
 powershell -File ./scripts/self-test.ps1
 powershell -File ./scripts/harness/test-execution-control.ps1
 ```
+
+Atualização do harness nos consumidores: [docs/UPDATE_NOTIFICATIONS.md](docs/UPDATE_NOTIFICATIONS.md)
 
 Config: [`arah.config.yaml`](arah.config.yaml)
 

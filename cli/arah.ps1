@@ -9,7 +9,7 @@ param(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
         'export-graph', 'validate-runtime', 'discover', 'organism',
         'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks',
-        'task', 'help'
+        'task', 'update-check', 'help'
     )]
     [string]$Command = 'help',
 
@@ -25,6 +25,9 @@ param(
     [switch]$Force,
     [switch]$DryRun,
     [switch]$Apply,
+    [switch]$Notify,
+    [switch]$FailIfOutdated,
+    [string]$LatestVersion = '',
     [switch]$UpdateKernel,
     [switch]$ApplyDiscovery,
     [switch]$SkipDoctor,
@@ -288,6 +291,18 @@ switch ($Command) {
             Pop-Location
         }
     }
+    'update-check' {
+        $script = Get-TargetScript 'scripts/agents/check-harness-update.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'check-harness-update.ps1'
+        }
+        $splat = @{ Target = $targetPath }
+        if ($Notify) { $splat.Notify = $true }
+        if ($FailIfOutdated) { $splat.FailIfOutdated = $true }
+        if ($LatestVersion) { $splat.LatestVersion = $LatestVersion }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
     default {
         Write-Host @"
 ARAH Harness CLI — TechOrganism
@@ -322,6 +337,9 @@ ARAH Harness CLI — TechOrganism
   powershell -File cli/arah.ps1 task validate -TaskId task-…
   powershell -File cli/arah.ps1 task complete -TaskId task-… -Evidence "…"
   powershell -File cli/arah.ps1 task block -TaskId task-… -Reason "…"
+
+  # Harness update notifications (GitHub Releases)
+  powershell -File cli/arah.ps1 update-check [-FailIfOutdated] [-Notify] [-LatestVersion X.Y.Z]
 "@
     }
 }
