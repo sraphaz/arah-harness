@@ -1,6 +1,6 @@
 {
   "locale": "pt",
-  "version": "0.3.1",
+  "version": "0.4.1",
   "commands": [
     {
       "slug": "install",
@@ -10,7 +10,7 @@
       "reads": "kernel/, templates/",
       "writes": "arah.config.yaml, AGENTS.md, .agents/, .skills/, scripts/, .github/workflows/",
       "example": "arah install -ProjectName \"my-project\"",
-      "output": "kernel 0.3.1 instalado · 18 agentes · 22 skills"
+      "output": "kernel 0.4.1 instalado · 18 agentes · 23 skills"
     },
     {
       "slug": "init",
@@ -30,7 +30,7 @@
       "reads": "kernel/",
       "writes": ".agents/, .skills/, scripts/",
       "example": "arah update",
-      "output": "kernel 0.3.0 → 0.3.1"
+      "output": "kernel 0.3.1 → 0.4.1"
     },
     {
       "slug": "doctor",
