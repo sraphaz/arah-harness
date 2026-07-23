@@ -52,6 +52,7 @@ jobs:
           cache-dependency-path: website/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
+      - run: node scripts/extract-design-content.mjs
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm build
