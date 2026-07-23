@@ -15,7 +15,7 @@ The extractor:
 - Parses `<script data-dc-script>` class field arrays via a Node `vm` sandbox
 - Pulls static section copy (eyebrows, headlines, body) from HTML
 - Normalizes stage labels to slugs (`available`, `experimental`, `planned`)
-- Rewrites design mock versions (`1.5.0`) to harness **`0.3.1`**
+- Rewrites design mock versions (`1.5.0`) to the harness `VERSION` file (currently **`0.4.1`**)
 - Calibrates agent/skill counts from the repo (`.agents/**/*.agent.yaml`, `.skills/*.skill.yaml`)
 
 ## Layout
@@ -36,4 +36,4 @@ The extractor:
 - Stages are lowercase slugs, not `AVAILABLE` / `DISPONÍVEL`
 - Matrix scores: `2` = yes, `1` = partial, `0` = no (plus string labels in `values`)
 - Docs blocks are typed: `heading` | `paragraph` | `code` | `list` | `cli-reference`
-- Console mock copy is Portuguese (as in the design file); kernel versions calibrated to `0.3.1` / `0.3.0`
+- Console mock copy is Portuguese (as in the design file); kernel versions calibrated from `VERSION` / previous release

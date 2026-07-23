@@ -23,21 +23,19 @@ pnpm build          # export estático → out/ (sem basePath)
 pnpm build:pages    # igual ao CI (BASE_PATH=/arah-harness)
 ```
 
-## Deploy — GitHub Pages (sem domínio próprio)
+## Deploy — GitHub Pages (automático)
 
 URL do projeto: **https://sraphaz.github.io/arah-harness/**
 
 Workflow: [`.github/workflows/website.yml`](../.github/workflows/website.yml)
 
-- Em todo PR que toca `website/`: lint + typecheck + build estático
-- Em push para `main`: build + deploy automático via Actions
+- Em todo PR que toca `website/`, `capabilities.yaml`, `VERSION` ou `docs/design/control-plane/`: lint + typecheck + build estático
+- Em push para `main` nos mesmos paths: build + **deploy automático** via GitHub Actions
+- Também pode rodar manualmente (*Actions → website → Run workflow*)
 
-**Ativar uma vez no GitHub** (Settings do repo):
+Source do Pages já está em **GitHub Actions**. Sem custom domain por enquanto — quando houver, apontar o DNS em Pages → Custom domain (sem alterar o `BASE_PATH` do project site, ou migrar para user site).
 
-1. **Settings → Pages → Build and deployment → Source:** GitHub Actions  
-2. Merge deste PR (ou rode o workflow `website` via *workflow_dispatch* em `main`)
-
-Sem custom domain por enquanto — quando houver, basta apontar o DNS e configurar em Pages → Custom domain (sem alterar o `BASE_PATH` do project site, ou migrar para user site).
+Conteúdo visual vem dos protótipos Control Plane em `docs/design/control-plane/` (pacote de handoff). Após atualizar os `.dc.html`, regenere com `node scripts/extract-design-content.mjs`.
 
 ## Rotas
 
