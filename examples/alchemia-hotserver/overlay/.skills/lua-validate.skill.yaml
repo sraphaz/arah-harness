@@ -1,0 +1,11 @@
+id: lua-validate
+description: Valida sintaxe Lua via LuaJIT loadfile (server e/ou client) sem executar o chunk.
+inputs:
+  area:
+    type: enum
+    values: [server, client, all]
+    default: all
+run:
+  script: scripts/agents/alchemia/lua-validate.ps1
+success: exit_code == 0
+on_fail: comment_pr_and_return_to_agent

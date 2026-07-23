@@ -1,0 +1,5 @@
+id: balance-pass
+description: Gate de balanceamento — Cap.19 Handbook + planilha antes de items.xml/spells.
+run:
+  script: scripts/agents/alchemia/balance-pass.ps1
+success: exit_code == 0

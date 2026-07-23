@@ -1,0 +1,126 @@
+# Coreografia Alchemia HotServer — overlay local (não sobrescrito por arah update)
+version: 1
+updated: 2026-07-15
+
+rules:
+  - id: alchemia-spells
+    paths:
+      - canary-3.4.1/data/scripts/spells/**
+      - canary-3.4.1/data/spells/**
+      - canary-3.4.1/data/scripts/custom_skills.lua
+    agents:
+      - id: backend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [lua-validate, add-spell, run-tests, craft-review]
+      - id: combat-magic
+        type: domain
+        autonomy: [consult_post]
+      - id: client-ux
+        type: domain
+        autonomy: [consult_post]
+
+  - id: alchemia-power-beasts
+    paths:
+      - canary-3.4.1/data/scripts/creaturescripts/others/power_beasts.lua
+      - canary-3.4.1/data/scripts/**/*avatar*
+    agents:
+      - id: backend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [lua-validate, power-beast-touch, craft-review]
+      - id: power-beasts
+        type: domain
+        autonomy: [consult_post]
+
+  - id: alchemia-items
+    paths:
+      - canary-3.4.1/data/items/**
+      - "**/items.xml"
+    agents:
+      - id: backend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [balance-pass, craft-review]
+      - id: items-economy
+        type: domain
+        autonomy: [consult_post]
+      - id: ops-codex
+        type: domain
+        autonomy: [consult_post]
+
+  - id: alchemia-monsters
+    paths:
+      - canary-3.4.1/data/monster/**
+      - canary-3.4.1/data/world/**
+    agents:
+      - id: backend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [add-monster, craft-review]
+      - id: monsters-spawns
+        type: domain
+        autonomy: [consult_post]
+
+  - id: alchemia-quests
+    paths:
+      - canary-3.4.1/data/npc/**
+      - canary-3.4.1/data/scripts/actions/**
+      - canary-3.4.1/data/scripts/talkactions/**
+    agents:
+      - id: backend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [lua-validate, craft-review]
+      - id: quests-npcs
+        type: domain
+        autonomy: [consult_post]
+
+  - id: alchemia-client
+    paths:
+      - client_run/modules/**
+      - client_run/**/*.otui
+    agents:
+      - id: frontend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [lua-validate, hot-reload-check, craft-review]
+      - id: client-ux
+        type: domain
+        autonomy: [consult_post]
+
+  - id: alchemia-engine-cpp
+    paths:
+      - canary-3.4.1/src/**
+      - client_run/src/**
+      - client_run/CMakeLists.txt
+      - canary-3.4.1/CMakeLists.txt
+    agents:
+      - id: backend
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [build-client, craft-review]
+      - id: engine-cpp
+        type: domain
+        autonomy: [consult_post]
+      - id: security
+        type: operational
+        autonomy: [consult_post]
+
+  - id: alchemia-codex
+    paths:
+      - "coisas do codex/**"
+      - AGENTS.md
+      - BACKLOG.md
+      - docs/arah/**
+    agents:
+      - id: docs-steward
+        type: operational
+        autonomy: [activate, invoke_skill]
+        skills: [codex-append, sync-docs]
+      - id: ops-codex
+        type: domain
+        autonomy: [consult_post]
+      - id: planner
+        type: operational
+        autonomy: [consult_post]
