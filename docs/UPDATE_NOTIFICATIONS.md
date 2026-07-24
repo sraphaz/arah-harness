@@ -18,16 +18,18 @@ Para tooling/template distribuído por **git clone + copy** (não npm/NuGet), o 
 Fluxo ARAH:
 
 ```text
-Harness: tag vX.Y.Z → GitHub Release
+Humano: PR com VERSION + CHANGELOG → merge em main
+        ↓
+Harness (Actions): cut-release → tag vX.Y.Z + GitHub Release  (autônomo)
         ↓
 Consumidor (weekly workflow): lê .arah-version → compara com releases/latest
         ↓
 outdated → abre/atualiza issue `arah-harness-update`
         ↓
-Humano: checkout tag → arah update -Force → PR
+Humano (consumidor): checkout tag → arah update -Force → PR
 ```
 
-Alinhado a [MARKET_REFERENCE.md](MARKET_REFERENCE.md) (copier update, harnessforge sync --check) e à governança “humano faz merge”.
+Alinhado a [MARKET_REFERENCE.md](MARKET_REFERENCE.md) (copier update, harnessforge sync --check) e à governança “humano mergeia o bump; a máquina publica o release”.
 
 ## O que foi implementado
 
@@ -35,9 +37,10 @@ Alinhado a [MARKET_REFERENCE.md](MARKET_REFERENCE.md) (copier update, harnessfor
    Compara pin × latest release (API GitHub). Exit `2` se outdated.
 2. **Workflow consumidor** `harness-update-check.yml` (instalado no `init`)  
    Cron semanal + `workflow_dispatch`; cria issue com label `arah-harness-update`.
-3. **Workflow upstream** `.github/workflows/release.yml`  
-   Publica Release a partir de tags `v*.*.*`.
-4. **Template Renovate** `templates/renovate-arah.json`  
+3. **Workflow upstream** `.github/workflows/release.yml` + **`cut-release.ps1`**  
+   Em todo push em `main` (e `workflow_dispatch`): se ainda não existir Release para `VERSION`, cria tag anotada + GitHub Release. Idempotente.
+4. **CLI** `arah release cut` — mesmo corte, local/CI (requer `GITHUB_TOKEN`).
+5. **Template Renovate** `templates/renovate-arah.json`  
    Opcional: PR só no pin `.arah-version`.
 
 ## Uso no consumidor
@@ -78,13 +81,20 @@ update_check:
 
 Copie [`templates/renovate-arah.json`](../templates/renovate-arah.json) para `renovate.json` no consumidor (ou faça merge com sua config). O Renovate abre PR alterando só o pin; o humano ainda precisa rodar `arah update -Force`.
 
-## Publicar release no harness
+## Publicar release no harness (autônomo)
+
+1. Abra PR que altera `VERSION` + seção correspondente em `CHANGELOG.md` (+ pin `.arah-version` se dogfooding).
+2. Merge em `main` (humano).
+3. O workflow **Release** corre sozinho e publica `vX.Y.Z` + GitHub Release.
+
+Manual / backfill:
 
 ```bash
-# VERSION e CHANGELOG já bumpados no PR
-git tag v0.4.1
-git push origin v0.4.1
-# Actions → Release workflow cria o GitHub Release
+# Disparar na UI: Actions → Release → Run workflow
+# ou localmente (com token):
+powershell -File ./cli/arah.ps1 release cut
+# dry-run:
+powershell -File ./scripts/agents/cut-release.ps1 -DryRun
 ```
 
-Sem Release/tag, o check cai para a tag semver mais recente; se não houver nenhuma, falha pedindo publicação.
+Sem Release/tag, o `update-check` do consumidor cai para a tag semver mais recente; se não houver nenhuma, falha pedindo publicação.

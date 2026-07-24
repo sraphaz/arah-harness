@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.4.1-green.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.4.2-green.svg)](VERSION)
 [![TechOrganism](https://img.shields.io/badge/TechOrganism-v0.3-0A7A5A.svg)](docs/TECHORGANISM.md)
 
 **ARAH** — *Agent Runtime Autonomous Harness*  
@@ -165,6 +165,7 @@ flowchart TB
 | `metrics rollup\|report` | Economy Intelligence (scorecard) |
 | `task create\|status\|validate\|complete\|block` | Execution Control Protocol |
 | `update-check` | Notifica se `.arah-version` &lt; latest Release |
+| `release cut` | Publica tag + GitHub Release a partir de VERSION |
 | `regenerate [-UpdateKernel]` | Homeostase completa no consumidor |
 
 ```powershell

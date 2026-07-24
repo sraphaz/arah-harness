@@ -1,5 +1,5 @@
 id: release-cut
-description: Prepara corte de release (tag, changelog).
+description: Corta tag + GitHub Release a partir de VERSION (autônomo / idempotente).
 run:
-  script: scripts/agents/next-phase.ps1
+  script: scripts/agents/cut-release.ps1
 success: exit_code == 0
