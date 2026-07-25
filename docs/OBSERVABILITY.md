@@ -13,7 +13,8 @@
 | Evidência fria | `docs/_meta/runs/*/summary.json` | Resumos versionáveis |
 | Live (Cursor) | `.cursor/arah-live/diagnostics.jsonl` | Diagnósticos de sessão |
 | Sessões | `.cursor/arah-live/sessions/*.diagnostics.jsonl` | Traces por conversa |
-| Agent Graph | `docs/_meta/agent-graph.generated.json` | Grafo exportável |
+| Agent Graph | `docs/_meta/agent-graph.generated.json` | Grafo de colaboração (agentes/skills/gates) |
+| Knowledge Graph | `docs/_meta/knowledge-graph.manifest.yaml` + `graphify-out/` | Corpus via Graphify (opcional) |
 | Capacidades | `capabilities.yaml` | Status available/experimental/planned |
 
 ## Economy Intelligence
@@ -52,6 +53,15 @@ Eventos espelhados em `.cursor/arah-live/events.jsonl`.
 ```
 
 Artefato: `docs/_meta/agent-graph.generated.json` — nós (agentes, skills, rules, gates) e arestas.
+
+### Knowledge Graph (Graphify) — opcional
+
+```powershell
+./cli/arah.ps1 knowledge-graph          # code-only se CLI presente; senão skip
+./cli/arah.ps1 knowledge-graph status
+```
+
+Sibling do Agent Graph — ver [`docs/architecture/GRAPHIFY.md`](architecture/GRAPHIFY.md).
 
 ## Coreografia observável
 

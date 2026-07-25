@@ -5,3 +5,4 @@
 | arah-biocomponent | TechOrganism — discovery, organismo, sinais e evolução | active |
 | arah-state-model | Estado quente × frio, arquivo-por-evento, scrubbing | active |
 | arah-economy-metrics | Economy Intelligence — métricas, scorecard e eficiência do harness | active |
+| arah-graphify-knowledge-graph | Knowledge Graph opcional via Graphify (sibling do Agent Graph) | active |

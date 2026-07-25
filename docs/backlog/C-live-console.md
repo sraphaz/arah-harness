@@ -50,3 +50,4 @@ Schemas: [`schemas/console/`](../../schemas/console/). Serviço: [`live/`](../..
 
 ### C-12 · (Fase 2) Graph Explorer `G` — backlog
 - [ ] Visualização navegável do grafo (único painel ainda não prototipado)
+- [ ] Dual-pane: **Agent Graph** (colaboração) ∪ **Knowledge Graph** Graphify (`graphify-out/graph.json` + manifesto) — ver [`GRAPHIFY.md`](../architecture/GRAPHIFY.md)

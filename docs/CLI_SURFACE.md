@@ -13,6 +13,7 @@
 | `sync-check` | `-Target` | `cli/sync-check.ps1` |
 | `domain sync` | `-Target` `-DryRun` | `domain-sync.ps1` |
 | `export-graph` | `-Target` | `export-agent-graph.ps1` |
+| `knowledge-graph` | `[status\|code-only\|full]` `-Require` `-DryRun` | `graphify-knowledge-graph.ps1` |
 | `validate-runtime` | `-Target` | `validate-solution-choreography.ps1` |
 | `discover` | `-Target` `-Apply` `-DryRun` | `discover-repo.ps1` |
 | `organism bootstrap\|status\|signal` | signal: `-From` `-SignalType` `-SignalTo` `-Topic` `-Payload` | `organism-bootstrap` / `signal-bus` |

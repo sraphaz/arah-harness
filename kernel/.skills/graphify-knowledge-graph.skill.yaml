@@ -1,0 +1,11 @@
+id: graphify-knowledge-graph
+description: >
+  Extrai Knowledge Graph do corpus via Graphify (opcional, code-only por padrão).
+  Complementar ao Agent Graph — não o substitui.
+run:
+  script: scripts/agents/graphify-knowledge-graph.ps1
+success: exit_code == 0
+guardrails:
+  - optional_external_tool
+  - default_code_only_no_llm
+  - skip_ok_when_cli_missing

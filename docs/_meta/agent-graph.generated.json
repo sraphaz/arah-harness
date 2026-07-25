@@ -2,7 +2,7 @@
   "schema": ".agents/agent-graph.schema.yaml",
   "version": 1,
   "generator": "scripts/agents/export-agent-graph.ps1",
-  "generated_at": "2026-07-17T23:49:55Z",
+  "generated_at": "2026-07-25T20:32:50Z",
   "sources": [
     ".agents/choreography.yaml",
     ".agents/**/*.agent.yaml",
@@ -12,17 +12,17 @@
   ],
   "stats": {
     "agents": 18,
-    "skills": 23,
+    "skills": 24,
     "rules": 17,
-    "paths": 63,
+    "paths": 67,
     "domains": 0,
-    "specs": 2,
-    "harnesses": 2,
-    "tests": 2,
+    "specs": 5,
+    "harnesses": 5,
+    "tests": 5,
     "guardrails": 16,
-    "workflows": 5,
+    "workflows": 9,
     "review_gates": 5,
-    "edges": 306
+    "edges": 323
   },
   "nodes": {
     "agents": [
@@ -264,7 +264,8 @@
           "discover-repo",
           "evolve-harness",
           "metrics-rollup",
-          "regenerate-harness"
+          "regenerate-harness",
+          "graphify-knowledge-graph"
         ],
         "consults": {
           "domain": [],
@@ -489,6 +490,11 @@
         "manifest": ".skills/evolve-harness.skill.yaml"
       },
       {
+        "id": "graphify-knowledge-graph",
+        "description": ">",
+        "manifest": ".skills/graphify-knowledge-graph.skill.yaml"
+      },
+      {
         "id": "harness-run",
         "description": "Executa harness SDD ligado à spec/fase.",
         "manifest": ".skills/harness-run.skill.yaml"
@@ -525,7 +531,7 @@
       },
       {
         "id": "release-cut",
-        "description": "Prepara corte de release (tag, changelog).",
+        "description": "Corta tag + GitHub Release a partir de VERSION (autônomo / idempotente).",
         "manifest": ".skills/release-cut.skill.yaml"
       },
       {
@@ -561,427 +567,530 @@
     ],
     "rules": [
       {
+        "primary_executor": null,
         "when": null,
+        "id": "domain-kernel",
+        "agents": [
+          {
+            "skills": [],
+            "type": "domain",
+            "id": "kernel",
+            "autonomy": [
+              "consult_post"
+            ],
+            "role": null
+          }
+        ],
         "paths": [
           "kernel/**",
           ".agents/**",
           ".skills/**",
           "scripts/**"
-        ],
+        ]
+      },
+      {
+        "primary_executor": null,
+        "when": null,
+        "id": "domain-extension-live",
         "agents": [
           {
+            "skills": [],
+            "type": "domain",
+            "id": "extension-live",
             "autonomy": [
               "consult_post"
             ],
-            "type": "domain",
-            "skills": [],
-            "id": "kernel"
+            "role": null
           }
         ],
-        "id": "domain-kernel"
-      },
-      {
-        "when": null,
         "paths": [
           "extension/**"
-        ],
+        ]
+      },
+      {
+        "primary_executor": null,
+        "when": null,
+        "id": "domain-cli",
         "agents": [
           {
+            "skills": [],
+            "type": "domain",
+            "id": "cli",
             "autonomy": [
               "consult_post"
             ],
-            "type": "domain",
-            "skills": [],
-            "id": "extension-live"
+            "role": null
           }
         ],
-        "id": "domain-extension-live"
-      },
-      {
-        "when": null,
         "paths": [
           "cli/**"
-        ],
-        "agents": [
-          {
-            "autonomy": [
-              "consult_post"
-            ],
-            "type": "domain",
-            "skills": [],
-            "id": "cli"
-          }
-        ],
-        "id": "domain-cli"
+        ]
       },
       {
+        "primary_executor": null,
         "when": null,
+        "id": "harness-kernel",
+        "agents": [
+          {
+            "skills": [],
+            "type": "operational",
+            "id": "release",
+            "autonomy": [
+              "activate"
+            ],
+            "role": null
+          },
+          {
+            "skills": [],
+            "type": "operational",
+            "id": "docs-steward",
+            "autonomy": [
+              "activate"
+            ],
+            "role": null
+          }
+        ],
         "paths": [
           "kernel/**",
           "scripts/**"
-        ],
-        "agents": [
-          {
-            "autonomy": [
-              "activate"
-            ],
-            "type": "operational",
-            "skills": [],
-            "id": "release"
-          },
-          {
-            "autonomy": [
-              "activate"
-            ],
-            "type": "operational",
-            "skills": [],
-            "id": "docs-steward"
-          }
-        ],
-        "id": "harness-kernel"
+        ]
       },
       {
+        "primary_executor": null,
         "when": null,
-        "paths": [
-          "extension/**"
-        ],
+        "id": "harness-extension",
         "agents": [
           {
+            "skills": [
+              "craft-review"
+            ],
+            "type": "operational",
+            "id": "frontend",
             "autonomy": [
               "activate",
               "invoke_skill"
             ],
-            "type": "operational",
-            "skills": [
-              "craft-review"
-            ],
-            "id": "frontend"
+            "role": null
           },
           {
+            "skills": [],
+            "type": "operational",
+            "id": "docs-steward",
             "autonomy": [
               "activate"
             ],
-            "type": "operational",
-            "skills": [],
-            "id": "docs-steward"
+            "role": null
           }
         ],
-        "id": "harness-extension"
+        "paths": [
+          "extension/**"
+        ]
       },
       {
+        "primary_executor": null,
         "when": null,
-        "paths": [
-          "cli/**"
-        ],
+        "id": "harness-cli",
         "agents": [
           {
+            "skills": [],
+            "type": "operational",
+            "id": "release",
             "autonomy": [
               "activate"
             ],
-            "type": "operational",
-            "skills": [],
-            "id": "release"
+            "role": null
           }
         ],
-        "id": "harness-cli"
+        "paths": [
+          "cli/**"
+        ]
       },
       {
+        "primary_executor": null,
         "when": null,
+        "id": "harness-docs",
+        "agents": [
+          {
+            "skills": [],
+            "type": "operational",
+            "id": "docs-steward",
+            "autonomy": [
+              "activate"
+            ],
+            "role": null
+          }
+        ],
         "paths": [
           "docs/**",
           "README.md",
           "CHANGELOG.md",
           "AGENTS.md"
-        ],
+        ]
+      },
+      {
+        "primary_executor": null,
+        "when": null,
+        "id": "harness-arah-sdlc",
         "agents": [
           {
+            "skills": [],
+            "type": "operational",
+            "id": "release",
             "autonomy": [
               "activate"
             ],
-            "type": "operational",
+            "role": null
+          },
+          {
             "skills": [],
-            "id": "docs-steward"
+            "type": "operational",
+            "id": "docs-steward",
+            "autonomy": [
+              "activate"
+            ],
+            "role": null
+          },
+          {
+            "skills": [],
+            "type": "domain",
+            "id": "extension-live",
+            "autonomy": [
+              "consult_post"
+            ],
+            "role": null
           }
         ],
-        "id": "harness-docs"
-      },
-      {
-        "when": null,
         "paths": [
           ".cursor/**",
           "arah.config.yaml",
           ".arah-version"
-        ],
-        "agents": [
-          {
-            "autonomy": [
-              "activate"
-            ],
-            "type": "operational",
-            "skills": [],
-            "id": "release"
-          },
-          {
-            "autonomy": [
-              "activate"
-            ],
-            "type": "operational",
-            "skills": [],
-            "id": "docs-steward"
-          },
-          {
-            "autonomy": [
-              "consult_post"
-            ],
-            "type": "domain",
-            "skills": [],
-            "id": "extension-live"
-          }
-        ],
-        "id": "harness-arah-sdlc"
+        ]
       },
       {
+        "primary_executor": "spec-steward",
         "when": null,
-        "paths": [
-          "docs/specs/**",
-          "scripts/harness/**"
-        ],
+        "id": "specs-sdd",
         "agents": [
           {
-            "autonomy": [
-              "activate",
-              "invoke_skill"
-            ],
-            "type": "operational",
             "skills": [
               "spec-validate",
               "harness-run"
             ],
-            "id": "spec-steward"
-          }
-        ],
-        "id": "specs-sdd"
-      },
-      {
-        "when": null,
-        "paths": [
-          "docs/architecture/**",
-          "docs/design/**",
-          "docs/adr/**"
-        ],
-        "agents": [
-          {
+            "type": "operational",
+            "id": "spec-steward",
             "autonomy": [
               "activate",
+              "execute_change",
               "invoke_skill"
             ],
-            "type": "operational",
+            "role": "executor"
+          }
+        ],
+        "paths": [
+          "docs/specs/**",
+          "scripts/harness/**"
+        ]
+      },
+      {
+        "primary_executor": "solutions-architect",
+        "when": null,
+        "id": "architecture-docs",
+        "agents": [
+          {
             "skills": [
               "architecture-review",
               "register-adr",
               "craft-review"
             ],
-            "id": "solutions-architect"
+            "type": "operational",
+            "id": "solutions-architect",
+            "autonomy": [
+              "activate",
+              "execute_change",
+              "invoke_skill"
+            ],
+            "role": "executor"
           },
           {
-            "autonomy": [
-              "consult"
-            ],
-            "type": "domain",
             "skills": [
               "architecture-review",
               "register-adr",
               "doc-taxonomy"
             ],
-            "id": "architecture-documenter"
-          },
-          {
+            "type": "domain",
+            "id": "architecture-documenter",
             "autonomy": [
               "consult"
             ],
-            "type": "domain",
+            "role": "consultant"
+          },
+          {
             "skills": [
               "craft-review"
             ],
-            "id": "clean-craft-advisor"
-          }
-        ],
-        "id": "architecture-docs"
-      },
-      {
-        "when": null,
-        "paths": [
-          "docs/testing/**",
-          "tests/**",
-          "e2e/**"
-        ],
-        "agents": [
-          {
+            "type": "domain",
+            "id": "clean-craft-advisor",
             "autonomy": [
               "consult"
             ],
-            "type": "domain",
-            "skills": [
-              "test-strategy",
-              "run-tests"
-            ],
-            "id": "test-architect"
-          },
+            "role": "consultant"
+          }
+        ],
+        "paths": [
+          "docs/architecture/**",
+          "docs/design/**",
+          "docs/adr/**"
+        ]
+      },
+      {
+        "primary_executor": "qa",
+        "when": null,
+        "id": "testing-strategy",
+        "agents": [
           {
-            "autonomy": [
-              "activate",
-              "invoke_skill"
-            ],
-            "type": "operational",
             "skills": [
               "run-tests",
               "craft-review"
             ],
-            "id": "qa"
-          }
-        ],
-        "id": "testing-strategy"
-      },
-      {
-        "when": null,
-        "paths": [
-          "backend/**",
-          "src/**/api/**",
-          "services/**"
-        ],
-        "agents": [
-          {
+            "type": "operational",
+            "id": "qa",
             "autonomy": [
               "activate",
+              "execute_change",
               "invoke_skill"
             ],
-            "type": "operational",
+            "role": "executor"
+          },
+          {
+            "skills": [
+              "test-strategy",
+              "run-tests"
+            ],
+            "type": "domain",
+            "id": "test-architect",
+            "autonomy": [
+              "consult"
+            ],
+            "role": "consultant"
+          }
+        ],
+        "paths": [
+          "docs/testing/**",
+          "tests/**",
+          "e2e/**"
+        ]
+      },
+      {
+        "primary_executor": "backend",
+        "when": null,
+        "id": "craft-backend",
+        "agents": [
+          {
             "skills": [
               "craft-review"
             ],
-            "id": "backend"
+            "type": "operational",
+            "id": "backend",
+            "autonomy": [
+              "activate",
+              "execute_change",
+              "invoke_skill"
+            ],
+            "role": "executor"
           },
           {
+            "skills": [
+              "craft-review"
+            ],
+            "type": "operational",
+            "id": "solutions-architect",
             "autonomy": [
               "consult_post",
               "invoke_skill"
             ],
-            "type": "operational",
+            "role": "consultant"
+          }
+        ],
+        "paths": [
+          "backend/**",
+          "src/**/api/**",
+          "services/**"
+        ]
+      },
+      {
+        "primary_executor": "frontend",
+        "when": null,
+        "id": "craft-frontend",
+        "agents": [
+          {
             "skills": [
               "craft-review"
             ],
-            "id": "solutions-architect"
+            "type": "operational",
+            "id": "frontend",
+            "autonomy": [
+              "activate",
+              "execute_change",
+              "invoke_skill"
+            ],
+            "role": "executor"
           }
         ],
-        "id": "craft-backend"
-      },
-      {
-        "when": null,
         "paths": [
           "frontend/**",
           "apps/web/**",
           "apps/mobile/**"
-        ],
-        "agents": [
-          {
-            "autonomy": [
-              "activate",
-              "invoke_skill"
-            ],
-            "type": "operational",
-            "skills": [
-              "craft-review"
-            ],
-            "id": "frontend"
-          }
-        ],
-        "id": "craft-frontend"
+        ]
       },
       {
+        "primary_executor": "release",
         "when": null,
+        "id": "infra-deploy",
+        "agents": [
+          {
+            "skills": [],
+            "type": "operational",
+            "id": "release",
+            "autonomy": [
+              "activate",
+              "execute_change"
+            ],
+            "role": "executor"
+          }
+        ],
         "paths": [
           ".github/workflows/**",
           "infrastructure/**",
           "docker-compose*.yml",
           "Dockerfile"
-        ],
-        "agents": [
-          {
-            "autonomy": [
-              "activate"
-            ],
-            "type": "operational",
-            "skills": [],
-            "id": "release"
-          }
-        ],
-        "id": "infra-deploy"
+        ]
       },
       {
+        "primary_executor": "docs-steward",
         "when": null,
-        "paths": [
-          "docs/_meta/discovery.proposed.yaml",
-          "docs/_meta/organism.manifest.yaml",
-          "docs/_meta/evolution.proposed.yaml",
-          "docs/_meta/metrics.digest.md",
-          "docs/TECHORGANISM.md",
-          "docs/BIOCOMPONENT.md",
-          "docs/ECONOMY.md",
-          "schemas/arah-harness/discovery.schema.yaml",
-          "schemas/arah-harness/organism.schema.yaml",
-          "schemas/arah-harness/signal.schema.yaml",
-          "schemas/arah-harness/evolution.schema.yaml",
-          "schemas/arah-harness/metrics-summary.schema.yaml",
-          "scripts/agents/discover-repo.ps1",
-          "scripts/agents/organism-bootstrap.ps1",
-          "scripts/agents/signal-bus.ps1",
-          "scripts/agents/evolve-harness.ps1",
-          "scripts/agents/metrics-rollup.ps1",
-          "scripts/agents/regenerate-harness.ps1"
-        ],
+        "id": "biocomponent-meta",
         "agents": [
           {
+            "skills": [],
+            "type": "operational",
+            "id": "docs-steward",
+            "autonomy": [
+              "activate",
+              "execute_change",
+              "invoke_skill"
+            ],
+            "role": "executor"
+          },
+          {
+            "skills": [
+              "discover-repo",
+              "evolve-harness",
+              "regenerate-harness",
+              "metrics-rollup",
+              "graphify-knowledge-graph"
+            ],
+            "type": "operational",
+            "id": "orchestrator",
             "autonomy": [
               "route",
               "activate",
               "invoke_skill"
             ],
-            "type": "operational",
-            "skills": [
-              "discover-repo",
-              "evolve-harness",
-              "regenerate-harness",
-              "metrics-rollup"
-            ],
-            "id": "orchestrator"
+            "role": "router"
           },
           {
+            "skills": [
+              "spec-validate"
+            ],
+            "type": "operational",
+            "id": "spec-steward",
             "autonomy": [
               "activate",
               "invoke_skill"
             ],
-            "type": "operational",
-            "skills": [
-              "spec-validate"
-            ],
-            "id": "spec-steward"
+            "role": "consultant"
           },
           {
+            "skills": [
+              "architecture-review"
+            ],
+            "type": "operational",
+            "id": "solutions-architect",
             "autonomy": [
               "consult",
               "invoke_skill"
             ],
-            "type": "operational",
-            "skills": [
-              "architecture-review"
-            ],
-            "id": "solutions-architect"
+            "role": "consultant"
           }
         ],
-        "id": "biocomponent-meta"
+        "paths": [
+          "docs/_meta/discovery.proposed.yaml",
+          "docs/_meta/organism.manifest.yaml",
+          "docs/_meta/evolution.proposed.yaml",
+          "docs/_meta/metrics.digest.md",
+          "docs/_meta/knowledge-graph.manifest.yaml",
+          "docs/TECHORGANISM.md",
+          "docs/BIOCOMPONENT.md",
+          "docs/ECONOMY.md",
+          "docs/architecture/GRAPHIFY.md",
+          "schemas/arah-harness/discovery.schema.yaml",
+          "schemas/arah-harness/organism.schema.yaml",
+          "schemas/arah-harness/signal.schema.yaml",
+          "schemas/arah-harness/evolution.schema.yaml",
+          "schemas/arah-harness/metrics-summary.schema.yaml",
+          "schemas/arah-harness/knowledge-graph.schema.yaml",
+          "scripts/agents/discover-repo.ps1",
+          "scripts/agents/organism-bootstrap.ps1",
+          "scripts/agents/signal-bus.ps1",
+          "scripts/agents/evolve-harness.ps1",
+          "scripts/agents/metrics-rollup.ps1",
+          "scripts/agents/regenerate-harness.ps1",
+          "scripts/agents/graphify-knowledge-graph.ps1"
+        ]
       },
       {
+        "primary_executor": "docs-steward",
         "when": null,
+        "id": "economy-intelligence",
+        "agents": [
+          {
+            "skills": [],
+            "type": "operational",
+            "id": "docs-steward",
+            "autonomy": [
+              "activate",
+              "execute_change",
+              "invoke_skill"
+            ],
+            "role": "executor"
+          },
+          {
+            "skills": [
+              "metrics-rollup",
+              "evolve-harness"
+            ],
+            "type": "operational",
+            "id": "orchestrator",
+            "autonomy": [
+              "route",
+              "activate",
+              "invoke_skill"
+            ],
+            "role": "router"
+          },
+          {
+            "skills": [
+              "spec-validate"
+            ],
+            "type": "operational",
+            "id": "spec-steward",
+            "autonomy": [
+              "activate",
+              "invoke_skill"
+            ],
+            "role": "consultant"
+          }
+        ],
         "paths": [
           "schemas/arah-harness/metrics-summary.schema.yaml",
           "schemas/arah-harness/audit-event.schema.yaml",
@@ -993,104 +1102,75 @@
           "docs/AUDIT.md",
           "docs/specs/arah-economy-metrics.spec.yaml",
           "cli/arah.ps1"
-        ],
-        "agents": [
-          {
-            "autonomy": [
-              "route",
-              "activate",
-              "invoke_skill"
-            ],
-            "type": "operational",
-            "skills": [
-              "metrics-rollup",
-              "evolve-harness"
-            ],
-            "id": "orchestrator"
-          },
-          {
-            "autonomy": [
-              "activate",
-              "invoke_skill"
-            ],
-            "type": "operational",
-            "skills": [
-              "spec-validate"
-            ],
-            "id": "spec-steward"
-          },
-          {
-            "autonomy": [
-              "activate",
-              "invoke_skill"
-            ],
-            "type": "operational",
-            "skills": [],
-            "id": "docs-steward"
-          }
-        ],
-        "id": "economy-intelligence"
+        ]
       },
       {
+        "primary_executor": "pr-steward",
         "when": "pull_request",
-        "paths": [
-          "**"
-        ],
+        "id": "pr-always",
         "agents": [
           {
+            "skills": [],
+            "type": "operational",
+            "id": "pr-steward",
             "autonomy": [
               "activate",
-              "invoke_skill"
+              "execute_change"
             ],
-            "type": "operational",
+            "role": "executor"
+          },
+          {
             "skills": [
               "craft-review",
               "run-tests"
             ],
-            "id": "qa"
-          },
-          {
-            "autonomy": [
-              "activate"
-            ],
             "type": "operational",
-            "skills": [],
-            "id": "pr-steward"
+            "id": "qa",
+            "autonomy": [
+              "activate",
+              "invoke_skill"
+            ],
+            "role": "reviewer"
           },
           {
-            "autonomy": [
-              "consult"
-            ],
-            "type": "domain",
             "skills": [
               "craft-review"
             ],
-            "id": "clean-craft-advisor"
-          },
-          {
+            "type": "domain",
+            "id": "clean-craft-advisor",
             "autonomy": [
               "consult"
             ],
-            "type": "domain",
+            "role": "consultant"
+          },
+          {
             "skills": [
               "test-strategy"
             ],
-            "id": "test-architect"
+            "type": "domain",
+            "id": "test-architect",
+            "autonomy": [
+              "consult"
+            ],
+            "role": "consultant"
           },
           {
-            "autonomy": [
-              "consult",
-              "invoke_skill"
-            ],
-            "type": "operational",
             "skills": [
               "dep-audit",
               "code-review"
             ],
-            "id": "security"
+            "type": "operational",
+            "id": "security",
+            "autonomy": [
+              "consult",
+              "invoke_skill"
+            ],
+            "role": "reviewer"
           }
         ],
-        "id": "pr-always"
+        "paths": [
+          "**"
+        ]
       }
     ],
     "paths": [
@@ -1260,6 +1340,13 @@
         "agents": []
       },
       {
+        "pattern": "docs/_meta/knowledge-graph.manifest.yaml",
+        "rules": [
+          "biocomponent-meta"
+        ],
+        "agents": []
+      },
+      {
         "pattern": "docs/_meta/metrics.digest.md",
         "rules": [
           "biocomponent-meta"
@@ -1309,6 +1396,13 @@
           "test-architect",
           "solutions-architect"
         ]
+      },
+      {
+        "pattern": "docs/architecture/GRAPHIFY.md",
+        "rules": [
+          "biocomponent-meta"
+        ],
+        "agents": []
       },
       {
         "pattern": "docs/AUDIT.md",
@@ -1470,6 +1564,13 @@
         "agents": []
       },
       {
+        "pattern": "schemas/arah-harness/knowledge-graph.schema.yaml",
+        "rules": [
+          "biocomponent-meta"
+        ],
+        "agents": []
+      },
+      {
         "pattern": "schemas/arah-harness/metrics-summary.schema.yaml",
         "rules": [
           "biocomponent-meta",
@@ -1510,6 +1611,13 @@
       },
       {
         "pattern": "scripts/agents/evolve-harness.ps1",
+        "rules": [
+          "biocomponent-meta"
+        ],
+        "agents": []
+      },
+      {
+        "pattern": "scripts/agents/graphify-knowledge-graph.ps1",
         "rules": [
           "biocomponent-meta"
         ],
@@ -1640,6 +1748,75 @@
             "evidence": null
           }
         ]
+      },
+      {
+        "id": "arah-execution-control",
+        "status": "active",
+        "manifest": "docs/specs/arah-execution-control.spec.yaml",
+        "harness_agents": [],
+        "guardrails": [],
+        "acceptance": [
+          {
+            "id": "AC-01",
+            "status": "covered",
+            "covered_by": "scripts/agents/execute-task.ps1",
+            "evidence": null
+          }
+        ]
+      },
+      {
+        "id": "arah-graphify-knowledge-graph",
+        "status": "active",
+        "manifest": "docs/specs/arah-graphify-knowledge-graph.spec.yaml",
+        "harness_agents": [],
+        "guardrails": [],
+        "acceptance": [
+          {
+            "id": "AC-01",
+            "status": "pending",
+            "covered_by": "- scripts/self-test.ps1",
+            "evidence": null
+          },
+          {
+            "id": "AC-02",
+            "status": "pending",
+            "covered_by": null,
+            "evidence": null
+          },
+          {
+            "id": "AC-03",
+            "status": "pending",
+            "covered_by": null,
+            "evidence": null
+          },
+          {
+            "id": "AC-04",
+            "status": "pending",
+            "covered_by": null,
+            "evidence": null
+          },
+          {
+            "id": "AC-05",
+            "status": "pending",
+            "covered_by": null,
+            "evidence": null
+          }
+        ]
+      },
+      {
+        "id": "arah-state-model",
+        "status": "active",
+        "manifest": "docs/specs/arah-state-model.spec.yaml",
+        "harness_agents": [],
+        "guardrails": [],
+        "acceptance": [
+          {
+            "id": "AC-01",
+            "status": "covered",
+            "covered_by": "scripts/agents/signal-bus.ps1",
+            "evidence": null
+          }
+        ]
       }
     ],
     "harnesses": [
@@ -1652,9 +1829,30 @@
         "id": "arah-economy-metrics",
         "spec": "arah-economy-metrics",
         "agents": []
+      },
+      {
+        "id": "arah-execution-control",
+        "spec": "arah-execution-control",
+        "agents": []
+      },
+      {
+        "id": "arah-graphify-knowledge-graph",
+        "spec": "arah-graphify-knowledge-graph",
+        "agents": []
+      },
+      {
+        "id": "arah-state-model",
+        "spec": "arah-state-model",
+        "agents": []
       }
     ],
     "tests": [
+      {
+        "id": "- scripts/self-test.ps1",
+        "covers": [
+          "arah-graphify-knowledge-graph:AC-01"
+        ]
+      },
       {
         "id": "scripts/agents/discover-repo.ps1",
         "covers": [
@@ -1662,9 +1860,21 @@
         ]
       },
       {
+        "id": "scripts/agents/execute-task.ps1",
+        "covers": [
+          "arah-execution-control:AC-01"
+        ]
+      },
+      {
         "id": "scripts/agents/metrics-rollup.ps1",
         "covers": [
           "arah-economy-metrics:AC-01"
+        ]
+      },
+      {
+        "id": "scripts/agents/signal-bus.ps1",
+        "covers": [
+          "arah-state-model:AC-01"
         ]
       }
     ],
@@ -1746,8 +1956,18 @@
         "role": "Build + testes"
       },
       {
+        "id": "go.yml",
+        "path": ".github/workflows/go.yml",
+        "role": null
+      },
+      {
         "id": "harness-checks.yml",
         "path": ".github/workflows/harness-checks.yml",
+        "role": null
+      },
+      {
+        "id": "harness-update-check.yml",
+        "path": ".github/workflows/harness-update-check.yml",
         "role": null
       },
       {
@@ -1756,8 +1976,18 @@
         "role": null
       },
       {
+        "id": "release.yml",
+        "path": ".github/workflows/release.yml",
+        "role": null
+      },
+      {
         "id": "validate-specs.yml",
         "path": ".github/workflows/validate-specs.yml",
+        "role": null
+      },
+      {
+        "id": "website.yml",
+        "path": ".github/workflows/website.yml",
         "role": null
       }
     ],
@@ -1803,6 +2033,11 @@
     {
       "from": "rule:architecture-docs",
       "to": "agent:solutions-architect",
+      "type": "activates_agent"
+    },
+    {
+      "from": "rule:biocomponent-meta",
+      "to": "agent:docs-steward",
       "type": "activates_agent"
     },
     {
@@ -2326,6 +2561,11 @@
       "type": "matches_rule"
     },
     {
+      "from": "path:docs/_meta/knowledge-graph.manifest.yaml",
+      "to": "rule:biocomponent-meta",
+      "type": "matches_rule"
+    },
+    {
       "from": "path:docs/_meta/metrics.digest.md",
       "to": "rule:biocomponent-meta",
       "type": "matches_rule"
@@ -2348,6 +2588,11 @@
     {
       "from": "path:docs/architecture/**",
       "to": "rule:architecture-docs",
+      "type": "matches_rule"
+    },
+    {
+      "from": "path:docs/architecture/GRAPHIFY.md",
+      "to": "rule:biocomponent-meta",
       "type": "matches_rule"
     },
     {
@@ -2456,6 +2701,11 @@
       "type": "matches_rule"
     },
     {
+      "from": "path:schemas/arah-harness/knowledge-graph.schema.yaml",
+      "to": "rule:biocomponent-meta",
+      "type": "matches_rule"
+    },
+    {
       "from": "path:schemas/arah-harness/metrics-summary.schema.yaml",
       "to": "rule:biocomponent-meta",
       "type": "matches_rule"
@@ -2492,6 +2742,11 @@
     },
     {
       "from": "path:scripts/agents/evolve-harness.ps1",
+      "to": "rule:biocomponent-meta",
+      "type": "matches_rule"
+    },
+    {
+      "from": "path:scripts/agents/graphify-knowledge-graph.ps1",
       "to": "rule:biocomponent-meta",
       "type": "matches_rule"
     },
@@ -2549,19 +2804,13 @@
       "from": "agent:architecture-documenter",
       "to": "skill:architecture-review",
       "type": "may_invoke_skill",
-      "via": "architecture-docs"
+      "via": "manifest"
     },
     {
       "from": "agent:architecture-documenter",
       "to": "skill:architecture-review",
       "type": "may_invoke_skill",
-      "via": "manifest"
-    },
-    {
-      "from": "agent:architecture-documenter",
-      "to": "skill:doc-taxonomy",
-      "type": "may_invoke_skill",
-      "via": "manifest"
+      "via": "architecture-docs"
     },
     {
       "from": "agent:architecture-documenter",
@@ -2571,7 +2820,7 @@
     },
     {
       "from": "agent:architecture-documenter",
-      "to": "skill:register-adr",
+      "to": "skill:doc-taxonomy",
       "type": "may_invoke_skill",
       "via": "manifest"
     },
@@ -2580,6 +2829,12 @@
       "to": "skill:register-adr",
       "type": "may_invoke_skill",
       "via": "architecture-docs"
+    },
+    {
+      "from": "agent:architecture-documenter",
+      "to": "skill:register-adr",
+      "type": "may_invoke_skill",
+      "via": "manifest"
     },
     {
       "from": "agent:backend",
@@ -2615,6 +2870,12 @@
       "from": "agent:clean-craft-advisor",
       "to": "skill:craft-review",
       "type": "may_invoke_skill",
+      "via": "architecture-docs"
+    },
+    {
+      "from": "agent:clean-craft-advisor",
+      "to": "skill:craft-review",
+      "type": "may_invoke_skill",
       "via": "manifest"
     },
     {
@@ -2622,12 +2883,6 @@
       "to": "skill:craft-review",
       "type": "may_invoke_skill",
       "via": "pr-always"
-    },
-    {
-      "from": "agent:clean-craft-advisor",
-      "to": "skill:craft-review",
-      "type": "may_invoke_skill",
-      "via": "architecture-docs"
     },
     {
       "from": "agent:docs-steward",
@@ -2645,6 +2900,12 @@
       "from": "agent:frontend",
       "to": "skill:craft-review",
       "type": "may_invoke_skill",
+      "via": "manifest"
+    },
+    {
+      "from": "agent:frontend",
+      "to": "skill:craft-review",
+      "type": "may_invoke_skill",
       "via": "craft-frontend"
     },
     {
@@ -2652,12 +2913,6 @@
       "to": "skill:craft-review",
       "type": "may_invoke_skill",
       "via": "harness-extension"
-    },
-    {
-      "from": "agent:frontend",
-      "to": "skill:craft-review",
-      "type": "may_invoke_skill",
-      "via": "manifest"
     },
     {
       "from": "agent:frontend",
@@ -2687,19 +2942,25 @@
       "from": "agent:orchestrator",
       "to": "skill:discover-repo",
       "type": "may_invoke_skill",
-      "via": "manifest"
+      "via": "biocomponent-meta"
     },
     {
       "from": "agent:orchestrator",
       "to": "skill:discover-repo",
       "type": "may_invoke_skill",
-      "via": "biocomponent-meta"
+      "via": "manifest"
     },
     {
       "from": "agent:orchestrator",
       "to": "skill:evolve-harness",
       "type": "may_invoke_skill",
       "via": "manifest"
+    },
+    {
+      "from": "agent:orchestrator",
+      "to": "skill:evolve-harness",
+      "type": "may_invoke_skill",
+      "via": "biocomponent-meta"
     },
     {
       "from": "agent:orchestrator",
@@ -2709,7 +2970,13 @@
     },
     {
       "from": "agent:orchestrator",
-      "to": "skill:evolve-harness",
+      "to": "skill:graphify-knowledge-graph",
+      "type": "may_invoke_skill",
+      "via": "manifest"
+    },
+    {
+      "from": "agent:orchestrator",
+      "to": "skill:graphify-knowledge-graph",
       "type": "may_invoke_skill",
       "via": "biocomponent-meta"
     },
@@ -2747,13 +3014,13 @@
       "from": "agent:orchestrator",
       "to": "skill:regenerate-harness",
       "type": "may_invoke_skill",
-      "via": "biocomponent-meta"
+      "via": "manifest"
     },
     {
       "from": "agent:orchestrator",
       "to": "skill:regenerate-harness",
       "type": "may_invoke_skill",
-      "via": "manifest"
+      "via": "biocomponent-meta"
     },
     {
       "from": "agent:planner",
@@ -2795,6 +3062,12 @@
       "from": "agent:qa",
       "to": "skill:craft-review",
       "type": "may_invoke_skill",
+      "via": "manifest"
+    },
+    {
+      "from": "agent:qa",
+      "to": "skill:craft-review",
+      "type": "may_invoke_skill",
       "via": "testing-strategy"
     },
     {
@@ -2802,12 +3075,6 @@
       "to": "skill:craft-review",
       "type": "may_invoke_skill",
       "via": "pr-always"
-    },
-    {
-      "from": "agent:qa",
-      "to": "skill:craft-review",
-      "type": "may_invoke_skill",
-      "via": "manifest"
     },
     {
       "from": "agent:qa",
@@ -2825,13 +3092,13 @@
       "from": "agent:qa",
       "to": "skill:run-tests",
       "type": "may_invoke_skill",
-      "via": "testing-strategy"
+      "via": "pr-always"
     },
     {
       "from": "agent:qa",
       "to": "skill:run-tests",
       "type": "may_invoke_skill",
-      "via": "pr-always"
+      "via": "testing-strategy"
     },
     {
       "from": "agent:qa",
@@ -2885,7 +3152,7 @@
       "from": "agent:solutions-architect",
       "to": "skill:architecture-review",
       "type": "may_invoke_skill",
-      "via": "manifest"
+      "via": "architecture-docs"
     },
     {
       "from": "agent:solutions-architect",
@@ -2897,13 +3164,7 @@
       "from": "agent:solutions-architect",
       "to": "skill:architecture-review",
       "type": "may_invoke_skill",
-      "via": "architecture-docs"
-    },
-    {
-      "from": "agent:solutions-architect",
-      "to": "skill:craft-review",
-      "type": "may_invoke_skill",
-      "via": "architecture-docs"
+      "via": "manifest"
     },
     {
       "from": "agent:solutions-architect",
@@ -2919,15 +3180,21 @@
     },
     {
       "from": "agent:solutions-architect",
-      "to": "skill:register-adr",
+      "to": "skill:craft-review",
       "type": "may_invoke_skill",
-      "via": "manifest"
+      "via": "architecture-docs"
     },
     {
       "from": "agent:solutions-architect",
       "to": "skill:register-adr",
       "type": "may_invoke_skill",
       "via": "architecture-docs"
+    },
+    {
+      "from": "agent:solutions-architect",
+      "to": "skill:register-adr",
+      "type": "may_invoke_skill",
+      "via": "manifest"
     },
     {
       "from": "agent:solutions-architect",
@@ -2957,6 +3224,12 @@
       "from": "agent:spec-steward",
       "to": "skill:spec-validate",
       "type": "may_invoke_skill",
+      "via": "specs-sdd"
+    },
+    {
+      "from": "agent:spec-steward",
+      "to": "skill:spec-validate",
+      "type": "may_invoke_skill",
       "via": "biocomponent-meta"
     },
     {
@@ -2969,12 +3242,6 @@
       "from": "agent:spec-steward",
       "to": "skill:spec-validate",
       "type": "may_invoke_skill",
-      "via": "specs-sdd"
-    },
-    {
-      "from": "agent:spec-steward",
-      "to": "skill:spec-validate",
-      "type": "may_invoke_skill",
       "via": "manifest"
     },
     {
@@ -2988,24 +3255,24 @@
       "to": "skill:run-tests",
       "type": "may_invoke_skill",
       "via": "testing-strategy"
-    },
-    {
-      "from": "agent:test-architect",
-      "to": "skill:test-strategy",
-      "type": "may_invoke_skill",
-      "via": "testing-strategy"
-    },
-    {
-      "from": "agent:test-architect",
-      "to": "skill:test-strategy",
-      "type": "may_invoke_skill",
-      "via": "manifest"
     },
     {
       "from": "agent:test-architect",
       "to": "skill:test-strategy",
       "type": "may_invoke_skill",
       "via": "pr-always"
+    },
+    {
+      "from": "agent:test-architect",
+      "to": "skill:test-strategy",
+      "type": "may_invoke_skill",
+      "via": "manifest"
+    },
+    {
+      "from": "agent:test-architect",
+      "to": "skill:test-strategy",
+      "type": "may_invoke_skill",
+      "via": "testing-strategy"
     },
     {
       "from": "spec:arah-biocomponent",
@@ -3015,6 +3282,21 @@
     {
       "from": "spec:arah-economy-metrics",
       "to": "harness:arah-economy-metrics",
+      "type": "requires_harness"
+    },
+    {
+      "from": "spec:arah-execution-control",
+      "to": "harness:arah-execution-control",
+      "type": "requires_harness"
+    },
+    {
+      "from": "spec:arah-graphify-knowledge-graph",
+      "to": "harness:arah-graphify-knowledge-graph",
+      "type": "requires_harness"
+    },
+    {
+      "from": "spec:arah-state-model",
+      "to": "harness:arah-state-model",
       "type": "requires_harness"
     },
     {
@@ -3094,6 +3376,12 @@
     {
       "from": "rule:biocomponent-meta",
       "to": "skill:evolve-harness",
+      "type": "requires_skill",
+      "via": "biocomponent-meta"
+    },
+    {
+      "from": "rule:biocomponent-meta",
+      "to": "skill:graphify-knowledge-graph",
       "type": "requires_skill",
       "via": "biocomponent-meta"
     },
@@ -3237,6 +3525,21 @@
     {
       "from": "rule:specs-sdd",
       "to": "spec:arah-economy-metrics",
+      "type": "requires_spec"
+    },
+    {
+      "from": "rule:specs-sdd",
+      "to": "spec:arah-execution-control",
+      "type": "requires_spec"
+    },
+    {
+      "from": "rule:specs-sdd",
+      "to": "spec:arah-graphify-knowledge-graph",
+      "type": "requires_spec"
+    },
+    {
+      "from": "rule:specs-sdd",
+      "to": "spec:arah-state-model",
       "type": "requires_spec"
     },
     {
@@ -3512,6 +3815,24 @@
     {
       "from": "spec:arah-economy-metrics",
       "to": "test:scripts/agents/metrics-rollup.ps1",
+      "type": "verified_by_test",
+      "via": "AC-01"
+    },
+    {
+      "from": "spec:arah-execution-control",
+      "to": "test:scripts/agents/execute-task.ps1",
+      "type": "verified_by_test",
+      "via": "AC-01"
+    },
+    {
+      "from": "spec:arah-graphify-knowledge-graph",
+      "to": "test:- scripts/self-test.ps1",
+      "type": "verified_by_test",
+      "via": "AC-01"
+    },
+    {
+      "from": "spec:arah-state-model",
+      "to": "test:scripts/agents/signal-bus.ps1",
       "type": "verified_by_test",
       "via": "AC-01"
     }

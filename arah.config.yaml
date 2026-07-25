@@ -46,13 +46,13 @@ domains:
 
   - id: cli
     name: CLI ARAH
-    description: init, update, doctor, domain sync, discover, organism, evolve, regenerate, export-graph
+    description: init, update, doctor, domain sync, discover, organism, evolve, regenerate, export-graph, knowledge-graph
     paths:
       - cli/**
     enrich: |
       Entry point arah.ps1 — não quebrar compat PS 5.1.
     validate: |
-      self-test.ps1 cobre init + domain sync + export-graph.
+      self-test.ps1 cobre init + domain sync + export-graph + knowledge-graph skip.
     references:
       - README.md
 
@@ -65,6 +65,13 @@ update_check:
   notify:
     issue: true
     label: arah-harness-update
+
+# Knowledge Graph (Graphify) — opcional; sibling do Agent Graph (docs/architecture/GRAPHIFY.md)
+# enabled:false por padrão — use `arah knowledge-graph` ou regenerate -IncludeKnowledgeGraph
+knowledge_graph:
+  enabled: false
+  provider: graphify
+  default_mode: code-only
 
 # Execution Control Protocol — terminalidade (intenção → um executor → done|blocked)
 execution_control:

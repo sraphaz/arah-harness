@@ -1,0 +1,69 @@
+id: arah-graphify-knowledge-graph
+title: Knowledge Graph opcional via Graphify (complementar ao Agent Graph)
+status: active
+owner: solutions-architect
+version: 1
+updated_at: 2026-07-25
+covers:
+  - docs/architecture/GRAPHIFY.md
+  - docs/TECHORGANISM.md
+  - docs/CLI_SURFACE.md
+  - docs/backlog/H-harness-improvements.md
+  - docs/backlog/C-live-console.md
+  - capabilities.yaml
+  - website/capabilities.yaml
+  - cli/arah.ps1
+  - arah.config.yaml
+  - templates/arah.config.yaml
+  - .gitignore
+  - scripts/agents/graphify-knowledge-graph.ps1
+  - scripts/agents/regenerate-harness.ps1
+  - kernel/scripts/agents/graphify-knowledge-graph.ps1
+  - kernel/scripts/agents/regenerate-harness.ps1
+  - .skills/graphify-knowledge-graph.skill.yaml
+  - kernel/.skills/graphify-knowledge-graph.skill.yaml
+  - schemas/arah-harness/knowledge-graph.schema.yaml
+  - scripts/self-test.ps1
+  - CHANGELOG.md
+  - README.md
+  - docs/specs/REGISTRY.md
+  - .agents/choreography.yaml
+  - .agents/orchestrator.agent.yaml
+  - kernel/.agents/choreography.yaml
+  - kernel/.agents/orchestrator.agent.yaml
+
+description: |
+  Integra Graphify (PyPI graphifyy, CLI graphify) como provedor opcional de
+  knowledge graph do corpus do repositório. Não substitui o Agent Graph
+  (colaboração de agentes/skills/gates). Default operacional: extract --code-only
+  (AST local, sem tokens). Passagem semântica (docs/imagens) é opt-in.
+  Ausência do CLI não falha CI/homeostase (skip exit 0), salvo -Require.
+
+acceptance:
+  - id: AC-01
+    when: operador executa arah knowledge-graph sem Graphify instalado
+    then: exit 0 com status skipped/missing e manifesto atualizado (ou DryRun sem gravar)
+    status: pending
+    covered_by:
+      - scripts/self-test.ps1
+  - id: AC-02
+    when: Graphify está no PATH e operador executa arah knowledge-graph (code-only)
+    then: gera/atualiza graphify-out/ e docs/_meta/knowledge-graph.manifest.yaml apontando ao grafo
+    status: pending
+  - id: AC-03
+    when: regenerate roda sem knowledge_graph.enabled
+    then: não invoca Graphify; Agent Graph continua a ser exportado
+    status: pending
+  - id: AC-04
+    when: knowledge_graph.enabled=true e CLI ausente
+    then: regenerate emite warning e segue (não aborta), salvo Require
+    status: pending
+  - id: AC-05
+    when: leitor consulta docs/architecture/GRAPHIFY.md
+    then: entende veredito, dualidade Agent vs Knowledge e fases 0–3
+    status: pending
+
+harness:
+  commands:
+    - powershell -File ./cli/arah.ps1 knowledge-graph -DryRun
+    - powershell -File ./scripts/self-test.ps1
