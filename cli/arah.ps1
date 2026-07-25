@@ -9,14 +9,14 @@ param(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
         'export-graph', 'validate-runtime', 'discover', 'organism',
         'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks',
-        'task', 'update-check', 'help'
+        'task', 'update-check', 'release', 'help'
     )]
     [string]$Command = 'help',
 
     [Parameter(Position = 1)]
     [ValidateSet(
         'sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', 'install',
-        'create', 'validate', 'complete', 'block', ''
+        'create', 'validate', 'complete', 'block', 'cut', ''
     )]
     [string]$SubCommand = '',
 
@@ -290,6 +290,20 @@ switch ($Command) {
         } finally {
             Pop-Location
         }
+    }
+    'release' {
+        if ($SubCommand -ne 'cut') {
+            Write-Error 'Use: arah release cut [-DryRun]'
+            exit 10
+        }
+        $script = Get-TargetScript 'scripts/agents/cut-release.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'cut-release.ps1'
+        }
+        $splat = @{ RepoRoot = $targetPath }
+        if ($DryRun) { $splat.DryRun = $true }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     'update-check' {
         $script = Get-TargetScript 'scripts/agents/check-harness-update.ps1'

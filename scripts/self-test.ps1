@@ -179,6 +179,13 @@ try {
         -Target $Tmp -LatestVersion 99.0.0
     if ($LASTEXITCODE -ne 2) { throw "update-check should exit 2 when outdated (got $LASTEXITCODE)" }
 
+    # Autonomous release cutter (harness-side; also shipped in kernel scripts)
+    Write-Host "=== cut-release dry-run ==="
+    $cut = Join-Path $HarnessRoot 'scripts/agents/cut-release.ps1'
+    if (-not (Test-Path $cut)) { throw "cut-release.ps1 missing in harness" }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $cut -RepoRoot $HarnessRoot -DryRun -FailIfChangelogMissing
+    if ($LASTEXITCODE -ne 0) { throw "cut-release -DryRun failed" }
+
     Write-Host "self-test: OK"
     exit 0
 } finally {

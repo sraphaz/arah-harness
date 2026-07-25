@@ -2,6 +2,19 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.4.2] - 2026-07-24
+
+### Added
+
+- **Publicação autônoma de releases** — após merge em `main`, o workflow `release.yml` garante tag `vX.Y.Z` + GitHub Release a partir de `VERSION` (idempotente)
+  - `scripts/agents/cut-release.ps1` + CLI `arah release cut`
+  - Skill `release-cut` aponta para o script real
+  - Humano só mergeia o bump; a Action publica (sem `git tag` manual)
+
+### Changed
+
+- [UPDATE_NOTIFICATIONS.md](docs/UPDATE_NOTIFICATIONS.md) — fluxo “merge → release autônomo → notify consumidores”
+
 ## [0.4.1] - 2026-07-19
 
 ### Added
