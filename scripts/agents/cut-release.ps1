@@ -97,6 +97,30 @@ function Test-TagExists {
     }
 }
 
+function Get-TagTargetSha {
+    param([string]$Repo, [string]$Tag, [hashtable]$Headers, [string]$Api)
+    try {
+        $ref = Invoke-RestMethod -Uri "$Api/repos/$Repo/git/ref/tags/$Tag" -Headers $Headers -Method Get
+    } catch {
+        return $null
+    }
+
+    $targetType = $ref.object.type
+    $targetSha = $ref.object.sha
+
+    while ($targetType -eq 'tag') {
+        $tagObj = Invoke-RestMethod -Uri "$Api/repos/$Repo/git/tags/$targetSha" -Headers $Headers -Method Get
+        $targetType = $tagObj.object.type
+        $targetSha = $tagObj.object.sha
+    }
+
+    if ($targetType -ne 'commit') {
+        throw "tag $Tag does not reference a commit (got: $targetType)"
+    }
+
+    return $targetSha
+}
+
 function Get-TargetSha {
     param([string]$Root)
     if ($env:GITHUB_SHA) { return $env:GITHUB_SHA }
@@ -157,14 +181,6 @@ $ver = Get-SemVer $Version
 $tag = "v$ver"
 $repo = Resolve-Repository -Root $Root -Override $Repository
 $api = $GithubApi.TrimEnd('/')
-$notes = Get-ChangelogNotes -Root $Root -Ver $ver
-
-if (-not $notes) {
-    $msg = "CHANGELOG.md missing section ## [$ver]"
-    if ($FailIfChangelogMissing) { Write-Error $msg; exit 1 }
-    Write-Warning $msg
-    $notes = "ARAH Harness $tag"
-}
 
 $result = [ordered]@{
     version    = $ver
@@ -176,6 +192,13 @@ $result = [ordered]@{
 }
 
 if ($DryRun) {
+    $notes = Get-ChangelogNotes -Root $Root -Ver $ver
+    if (-not $notes) {
+        $msg = "CHANGELOG.md missing section ## [$ver]"
+        if ($FailIfChangelogMissing) { Write-Error $msg; exit 1 }
+        Write-Warning $msg
+        $notes = "ARAH Harness $tag"
+    }
     $result.status = 'dry_run'
     if ($Json) { $result | ConvertTo-Json -Depth 4 }
     else {
@@ -196,11 +219,24 @@ if (Test-ReleaseExists -Repo $repo -Tag $tag -Headers $headers -Api $api) {
     exit 0
 }
 
-if (-not (Test-TagExists -Repo $repo -Tag $tag -Headers $headers -Api $api)) {
+$notes = Get-ChangelogNotes -Root $Root -Ver $ver
+if (-not $notes) {
+    $msg = "CHANGELOG.md missing section ## [$ver]"
+    if ($FailIfChangelogMissing) { Write-Error $msg; exit 1 }
+    Write-Warning $msg
+    $notes = "ARAH Harness $tag"
+}
+
+$existingTagSha = Get-TagTargetSha -Repo $repo -Tag $tag -Headers $headers -Api $api
+if (-not $existingTagSha) {
     Write-Host "cut-release: creating annotated tag $tag @ $sha"
     New-GitTag -Repo $repo -Tag $tag -Sha $sha -Headers $headers -Api $api
 } else {
     Write-Host "cut-release: tag $tag already exists"
+    if ($existingTagSha.ToLowerInvariant() -ne $sha.ToLowerInvariant()) {
+        Write-Error "tag $tag points to $existingTagSha but workflow target is $sha"
+        exit 1
+    }
 }
 
 Write-Host "cut-release: publishing GitHub Release $tag"
