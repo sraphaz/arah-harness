@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks, task
+  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks, task, assess-repo
 #>
 param(
     [Parameter(Position = 0)]
@@ -9,7 +9,7 @@ param(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
         'export-graph', 'validate-runtime', 'discover', 'organism',
         'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks',
-        'task', 'update-check', 'help'
+        'task', 'update-check', 'assess-repo', 'bootstrap-vision', 'help'
     )]
     [string]$Command = 'help',
 
@@ -53,7 +53,13 @@ param(
     [string]$Class = '',
     [string]$TaskId = '',
     [string]$Evidence = '',
-    [string]$Reason = ''
+    [string]$Reason = '',
+
+    # assess-repo / bootstrap-vision (experimental)
+    [string]$OutDir = '',
+    [string]$Agents = '',
+    [switch]$IncludeSpecialists,
+    [switch]$SkipIndex
 )
 
 $ErrorActionPreference = 'Stop'
@@ -303,6 +309,25 @@ switch ($Command) {
         & $script @splat
         if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
+    { $_ -in @('assess-repo', 'bootstrap-vision') } {
+        # Experimental: serial per-agent As-Is / Gaps / To-Be visions (bootstrap phase)
+        $script = Get-TargetScript 'scripts/agents/assess-repo.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'assess-repo.ps1'
+        }
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'kernel') 'scripts\agents') 'assess-repo.ps1'
+        }
+        $splat = @{ RepoRoot = $targetPath }
+        if ($OutDir) { $splat.OutDir = $OutDir }
+        if ($Agents) { $splat.Agents = $Agents }
+        if ($Force) { $splat.Force = $true }
+        if ($DryRun) { $splat.DryRun = $true }
+        if ($IncludeSpecialists) { $splat.IncludeSpecialists = $true }
+        if ($SkipIndex) { $splat.SkipIndex = $true }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
     default {
         Write-Host @"
 ARAH Harness CLI — TechOrganism
@@ -340,6 +365,10 @@ ARAH Harness CLI — TechOrganism
 
   # Harness update notifications (GitHub Releases)
   powershell -File cli/arah.ps1 update-check [-FailIfOutdated] [-Notify] [-LatestVersion X.Y.Z]
+
+  # Experimental — repo visions (As-Is / Gaps / To-Be per agent)
+  powershell -File cli/arah.ps1 assess-repo [-Target path] [-OutDir .arah/visions] [-Agents qa,backend] [-Force] [-DryRun]
+  powershell -File cli/arah.ps1 bootstrap-vision   # alias de assess-repo
 "@
     }
 }

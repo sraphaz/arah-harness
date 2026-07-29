@@ -2,6 +2,19 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.4.2] - 2026-07-28
+
+### Added
+
+- **Experimental — Repo Perspective Assessment** (`arah assess-repo` / alias `bootstrap-vision`)
+  - Skill `repo-perspective-assess`
+  - Script `scripts/agents/assess-repo.ps1` — As-Is + Gaps + To-Be por agent sob `.arah/visions/`
+  - Lentes por papel (qa, solutions-architect, backend, security, test-architect, domains, …)
+  - Modo `bootstrap-empty` para repo vazio
+  - Fase de bootstrap serial documentada como exceção controlada ao ECP ([REPO_VISIONS.md](docs/REPO_VISIONS.md), [EXECUTION_CONTROL.md](docs/EXECUTION_CONTROL.md))
+  - Opt-in nos next steps do `install` (não dispara automaticamente)
+  - Testes `scripts/harness/test-assess-repo.ps1`
+
 ## [0.4.1] - 2026-07-19
 
 ### Added

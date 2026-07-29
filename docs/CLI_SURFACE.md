@@ -25,6 +25,7 @@
 | `task create` | `-Objective` `-Area` `-Class` | `task-control.ps1` / `execute-task.ps1` |
 | `task status\|validate\|complete\|block` | `-TaskId` (`-Evidence` / `-Reason`) | `task-control.ps1` |
 | `update-check` | `-Notify` `-FailIfOutdated` `-LatestVersion` | `check-harness-update.ps1` |
+| `assess-repo` / `bootstrap-vision` | `-OutDir` `-Agents` `-Force` `-DryRun` | `assess-repo.ps1` (**experimental**) |
 
 ## CLI Go (fase 1 — H-07)
 

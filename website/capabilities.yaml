@@ -52,6 +52,9 @@ experimental:
   - id: agent-graph-export
     name: Agent graph export
     notes: JSON + Mermaid derivados
+  - id: repo-perspective-assess
+    name: Repo Perspective Assessment
+    notes: arah assess-repo → .arah/visions/ As-Is+Gaps+To-Be por agent (bootstrap serial)
 
 planned:
   - id: portable-cli-go

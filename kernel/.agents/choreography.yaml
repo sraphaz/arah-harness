@@ -128,6 +128,7 @@ rules:
       - schemas/arah-harness/evolution.schema.yaml
       - schemas/arah-harness/metrics-summary.schema.yaml
       - scripts/agents/discover-repo.ps1
+      - scripts/agents/assess-repo.ps1
       - scripts/agents/organism-bootstrap.ps1
       - scripts/agents/signal-bus.ps1
       - scripts/agents/evolve-harness.ps1
@@ -144,7 +145,7 @@ rules:
         type: operational
         role: router
         autonomy: [route, activate, invoke_skill]
-        skills: [discover-repo, evolve-harness, regenerate-harness, metrics-rollup]
+        skills: [discover-repo, evolve-harness, regenerate-harness, metrics-rollup, repo-perspective-assess]
       - id: spec-steward
         type: operational
         role: consultant

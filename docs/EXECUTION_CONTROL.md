@@ -91,6 +91,19 @@ Rule: [`.cursor/rules/arah-execution-control.mdc`](../.cursor/rules/arah-executi
 
 O runtime **não** simula LLM: emite contrato + briefing; o agente executor aplica a mudança e chama `task complete|block`.
 
+## Exceção controlada — fase de bootstrap (`assess-repo`)
+
+A assessment experimental **Repo Perspective** (`arah assess-repo` / skill `repo-perspective-assess`) gera pareceres **em série** (um agent por vez) sob `.arah/visions/`. Isso **não** é entrega de produto e **não** reabre handoffs livres:
+
+| | Entrega (ECP) | Bootstrap assessment |
+|--|---------------|----------------------|
+| Objetivo | alterar código / evidenciar done\|blocked | observar + documentar As-Is/Gaps/To-Be |
+| Executores | exatamente um `primary_executor` | nenhum (só artefatos de visão) |
+| Consultas | limitadas no contrato | N pareceres seriais, isolados |
+| Merge | via PR humano | opcional versionar visões |
+
+Detalhes: [REPO_VISIONS.md](REPO_VISIONS.md).
+
 ## Compatibilidade
 
 - Instalações novas: `execution_control.enabled: true`
