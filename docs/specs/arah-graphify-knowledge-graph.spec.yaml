@@ -44,8 +44,7 @@ acceptance:
     when: operador executa arah knowledge-graph sem Graphify instalado
     then: exit 0 com status skipped/missing e manifesto atualizado (ou DryRun sem gravar)
     status: pending
-    covered_by:
-      - scripts/self-test.ps1
+    covered_by: scripts/self-test.ps1
   - id: AC-02
     when: Graphify está no PATH e operador executa arah knowledge-graph (code-only)
     then: gera/atualiza graphify-out/ e docs/_meta/knowledge-graph.manifest.yaml apontando ao grafo

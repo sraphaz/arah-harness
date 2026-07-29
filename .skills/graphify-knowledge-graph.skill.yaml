@@ -1,7 +1,5 @@
 id: graphify-knowledge-graph
-description: >
-  Extrai Knowledge Graph do corpus via Graphify (opcional, code-only por padrão).
-  Complementar ao Agent Graph — não o substitui.
+description: Extrai Knowledge Graph do corpus via Graphify (opcional, code-only por padrão); complementar ao Agent Graph — não o substitui.
 run:
   script: scripts/agents/graphify-knowledge-graph.ps1
 success: exit_code == 0

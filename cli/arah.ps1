@@ -255,6 +255,7 @@ switch ($Command) {
         & (Join-Path $CliDir 'regenerate.ps1') -Target $targetPath -Force:$Force `
             -UpdateKernel:$UpdateKernel -ApplyDiscovery:$ApplyDiscovery `
             -SkipDoctor:$SkipDoctor -IncludeKnowledgeGraph:$IncludeKnowledgeGraph `
+            -Require:$Require `
             -DryRun:$DryRun
     }
     'compact' {

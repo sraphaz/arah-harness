@@ -491,7 +491,7 @@
       },
       {
         "id": "graphify-knowledge-graph",
-        "description": ">",
+        "description": "Extrai Knowledge Graph do corpus via Graphify (opcional, code-only por padrão); complementar ao Agent Graph — não o substitui.",
         "manifest": ".skills/graphify-knowledge-graph.skill.yaml"
       },
       {
@@ -1774,7 +1774,7 @@
           {
             "id": "AC-01",
             "status": "pending",
-            "covered_by": "- scripts/self-test.ps1",
+            "covered_by": "scripts/self-test.ps1",
             "evidence": null
           },
           {
@@ -1848,7 +1848,7 @@
     ],
     "tests": [
       {
-        "id": "- scripts/self-test.ps1",
+        "id": "scripts/self-test.ps1",
         "covers": [
           "arah-graphify-knowledge-graph:AC-01"
         ]
@@ -3826,7 +3826,7 @@
     },
     {
       "from": "spec:arah-graphify-knowledge-graph",
-      "to": "test:- scripts/self-test.ps1",
+      "to": "test:scripts/self-test.ps1",
       "type": "verified_by_test",
       "via": "AC-01"
     },

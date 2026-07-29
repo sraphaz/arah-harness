@@ -25,6 +25,7 @@ param(
     [switch]$ApplyDiscovery,
     [switch]$SkipDoctor,
     [switch]$IncludeKnowledgeGraph,
+    [switch]$Require,
     [switch]$DryRun
 )
 
@@ -193,10 +194,14 @@ Invoke-Step 'export-graph' {
 
 # 6b) Knowledge Graph (Graphify) — optional sibling of Agent Graph
 $kgEnabled = $IncludeKnowledgeGraph.IsPresent
-if (-not $kgEnabled -and (Test-Path -LiteralPath $cfgPath)) {
+$kgMode = 'code-only'
+if (Test-Path -LiteralPath $cfgPath) {
     $cfgForKg = Get-Content -LiteralPath $cfgPath -Raw
-    if ($cfgForKg -match '(?ms)^knowledge_graph:\s*\r?\n(?:[ \t]+[^\r\n]*\r?\n)*?[ \t]+enabled:\s*true') {
+    if (-not $kgEnabled -and $cfgForKg -match '(?ms)^knowledge_graph:\s*\r?\n(?:[ \t]+[^\r\n]*\r?\n)*?[ \t]+enabled:\s*true') {
         $kgEnabled = $true
+    }
+    if ($cfgForKg -match '(?ms)^knowledge_graph:\s*\r?\n(?:[ \t]+[^\r\n]*\r?\n)*?[ \t]+default_mode:\s*(code-only|full|status)\s*$') {
+        $kgMode = $Matches[1]
     }
 }
 if ($kgEnabled) {
@@ -206,7 +211,8 @@ if ($kgEnabled) {
             Write-Warning 'graphify-knowledge-graph.ps1 missing - skip'
             return
         }
-        $invokeArgs = @('-Target', $Root, '-Mode', 'code-only')
+        $invokeArgs = @('-Target', $Root, '-Mode', $kgMode)
+        if ($Require) { $invokeArgs += '-Require' }
         if ($DryRun) { $invokeArgs += '-DryRun' }
         & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs
     }
