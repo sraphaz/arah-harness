@@ -67,6 +67,9 @@ experimental:
   - id: knowledge-graph-graphify
     name: Knowledge Graph (Graphify)
     notes: Adapter opcional code-only; sibling do Agent Graph — docs/architecture/GRAPHIFY.md
+  - id: repo-perspective-assess
+    name: Repo Perspective Assessment
+    notes: arah assess-repo → visions v2 (opinião+As-Is+Gaps+action plan+backlog+memory); vision update / backlog sync
 
 planned:
   - id: arahd-daemon

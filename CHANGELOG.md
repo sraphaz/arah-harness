@@ -2,10 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
-## [Unreleased]
+## [0.4.4] - 2026-07-28
 
 ### Added
 
+- **Slice Compose (experimental)** — fatia composta: product ∩ agent-BL ∩ sugestões do usuário
+  - CLI: `arah slice plan -SliceId E1-Sx`
+  - Script `scripts/agents/slice-compose.ps1` · skill `slice-compose`
+  - Output: `docs/_arah/slice-plans/<slice>.md` (Product | Agent priorities | User | Deferred | Executor)
+  - Docs [SLICE_COMPOSE.md](docs/SLICE_COMPOSE.md); testes `test-slice-compose.ps1`
+- **Agent backlog `goal` / `acceptance`** — metas mensuráveis (ex. coverage ≥ 50% em `packages/domain`)
+  - Seeds QA / test-architect para coverage MVP + sinal `coverage-tool`
 - **Knowledge Graph (Graphify)** — integração opcional complementar ao Agent Graph
   - Avaliação/ADR: [`docs/architecture/GRAPHIFY.md`](docs/architecture/GRAPHIFY.md)
   - Spec-Id: `arah-graphify-knowledge-graph`
@@ -13,6 +20,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
   - Manifesto `docs/_meta/knowledge-graph.manifest.yaml`; default `--code-only` (sem tokens)
   - `regenerate -IncludeKnowledgeGraph` ou `knowledge_graph.enabled` na config
   - Capability experimental `knowledge-graph-graphify`
+
+## [0.4.3] - 2026-07-28
+
+### Added
+
+- **Repo Visions schema v2** — opinião por tipo de app, action plan, backlog próprio e memory/events
+  - Sidecars `{agent}.backlog.yaml` (merge-safe) + `{agent}.events.yaml` (append-only)
+  - IDs estáveis `{agent}-BL-NNN`; Refresh **não apaga** `done`/`cancelled`
+  - CLI: `arah assess-repo -Refresh`, `arah vision update`, `arah backlog sync`
+  - Lentes Clean Architecture / especialidade (TEA, ports, ASVS lite, boundaries, …)
+  - Heurística `app_type` alimenta a seção Opinião
+  - Docs [REPO_VISIONS.md](docs/REPO_VISIONS.md); testes de merge no `test-assess-repo.ps1`
+- **Experimental — Repo Perspective Assessment** (`arah assess-repo` / alias `bootstrap-vision`)
+  - Skill `repo-perspective-assess`
+  - Script `scripts/agents/assess-repo.ps1` — As-Is + Gaps + To-Be por agent sob `.arah/visions/`
+  - Lentes por papel (qa, solutions-architect, backend, security, test-architect, domains, …)
+  - Modo `bootstrap-empty` para repo vazio
+  - Fase de bootstrap serial documentada como exceção controlada ao ECP ([REPO_VISIONS.md](docs/REPO_VISIONS.md), [EXECUTION_CONTROL.md](docs/EXECUTION_CONTROL.md))
+  - Opt-in nos next steps do `install` (não dispara automaticamente)
+  - Testes `scripts/harness/test-assess-repo.ps1`
 
 ## [0.4.2] - 2026-07-24
 

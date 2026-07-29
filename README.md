@@ -1,8 +1,8 @@
-# ARAH Harness · TechOrganism
+﻿# ARAH Harness · TechOrganism
 
 [![CI](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/sraphaz/arah-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.4.2-green.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-0.4.4-green.svg)](VERSION)
 [![TechOrganism](https://img.shields.io/badge/TechOrganism-v0.3-0A7A5A.svg)](docs/TECHORGANISM.md)
 
 **ARAH** — *Agent Runtime Autonomous Harness*  
@@ -168,6 +168,9 @@ flowchart TB
 | `update-check` | Notifica se `.arah-version` &lt; latest Release |
 | `release cut` | Publica tag + GitHub Release a partir de VERSION |
 | `regenerate [-UpdateKernel]` | Homeostase completa no consumidor |
+| `assess-repo` / `bootstrap-vision` | **Experimental** — visões As-Is/Gaps/To-Be por agent |
+| `vision update` / `backlog sync` | Refresh de visões + merge de backlog |
+| `slice plan` | **Experimental** — fatia composta (produto ∩ agent-BL ∩ user) |
 
 ```powershell
 # Ativar / atualizar TechOrganism em um consumidor

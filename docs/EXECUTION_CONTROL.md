@@ -91,6 +91,31 @@ Rule: [`.cursor/rules/arah-execution-control.mdc`](../.cursor/rules/arah-executi
 
 O runtime **não** simula LLM: emite contrato + briefing; o agente executor aplica a mudança e chama `task complete|block`.
 
+## Exceção controlada — fase de bootstrap (`assess-repo`)
+
+A assessment experimental **Repo Perspective** (`arah assess-repo` / skill `repo-perspective-assess`) gera pareceres **em série** (um agent por vez) sob `.arah/visions/` — opinião, As-Is, Gaps, action plan, backlog e memory. Isso **não** é entrega de produto e **não** reabre handoffs livres:
+
+| | Entrega (ECP) | Bootstrap assessment |
+|--|---------------|----------------------|
+| Objetivo | alterar código / evidenciar done\|blocked | observar + documentar As-Is/Gaps/To-Be |
+| Executores | exatamente um `primary_executor` | nenhum (só artefatos de visão) |
+| Consultas | limitadas no contrato | N pareceres seriais, isolados |
+| Merge | via PR humano | opcional versionar visões |
+
+Detalhes: [REPO_VISIONS.md](REPO_VISIONS.md).
+
+## Exceção controlada — slice compose (`slice plan`)
+
+Antes da entrega, `arah slice plan` (skill `slice-compose`) gera um plano em `docs/_arah/slice-plans/` cruzando backlog de produto, prioridades dos agent-BL e sugestões do usuário. Isso **ainda não** é execução:
+
+| | Entrega (ECP) | Slice compose |
+|--|---------------|---------------|
+| Objetivo | alterar código / evidenciar done\|blocked | propor escopo da fatia |
+| Executores | exatamente um `primary_executor` | nenhum (só artefato de plano) |
+| Fonte | contrato | Product ∩ Agent-BL ∩ User |
+
+Detalhes: [SLICE_COMPOSE.md](SLICE_COMPOSE.md).
+
 ## Compatibilidade
 
 - Instalações novas: `execution_control.enabled: true`

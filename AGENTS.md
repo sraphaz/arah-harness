@@ -93,7 +93,7 @@ Dimensão viva: **[docs/TECHORGANISM.md](docs/TECHORGANISM.md)**
 ./scripts/agents/validate-manifests.ps1
 ```
 
-TechOrganism: `discover-repo` · `evolve-harness` · `regenerate-harness`
+TechOrganism: `discover-repo` · `evolve-harness` · `regenerate-harness` · `repo-perspective-assess` (experimental)
 
 ---
 
@@ -105,13 +105,18 @@ powershell -File ./cli/arah.ps1 organism bootstrap
 powershell -File ./cli/arah.ps1 organism status
 powershell -File ./cli/arah.ps1 evolve
 powershell -File ./cli/arah.ps1 regenerate
+powershell -File ./cli/arah.ps1 assess-repo -Force
+powershell -File ./cli/arah.ps1 slice plan -SliceId E1-S4 -DryRun
 powershell -File ./cli/arah.ps1 task create -Objective "…" -Area backend
 powershell -File ./cli/arah.ps1 update-check
 powershell -File ./scripts/self-test.ps1
 powershell -File ./scripts/harness/test-execution-control.ps1
+powershell -File ./scripts/harness/test-assess-repo.ps1
+powershell -File ./scripts/harness/test-slice-compose.ps1
 ```
 
 Atualização do harness nos consumidores: [docs/UPDATE_NOTIFICATIONS.md](docs/UPDATE_NOTIFICATIONS.md)
+Visões: [docs/REPO_VISIONS.md](docs/REPO_VISIONS.md) · Fatia composta: [docs/SLICE_COMPOSE.md](docs/SLICE_COMPOSE.md)
 
 Config: [`arah.config.yaml`](arah.config.yaml)
 

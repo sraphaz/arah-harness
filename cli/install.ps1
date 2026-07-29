@@ -54,7 +54,9 @@ if ($Minimal) {
     Write-Host "  2. powershell -File `"$HarnessRoot\cli\arah.ps1`" domain sync -Target `"$Target`""
     Write-Host "  3. Optional: create .agents/choreography.<project>.yaml for path overlays"
     Write-Host "  4. powershell -File `"$HarnessRoot\cli\arah.ps1`" export-graph -Target `"$Target`""
-    Write-Host "  5. git add .agents .skills scripts .cursor arah.config.yaml .arah-version .github"
+    Write-Host "  5. Opt-in experimental — visões por agent (As-Is/Gaps/To-Be):"
+    Write-Host "       powershell -File `"$HarnessRoot\cli\arah.ps1`" assess-repo -Target `"$Target`" -Force"
+    Write-Host "  6. git add .agents .skills scripts .cursor arah.config.yaml .arah-version .github"
 }
 Write-Host ""
 Write-Host "Docs: $HarnessRoot\docs\INSTALL.md"
