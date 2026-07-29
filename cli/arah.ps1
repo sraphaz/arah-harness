@@ -7,7 +7,7 @@ param(
     [Parameter(Position = 0)]
     [ValidateSet(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
-        'export-graph', 'validate-runtime', 'discover', 'organism',
+        'export-graph', 'knowledge-graph', 'validate-runtime', 'discover', 'organism',
         'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks',
         'task', 'update-check', 'release', 'help'
     )]
@@ -16,7 +16,7 @@ param(
     [Parameter(Position = 1)]
     [ValidateSet(
         'sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', 'install',
-        'create', 'validate', 'complete', 'block', 'cut', ''
+        'create', 'validate', 'complete', 'block', 'cut', 'code-only', 'full', ''
     )]
     [string]$SubCommand = '',
 
@@ -31,6 +31,8 @@ param(
     [switch]$UpdateKernel,
     [switch]$ApplyDiscovery,
     [switch]$SkipDoctor,
+    [switch]$IncludeKnowledgeGraph,
+    [switch]$Require,
     [switch]$Minimal,
     [switch]$Digest,
     [int]$Last = 500,
@@ -153,6 +155,22 @@ switch ($Command) {
         $script = Get-TargetScript 'scripts/agents/export-agent-graph.ps1'
         Invoke-TargetScript -ScriptPath $script
     }
+    'knowledge-graph' {
+        $script = Get-TargetScript 'scripts/agents/graphify-knowledge-graph.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'graphify-knowledge-graph.ps1'
+        }
+        $mode = 'code-only'
+        if ($SubCommand -eq 'status') { $mode = 'status' }
+        elseif ($SubCommand -eq 'full') { $mode = 'full' }
+        elseif ($SubCommand -eq 'code-only') { $mode = 'code-only' }
+        $splat = @{ Target = $targetPath; Mode = $mode }
+        if ($Require) { $splat.Require = $true }
+        if ($Force) { $splat.Force = $true }
+        if ($DryRun) { $splat.DryRun = $true }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
     'validate-runtime' {
         $script = Get-TargetScript 'scripts/harness/validate-solution-choreography.ps1'
         Invoke-TargetScript -ScriptPath $script
@@ -236,7 +254,8 @@ switch ($Command) {
     'regenerate' {
         & (Join-Path $CliDir 'regenerate.ps1') -Target $targetPath -Force:$Force `
             -UpdateKernel:$UpdateKernel -ApplyDiscovery:$ApplyDiscovery `
-            -SkipDoctor:$SkipDoctor -DryRun:$DryRun
+            -SkipDoctor:$SkipDoctor -IncludeKnowledgeGraph:$IncludeKnowledgeGraph `
+            -DryRun:$DryRun
     }
     'compact' {
         $script = Get-TargetScript 'scripts/agents/compact-state.ps1'
@@ -328,6 +347,7 @@ ARAH Harness CLI — TechOrganism
   powershell -File cli/arah.ps1 sync-check [-Target path]
   powershell -File cli/arah.ps1 domain sync [-Target path] [-DryRun]
   powershell -File cli/arah.ps1 export-graph [-Target path]
+  powershell -File cli/arah.ps1 knowledge-graph [status|code-only|full] [-Target path] [-Require] [-DryRun]
   powershell -File cli/arah.ps1 validate-runtime [-Target path]
 
   # TechOrganism
@@ -338,7 +358,7 @@ ARAH Harness CLI — TechOrganism
   powershell -File cli/arah.ps1 evolve [-Target path] [-Apply] [-DryRun]
   powershell -File cli/arah.ps1 metrics rollup [-Target path] [-Last N] [-Digest]
   powershell -File cli/arah.ps1 metrics report [-Target path] [-Last N] [-Digest]
-  powershell -File cli/arah.ps1 regenerate [-Target path] [-UpdateKernel] [-Force] [-ApplyDiscovery]
+  powershell -File cli/arah.ps1 regenerate [-Target path] [-UpdateKernel] [-Force] [-ApplyDiscovery] [-IncludeKnowledgeGraph]
 
   # State model (hot/cold)
   powershell -File cli/arah.ps1 compact [-Target path] [-Kind all|bus|audit] [-RetainDays 90] [-DryRun]

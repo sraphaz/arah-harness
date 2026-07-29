@@ -54,6 +54,13 @@ update_check:
     issue: true
     label: arah-harness-update
 
+# Knowledge Graph (Graphify) — opcional; sibling do Agent Graph
+# Install CLI: uv tool install graphifyy  ·  Docs: docs/architecture/GRAPHIFY.md
+knowledge_graph:
+  enabled: false
+  provider: graphify
+  default_mode: code-only
+
 # Execution Control Protocol — terminalidade (intenção → um executor → done|blocked)
 execution_control:
   enabled: true

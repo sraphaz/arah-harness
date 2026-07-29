@@ -2,6 +2,18 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Knowledge Graph (Graphify)** — integração opcional complementar ao Agent Graph
+  - Avaliação/ADR: [`docs/architecture/GRAPHIFY.md`](docs/architecture/GRAPHIFY.md)
+  - Spec-Id: `arah-graphify-knowledge-graph`
+  - CLI `arah knowledge-graph [status|code-only|full]` + skill `graphify-knowledge-graph`
+  - Manifesto `docs/_meta/knowledge-graph.manifest.yaml`; default `--code-only` (sem tokens)
+  - `regenerate -IncludeKnowledgeGraph` ou `knowledge_graph.enabled` na config
+  - Capability experimental `knowledge-graph-graphify`
+
 ## [0.4.2] - 2026-07-24
 
 ### Added

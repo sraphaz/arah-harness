@@ -152,6 +152,7 @@ flowchart TB
 | `sync-check` | Drift vs upstream (CI) |
 | `domain sync` | Gera agentes de domínio |
 | `export-graph` | Agent Graph (JSON + Mermaid) |
+| `knowledge-graph` | Knowledge Graph via Graphify (opcional, code-only) |
 
 ### TechOrganism
 
