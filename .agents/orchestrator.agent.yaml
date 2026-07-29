@@ -21,6 +21,7 @@ skills:
   - evolve-harness
   - metrics-rollup
   - regenerate-harness
+  - graphify-knowledge-graph
 routing:
   area/backend: backend
   area/frontend: frontend

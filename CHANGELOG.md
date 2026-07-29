@@ -13,6 +13,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
   - Docs [SLICE_COMPOSE.md](docs/SLICE_COMPOSE.md); testes `test-slice-compose.ps1`
 - **Agent backlog `goal` / `acceptance`** — metas mensuráveis (ex. coverage ≥ 50% em `packages/domain`)
   - Seeds QA / test-architect para coverage MVP + sinal `coverage-tool`
+- **Knowledge Graph (Graphify)** — integração opcional complementar ao Agent Graph
+  - Avaliação/ADR: [`docs/architecture/GRAPHIFY.md`](docs/architecture/GRAPHIFY.md)
+  - Spec-Id: `arah-graphify-knowledge-graph`
+  - CLI `arah knowledge-graph [status|code-only|full]` + skill `graphify-knowledge-graph`
+  - Manifesto `docs/_meta/knowledge-graph.manifest.yaml`; default `--code-only` (sem tokens)
+  - `regenerate -IncludeKnowledgeGraph` ou `knowledge_graph.enabled` na config
+  - Capability experimental `knowledge-graph-graphify`
 
 ## [0.4.3] - 2026-07-28
 
@@ -25,11 +32,6 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
   - Lentes Clean Architecture / especialidade (TEA, ports, ASVS lite, boundaries, …)
   - Heurística `app_type` alimenta a seção Opinião
   - Docs [REPO_VISIONS.md](docs/REPO_VISIONS.md); testes de merge no `test-assess-repo.ps1`
-
-## [0.4.2] - 2026-07-28
-
-### Added
-
 - **Experimental — Repo Perspective Assessment** (`arah assess-repo` / alias `bootstrap-vision`)
   - Skill `repo-perspective-assess`
   - Script `scripts/agents/assess-repo.ps1` — As-Is + Gaps + To-Be por agent sob `.arah/visions/`
@@ -38,6 +40,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
   - Fase de bootstrap serial documentada como exceção controlada ao ECP ([REPO_VISIONS.md](docs/REPO_VISIONS.md), [EXECUTION_CONTROL.md](docs/EXECUTION_CONTROL.md))
   - Opt-in nos next steps do `install` (não dispara automaticamente)
   - Testes `scripts/harness/test-assess-repo.ps1`
+
+## [0.4.2] - 2026-07-24
+
+### Added
+
+- **Publicação autônoma de releases** — após merge em `main`, o workflow `release.yml` garante tag `vX.Y.Z` + GitHub Release a partir de `VERSION` (idempotente)
+  - `scripts/agents/cut-release.ps1` + CLI `arah release cut`
+  - Skill `release-cut` aponta para o script real
+  - Humano só mergeia o bump; a Action publica (sem `git tag` manual)
+
+### Changed
+
+- [UPDATE_NOTIFICATIONS.md](docs/UPDATE_NOTIFICATIONS.md) — fluxo “merge → release autônomo → notify consumidores”
 
 ## [0.4.1] - 2026-07-19
 

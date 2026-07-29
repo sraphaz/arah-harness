@@ -13,6 +13,7 @@
 | `sync-check` | `-Target` | `cli/sync-check.ps1` |
 | `domain sync` | `-Target` `-DryRun` | `domain-sync.ps1` |
 | `export-graph` | `-Target` | `export-agent-graph.ps1` |
+| `knowledge-graph` | `[status\|code-only\|full]` `-Require` `-DryRun` | `graphify-knowledge-graph.ps1` |
 | `validate-runtime` | `-Target` | `validate-solution-choreography.ps1` |
 | `discover` | `-Target` `-Apply` `-DryRun` | `discover-repo.ps1` |
 | `organism bootstrap\|status\|signal` | signal: `-From` `-SignalType` `-SignalTo` `-Topic` `-Payload` | `organism-bootstrap` / `signal-bus` |
@@ -25,6 +26,7 @@
 | `task create` | `-Objective` `-Area` `-Class` | `task-control.ps1` / `execute-task.ps1` |
 | `task status\|validate\|complete\|block` | `-TaskId` (`-Evidence` / `-Reason`) | `task-control.ps1` |
 | `update-check` | `-Notify` `-FailIfOutdated` `-LatestVersion` | `check-harness-update.ps1` |
+| `release cut` | `-DryRun` | `cut-release.ps1` |
 | `assess-repo` / `bootstrap-vision` | `-OutDir` `-Agents` `-Force` `-Refresh` `-BacklogOnly` `-DryRun` | `assess-repo.ps1` (**experimental** v2) |
 | `vision update` | mesmo que assess-repo `-Refresh` | merge backlog + evento |
 | `backlog sync` | assess-repo `-Refresh -BacklogOnly` | merge backlog |

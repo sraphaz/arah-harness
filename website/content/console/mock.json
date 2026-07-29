@@ -1,5 +1,5 @@
 {
-  "version": "0.3.1",
+  "version": "0.4.1",
   "locale": "pt",
   "filters": [
     {
@@ -32,7 +32,7 @@
     {
       "slug": "checkout-platform",
       "name": "checkout-platform",
-      "kernel": "0.3.1",
+      "kernel": "0.4.1",
       "drift": "sem drift",
       "driftOk": true,
       "sync": "há 12 s",
@@ -246,7 +246,7 @@
     {
       "slug": "catalog-service",
       "name": "catalog-service",
-      "kernel": "0.3.0",
+      "kernel": "0.3.1",
       "drift": "kernel desatualizado",
       "driftOk": false,
       "sync": "há 40 s",
@@ -407,7 +407,7 @@
     {
       "slug": "infra-core",
       "name": "infra-core",
-      "kernel": "0.3.1",
+      "kernel": "0.4.1",
       "drift": "sem drift",
       "driftOk": true,
       "sync": "há 8 s",

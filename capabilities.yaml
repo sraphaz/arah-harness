@@ -2,7 +2,7 @@
 # Consumido pelo site (W-07) e por docs. Não duplicar status em outros arquivos.
 version: 1
 updated_at: 2026-07-19
-harness_version: "0.4.1"
+harness_version: "0.4.2"
 
 available:
   - id: agents-skills-manifests
@@ -49,6 +49,9 @@ experimental:
   - id: harness-update-check
     name: Harness update notifications
     notes: GitHub Releases + scheduled issue / Renovate pin
+  - id: autonomous-release
+    name: Autonomous tag + GitHub Release
+    notes: cut-release.ps1 on main — humano mergeia VERSION, Action publica
   - id: execution-control
     name: Execution Control Protocol
     notes: contratos de tarefa, executor primário, done|blocked
@@ -64,6 +67,9 @@ experimental:
   - id: live-console
     name: ARAH Live Console
     notes: live/arah-live + website/console (mock fallback)
+  - id: knowledge-graph-graphify
+    name: Knowledge Graph (Graphify)
+    notes: Adapter opcional code-only; sibling do Agent Graph — docs/architecture/GRAPHIFY.md
 
 planned:
   - id: arahd-daemon
@@ -77,7 +83,10 @@ planned:
     notes: Épico W — MDX filesystem / FlexSearch build
   - id: semantic-discovery
     name: Discovery semântico
-    notes: Monorepos heterogêneos
+    notes: Monorepos — fase 1 usa comunidades Graphify (knowledge-graph-graphify)
+  - id: knowledge-graph-console
+    name: Knowledge Graph no Live Console
+    notes: C-12 dual-pane Agent ∪ Knowledge
   - id: org-control-plane
     name: Control plane multi-repo
     notes: Agregador org-level (longo prazo)

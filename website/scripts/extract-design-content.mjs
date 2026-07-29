@@ -13,8 +13,9 @@ const ROOT = path.resolve(__dirname, '../..');
 const DESIGN = path.join(ROOT, 'docs/design/control-plane/design-files');
 const OUT = path.join(ROOT, 'website/content');
 
-const VERSION = '0.3.1';
-const PREV_VERSION = '0.3.0';
+// Calibrate design mocks (v1.5.0 / 1.4.2) to the published harness VERSION.
+const VERSION = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf8').trim();
+const PREV_VERSION = '0.3.1';
 
 function countAgents() {
   const agentsDir = path.join(ROOT, '.agents');
@@ -40,14 +41,39 @@ function countSkills() {
 const AGENT_COUNT = countAgents();
 const SKILL_COUNT = countSkills();
 
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function calibrateText(s) {
   if (typeof s !== 'string') return s;
   let t = s;
-  // Version replacements
-  t = t.replace(/\bv?1\.5\.0\b/g, VERSION);
-  t = t.replace(/\b1\.4\.2\s*→\s*0\.3\.1\b/g, `${PREV_VERSION} → ${VERSION}`);
-  t = t.replace(/\b1\.4\.2\b/g, PREV_VERSION);
-  t = t.replace(/kernel\s+0\.3\.1\s*→\s*0\.3\.1/gi, `kernel ${PREV_VERSION} → ${VERSION}`);
+  // Tokens avoid clobbering PREV when replacing overlapping version strings.
+  const PREV_TOKEN = '__ARAH_PREV_VERSION__';
+  const CUR_TOKEN = '__ARAH_CUR_VERSION__';
+  const prevRe = escapeRegExp(PREV_VERSION);
+  const curRe = escapeRegExp(VERSION);
+
+  // Idempotent guards (normalizeParts + writeJson both calibrate).
+  t = t.replace(
+    new RegExp(`\\b${prevRe}\\s*→\\s*${curRe}\\b`, 'g'),
+    `${PREV_TOKEN} → ${CUR_TOKEN}`,
+  );
+  t = t.replace(new RegExp(`\\b${curRe}\\b`, 'g'), CUR_TOKEN);
+  t = t.replace(new RegExp(`\\b${prevRe}\\b`, 'g'), PREV_TOKEN);
+
+  // Design mocks use 1.5.0 / 1.4.2; older extractions may still say 0.3.0 → 0.3.1.
+  t = t.replace(/\b1\.4\.2\s*→\s*1\.5\.0\b/g, `${PREV_TOKEN} → ${CUR_TOKEN}`);
+  t = t.replace(/\b0\.3\.0\s*→\s*0\.3\.1\b/g, `${PREV_TOKEN} → ${CUR_TOKEN}`);
+  t = t.replace(/\bv?1\.5\.0\b/g, CUR_TOKEN);
+  t = t.replace(/\b1\.4\.2\b/g, PREV_TOKEN);
+  t = t.replace(/\b0\.3\.0\b/g, PREV_TOKEN);
+  // Legacy "current" left from prior calibration when PREV moved forward.
+  if (PREV_VERSION !== '0.3.1') {
+    t = t.replace(/\b0\.3\.1\b/g, CUR_TOKEN);
+  }
+  t = t.replaceAll(PREV_TOKEN, PREV_VERSION);
+  t = t.replaceAll(CUR_TOKEN, VERSION);
   // Fake agent counts in examples
   t = t.replace(/(\d+)\s+agents\s*·\s*(\d+)\s+skills/gi, `${AGENT_COUNT} agents · ${SKILL_COUNT} skills`);
   t = t.replace(/(\d+)\s+agentes\s*·\s*(\d+)\s+skills/gi, `${AGENT_COUNT} agentes · ${SKILL_COUNT} skills`);

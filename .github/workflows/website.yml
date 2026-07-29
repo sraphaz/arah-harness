@@ -5,12 +5,16 @@ on:
     paths:
       - "website/**"
       - "capabilities.yaml"
+      - "VERSION"
+      - "docs/design/control-plane/**"
       - ".github/workflows/website.yml"
   push:
     branches: [main]
     paths:
       - "website/**"
       - "capabilities.yaml"
+      - "VERSION"
+      - "docs/design/control-plane/**"
       - ".github/workflows/website.yml"
   workflow_dispatch:
 

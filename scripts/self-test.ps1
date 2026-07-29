@@ -179,6 +179,39 @@ try {
         -Target $Tmp -LatestVersion 99.0.0
     if ($LASTEXITCODE -ne 2) { throw "update-check should exit 2 when outdated (got $LASTEXITCODE)" }
 
+    # Autonomous release cutter (harness-side; also shipped in kernel scripts)
+    Write-Host "=== cut-release dry-run ==="
+    $cut = Join-Path $HarnessRoot 'scripts/agents/cut-release.ps1'
+    if (-not (Test-Path $cut)) { throw "cut-release.ps1 missing in harness" }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $cut -RepoRoot $HarnessRoot -DryRun -FailIfChangelogMissing
+    if ($LASTEXITCODE -ne 0) { throw "cut-release -DryRun failed" }
+
+    # Knowledge Graph adapter (Graphify) — must skip cleanly without CLI
+    Write-Host "=== knowledge-graph (optional Graphify) ==="
+    $kgScript = Join-Path $Tmp 'scripts/agents/graphify-knowledge-graph.ps1'
+    if (-not (Test-Path -LiteralPath $kgScript)) {
+        throw "graphify-knowledge-graph.ps1 missing after init"
+    }
+    if (-not (Test-Path (Join-Path $Tmp '.skills/graphify-knowledge-graph.skill.yaml'))) {
+        throw "graphify-knowledge-graph.skill.yaml missing after init"
+    }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli knowledge-graph status -Target $Tmp -DryRun
+    if ($LASTEXITCODE -ne 0) { throw "knowledge-graph status -DryRun failed" }
+    & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $kgScript -Target $Tmp -Mode code-only
+    if ($LASTEXITCODE -ne 0) { throw "knowledge-graph code-only should exit 0 when CLI missing" }
+    $kgManifest = Join-Path $Tmp 'docs/_meta/knowledge-graph.manifest.yaml'
+    if (-not (Test-Path -LiteralPath $kgManifest)) {
+        throw "knowledge-graph.manifest.yaml not written when CLI missing"
+    }
+    $kgRaw = Get-Content -LiteralPath $kgManifest -Raw
+    if ($kgRaw -notmatch 'status:\s*missing') {
+        throw "knowledge-graph manifest expected status: missing without CLI"
+    }
+    $capsRaw = Get-Content -LiteralPath $caps -Raw
+    if ($capsRaw -notmatch 'knowledge-graph-graphify') {
+        throw "capabilities.yaml missing knowledge-graph-graphify"
+    }
+
     Write-Host "self-test: OK"
     exit 0
 } finally {

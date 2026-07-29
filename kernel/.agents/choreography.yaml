@@ -119,14 +119,17 @@ rules:
       - docs/_meta/organism.manifest.yaml
       - docs/_meta/evolution.proposed.yaml
       - docs/_meta/metrics.digest.md
+      - docs/_meta/knowledge-graph.manifest.yaml
       - docs/TECHORGANISM.md
       - docs/BIOCOMPONENT.md
       - docs/ECONOMY.md
+      - docs/architecture/GRAPHIFY.md
       - schemas/arah-harness/discovery.schema.yaml
       - schemas/arah-harness/organism.schema.yaml
       - schemas/arah-harness/signal.schema.yaml
       - schemas/arah-harness/evolution.schema.yaml
       - schemas/arah-harness/metrics-summary.schema.yaml
+      - schemas/arah-harness/knowledge-graph.schema.yaml
       - scripts/agents/discover-repo.ps1
       - scripts/agents/assess-repo.ps1
       - scripts/agents/organism-bootstrap.ps1
@@ -134,6 +137,7 @@ rules:
       - scripts/agents/evolve-harness.ps1
       - scripts/agents/metrics-rollup.ps1
       - scripts/agents/regenerate-harness.ps1
+      - scripts/agents/graphify-knowledge-graph.ps1
     execution:
       primary_executor: docs-steward
     agents:
@@ -145,7 +149,7 @@ rules:
         type: operational
         role: router
         autonomy: [route, activate, invoke_skill]
-        skills: [discover-repo, evolve-harness, regenerate-harness, metrics-rollup, repo-perspective-assess]
+        skills: [discover-repo, evolve-harness, regenerate-harness, metrics-rollup, repo-perspective-assess, graphify-knowledge-graph]
       - id: spec-steward
         type: operational
         role: consultant

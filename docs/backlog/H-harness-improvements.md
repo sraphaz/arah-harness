@@ -16,6 +16,7 @@
 | H-09 | Pre-commit hooks + branch protection | **done** — `arah hooks install` |
 | H-10 | Fonte única de status de capacidades | **done** — `capabilities.yaml` |
 | H-11 | Modo mínimo de adoção | **done** — `install -Minimal` |
+| H-12 | Knowledge Graph (Graphify) | **fase 0 done** — adapter opcional; fases 1–3 backlog |
 
 ---
 
@@ -53,3 +54,11 @@ Watch + batch + stream WS; CLI degrada sem daemon.
 
 ### H-11 · Modo mínimo de adoção `M` — done
 `arah install -Minimal`: manifests + gates; upgrade path em INSTALL.md.
+
+### H-12 · Knowledge Graph via Graphify `M` — fase 0 done / fases 1–3 backlog
+Adapter opcional (`arah knowledge-graph`, skill, manifesto). Veredito e fases em [`docs/architecture/GRAPHIFY.md`](../architecture/GRAPHIFY.md).
+
+- [x] Fase 0 — ADR + adapter `--code-only` + CLI + capability experimental  
+- [ ] Fase 1 — discover/evolve consomem comunidades Graphify  
+- [ ] Fase 2 — C-12 dual-pane no Live Console  
+- [ ] Fase 3 — MCP `graphify.serve` opcional

@@ -152,6 +152,7 @@ flowchart TB
 | `sync-check` | Drift vs upstream (CI) |
 | `domain sync` | Gera agentes de domínio |
 | `export-graph` | Agent Graph (JSON + Mermaid) |
+| `knowledge-graph` | Knowledge Graph via Graphify (opcional, code-only) |
 
 ### TechOrganism
 
@@ -165,6 +166,7 @@ flowchart TB
 | `metrics rollup\|report` | Economy Intelligence (scorecard) |
 | `task create\|status\|validate\|complete\|block` | Execution Control Protocol |
 | `update-check` | Notifica se `.arah-version` &lt; latest Release |
+| `release cut` | Publica tag + GitHub Release a partir de VERSION |
 | `regenerate [-UpdateKernel]` | Homeostase completa no consumidor |
 | `assess-repo` / `bootstrap-vision` | **Experimental** — visões As-Is/Gaps/To-Be por agent |
 | `vision update` / `backlog sync` | Refresh de visões + merge de backlog |

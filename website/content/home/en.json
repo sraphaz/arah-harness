@@ -2,9 +2,9 @@
   "locale": "en",
   "meta": {
     "title": "ARAH Harness — Governed human-agent engineering",
-    "version": "0.3.1",
+    "version": "0.4.1",
     "agents": 18,
-    "skills": 22
+    "skills": 23
   },
   "hero": {
     "eyebrow": "Repo-first harness · Open source",
@@ -483,7 +483,7 @@
       "definition": "Auditable representation of relations between agents, skills, domains and responsibilities.",
       "role": "Makes the whole system inspectable — and validatable as a gate.",
       "maturity": "Available — visual studio is planned.",
-      "example": "$ arah export-graph\nnodes: 18 agents · 22 skills · 6 domains\nedges: 61\n→ docs/_meta/graph.json",
+      "example": "$ arah export-graph\nnodes: 18 agents · 23 skills · 6 domains\nedges: 61\n→ docs/_meta/graph.json",
       "order": 10
     },
     {
@@ -516,7 +516,7 @@
       "definition": "Updates the kernel, re-runs discovery, syncs domains, regenerates graphs and validates the installation.",
       "role": "Homeostasis: keeps the installed harness consistent as the repository evolves.",
       "maturity": "Available — drift checks included.",
-      "example": "$ arah regenerate --update-kernel\nkernel 0.3.0 → 0.3.1\ndiscovery re-run · domains synced\ngraph regenerated · install valid",
+      "example": "$ arah regenerate --update-kernel\nkernel 0.3.1 → 0.4.1\ndiscovery re-run · domains synced\ngraph regenerated · install valid",
       "order": 13
     }
   ],

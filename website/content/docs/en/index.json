@@ -1,6 +1,6 @@
 {
   "locale": "en",
-  "version": "0.3.1",
+  "version": "0.4.1",
   "nav": [
     {
       "slug": "getting-started",
@@ -749,7 +749,7 @@
       "blocks": [
         {
           "type": "code",
-          "code": "project: my-project\nkernel: 0.3.1\nautonomy:\n  default: propose-only\nprofiles: [default]\noverlays: []\ngates:\n  required: [manifests, build]\n  per-domain: true",
+          "code": "project: my-project\nkernel: 0.4.1\nautonomy:\n  default: propose-only\nprofiles: [default]\noverlays: []\ngates:\n  required: [manifests, build]\n  per-domain: true",
           "label": "arah.config.yaml"
         },
         {

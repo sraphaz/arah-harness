@@ -29,6 +29,7 @@ Ver [REGISTRY.md](REGISTRY.md).
 | Spec-Id | Tema |
 |---------|------|
 | `arah-biocomponent` | Discovery, organismo, sinais, evolve, regenerate |
+| `arah-graphify-knowledge-graph` | Knowledge Graph opcional (Graphify) |
 
 ## Template
 

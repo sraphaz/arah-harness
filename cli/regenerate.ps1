@@ -9,6 +9,7 @@ param(
     [switch]$UpdateKernel,
     [switch]$ApplyDiscovery,
     [switch]$SkipDoctor,
+    [switch]$IncludeKnowledgeGraph,
     [switch]$DryRun
 )
 
@@ -34,6 +35,7 @@ $args = @{
     Force = $Force
     ApplyDiscovery = $ApplyDiscovery
     SkipDoctor = $SkipDoctor
+    IncludeKnowledgeGraph = $IncludeKnowledgeGraph
     DryRun = $DryRun
 }
 & $script @args

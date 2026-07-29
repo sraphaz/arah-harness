@@ -11,6 +11,7 @@
     5) evolve
     5b) metrics rollup (Economy Intelligence)
     6) export-graph
+    6b) knowledge-graph (Graphify — opcional; knowledge_graph.enabled ou -IncludeKnowledgeGraph)
     7) doctor
   Sugestoes ficam em docs/_meta/*.proposed.yaml para o repositorio evoluir.
 .EXAMPLE
@@ -23,6 +24,7 @@ param(
     [switch]$Force,
     [switch]$ApplyDiscovery,
     [switch]$SkipDoctor,
+    [switch]$IncludeKnowledgeGraph,
     [switch]$DryRun
 )
 
@@ -189,6 +191,27 @@ Invoke-Step 'export-graph' {
     try { & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script } finally { Pop-Location }
 }
 
+# 6b) Knowledge Graph (Graphify) — optional sibling of Agent Graph
+$kgEnabled = $IncludeKnowledgeGraph.IsPresent
+if (-not $kgEnabled -and (Test-Path -LiteralPath $cfgPath)) {
+    $cfgForKg = Get-Content -LiteralPath $cfgPath -Raw
+    if ($cfgForKg -match '(?ms)^knowledge_graph:\s*\r?\n(?:[ \t]+[^\r\n]*\r?\n)*?[ \t]+enabled:\s*true') {
+        $kgEnabled = $true
+    }
+}
+if ($kgEnabled) {
+    Invoke-Step 'knowledge-graph' {
+        $script = Join-Path $Agents 'graphify-knowledge-graph.ps1'
+        if (-not (Test-Path $script)) {
+            Write-Warning 'graphify-knowledge-graph.ps1 missing - skip'
+            return
+        }
+        $invokeArgs = @('-Target', $Root, '-Mode', 'code-only')
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $script @invokeArgs
+    }
+}
+
 # 7) Doctor
 if (-not $SkipDoctor) {
     Invoke-Step 'doctor' {
@@ -214,6 +237,7 @@ Write-Host '    docs/_meta/discovery.proposed.yaml'
 Write-Host '    docs/_meta/organism.manifest.yaml'
 Write-Host '    docs/_meta/evolution.proposed.yaml'
 Write-Host '    docs/_meta/agent-graph.generated.json'
+Write-Host '    docs/_meta/knowledge-graph.manifest.yaml (se knowledge_graph.enabled)'
 Write-Host '    .arah/observability/summary.yaml (metrics scorecard)'
 Write-Host '  review proposals -> PR -> human merge'
 

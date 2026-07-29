@@ -25,7 +25,7 @@ export function loadCapabilities(): Capabilities {
   }
   return {
     version: 1,
-    harness_version: "0.3.1",
+    harness_version: "0.4.1",
     available: [],
     experimental: [],
     planned: [],

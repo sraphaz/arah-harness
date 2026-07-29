@@ -176,7 +176,9 @@ Pipeline: update → domain sync → discover → organism → evolve → metric
 | `docs/_meta/organism.manifest.yaml` | Mapa de células e tecidos | Sim |
 | `docs/_meta/evolution.proposed.yaml` | Propostas de self-learning | Sim |
 | `docs/_meta/metrics.digest.md` | Digest de eficiência (opcional) | Opcional |
-| `docs/_meta/agent-graph.generated.json` | Grafo auditável | Sim (gerado) |
+| `docs/_meta/agent-graph.generated.json` | Grafo de *colaboração* (agentes/skills/gates) | Sim (gerado) |
+| `docs/_meta/knowledge-graph.manifest.yaml` | Ponte ao Knowledge Graph (Graphify) | Sim (gerado) |
+| `graphify-out/graph.json` | Grafo de *corpus* (código/docs) — opcional | Opcional |
 | `.arah/local/bus/` | Barramento de sinais (quente) | Não (runtime) |
 | `.arah/local/audit/` | Ledger de ações (quente) | Não (runtime) |
 | `docs/_meta/runs/*/summary.json` | Evidência fria por run | Sim |
@@ -204,6 +206,9 @@ Pipeline: update → domain sync → discover → organism → evolve → metric
 | `evolve-harness` | `scripts/agents/evolve-harness.ps1` |
 | `metrics-rollup` | `scripts/agents/metrics-rollup.ps1` |
 | `regenerate-harness` | `scripts/agents/regenerate-harness.ps1` |
+| `graphify-knowledge-graph` | `scripts/agents/graphify-knowledge-graph.ps1` (opcional) |
+
+Knowledge Graph (Graphify) é **sibling** do Agent Graph — ver [`docs/architecture/GRAPHIFY.md`](architecture/GRAPHIFY.md).
 
 ---
 
