@@ -2,6 +2,18 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.4.3] - 2026-07-28
+
+### Added
+
+- **Repo Visions schema v2** — opinião por tipo de app, action plan, backlog próprio e memory/events
+  - Sidecars `{agent}.backlog.yaml` (merge-safe) + `{agent}.events.yaml` (append-only)
+  - IDs estáveis `{agent}-BL-NNN`; Refresh **não apaga** `done`/`cancelled`
+  - CLI: `arah assess-repo -Refresh`, `arah vision update`, `arah backlog sync`
+  - Lentes Clean Architecture / especialidade (TEA, ports, ASVS lite, boundaries, …)
+  - Heurística `app_type` alimenta a seção Opinião
+  - Docs [REPO_VISIONS.md](docs/REPO_VISIONS.md); testes de merge no `test-assess-repo.ps1`
+
 ## [0.4.2] - 2026-07-28
 
 ### Added

@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks, task, assess-repo
+  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks, task, assess-repo, vision, backlog
 #>
 param(
     [Parameter(Position = 0)]
@@ -9,14 +9,14 @@ param(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
         'export-graph', 'validate-runtime', 'discover', 'organism',
         'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks',
-        'task', 'update-check', 'assess-repo', 'bootstrap-vision', 'help'
+        'task', 'update-check', 'assess-repo', 'bootstrap-vision', 'vision', 'backlog', 'help'
     )]
     [string]$Command = 'help',
 
     [Parameter(Position = 1)]
     [ValidateSet(
         'sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', 'install',
-        'create', 'validate', 'complete', 'block', ''
+        'create', 'validate', 'complete', 'block', 'update', ''
     )]
     [string]$SubCommand = '',
 
@@ -55,11 +55,13 @@ param(
     [string]$Evidence = '',
     [string]$Reason = '',
 
-    # assess-repo / bootstrap-vision (experimental)
+    # assess-repo / bootstrap-vision / vision update / backlog sync (experimental)
     [string]$OutDir = '',
     [string]$Agents = '',
     [switch]$IncludeSpecialists,
-    [switch]$SkipIndex
+    [switch]$SkipIndex,
+    [switch]$Refresh,
+    [switch]$BacklogOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -309,8 +311,16 @@ switch ($Command) {
         & $script @splat
         if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
-    { $_ -in @('assess-repo', 'bootstrap-vision') } {
-        # Experimental: serial per-agent As-Is / Gaps / To-Be visions (bootstrap phase)
+    { $_ -in @('assess-repo', 'bootstrap-vision', 'vision', 'backlog') } {
+        # Experimental: per-agent opinion / As-Is / Gaps / action plan / backlog / memory
+        if ($Command -eq 'vision' -and $SubCommand -ne 'update') {
+            Write-Error 'Use: arah vision update [-Target path] [-Agents qa,backend] [-OutDir …]'
+            exit 1
+        }
+        if ($Command -eq 'backlog' -and $SubCommand -ne 'sync') {
+            Write-Error 'Use: arah backlog sync [-Target path] [-Agents qa,backend] [-OutDir …]'
+            exit 1
+        }
         $script = Get-TargetScript 'scripts/agents/assess-repo.ps1'
         if (-not (Test-Path -LiteralPath $script)) {
             $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'assess-repo.ps1'
@@ -325,6 +335,13 @@ switch ($Command) {
         if ($DryRun) { $splat.DryRun = $true }
         if ($IncludeSpecialists) { $splat.IncludeSpecialists = $true }
         if ($SkipIndex) { $splat.SkipIndex = $true }
+        # vision update / backlog sync / -Refresh → merge backlog (preserve done)
+        if ($Refresh -or $Command -eq 'vision' -or $Command -eq 'backlog') {
+            $splat.Refresh = $true
+        }
+        if ($BacklogOnly -or $Command -eq 'backlog') {
+            $splat.BacklogOnly = $true
+        }
         & $script @splat
         if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
@@ -366,9 +383,11 @@ ARAH Harness CLI — TechOrganism
   # Harness update notifications (GitHub Releases)
   powershell -File cli/arah.ps1 update-check [-FailIfOutdated] [-Notify] [-LatestVersion X.Y.Z]
 
-  # Experimental — repo visions (As-Is / Gaps / To-Be per agent)
-  powershell -File cli/arah.ps1 assess-repo [-Target path] [-OutDir .arah/visions] [-Agents qa,backend] [-Force] [-DryRun]
+  # Experimental — repo visions (opinion / As-Is / Gaps / action plan / backlog / memory)
+  powershell -File cli/arah.ps1 assess-repo [-Target path] [-OutDir .arah/visions] [-Agents qa,backend] [-Force] [-Refresh] [-DryRun]
   powershell -File cli/arah.ps1 bootstrap-vision   # alias de assess-repo
+  powershell -File cli/arah.ps1 vision update [-Target path] [-Agents qa,backend]   # Refresh + merge backlog
+  powershell -File cli/arah.ps1 backlog sync [-Target path] [-Agents qa,backend]    # merge backlog only
 "@
     }
 }

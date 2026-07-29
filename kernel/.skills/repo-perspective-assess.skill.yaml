@@ -1,7 +1,8 @@
 id: repo-perspective-assess
 description: >
   Experimental — cada agent observa o repositório na sua perspectiva e grava
-  As-Is + Gaps + To-Be em .arah/visions/ (fase de bootstrap em série).
+  opinião + As-Is + Gaps + Action Plan + Backlog + Memory em .arah/visions/
+  (fase de bootstrap em série; Refresh mescla backlog).
 run:
   script: scripts/agents/assess-repo.ps1
 success: exit_code == 0
@@ -9,4 +10,5 @@ guardrails:
   - propose_only_artifacts
   - serial_bootstrap_not_product_delivery
   - does_not_bypass_execution_control
+  - backlog_merge_preserves_done
 experimental: true

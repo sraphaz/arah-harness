@@ -93,7 +93,7 @@ O runtime **não** simula LLM: emite contrato + briefing; o agente executor apli
 
 ## Exceção controlada — fase de bootstrap (`assess-repo`)
 
-A assessment experimental **Repo Perspective** (`arah assess-repo` / skill `repo-perspective-assess`) gera pareceres **em série** (um agent por vez) sob `.arah/visions/`. Isso **não** é entrega de produto e **não** reabre handoffs livres:
+A assessment experimental **Repo Perspective** (`arah assess-repo` / skill `repo-perspective-assess`) gera pareceres **em série** (um agent por vez) sob `.arah/visions/` — opinião, As-Is, Gaps, action plan, backlog e memory. Isso **não** é entrega de produto e **não** reabre handoffs livres:
 
 | | Entrega (ECP) | Bootstrap assessment |
 |--|---------------|----------------------|

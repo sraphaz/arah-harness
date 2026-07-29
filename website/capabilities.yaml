@@ -54,7 +54,7 @@ experimental:
     notes: JSON + Mermaid derivados
   - id: repo-perspective-assess
     name: Repo Perspective Assessment
-    notes: arah assess-repo → .arah/visions/ As-Is+Gaps+To-Be por agent (bootstrap serial)
+    notes: arah assess-repo → visions v2 (opinião+As-Is+Gaps+action plan+backlog+memory); vision update / backlog sync
 
 planned:
   - id: portable-cli-go
