@@ -554,12 +554,18 @@ function Build-VisionMarkdown {
     $gapsBlock = if ($gaps.Count) { ($gaps -join "`n") } else { '- Nenhum gap heurístico óbvio (revisão humana ainda recomendada).' }
     $tobeBlock = ($Lens.tobe | ForEach-Object { "1. $_" }) -join "`n"
     $mode = if ($isEmptyish) { 'bootstrap-empty' } else { 'observe-existing' }
+    $bt = [char]96  # markdown backtick (avoid PowerShell `a = BEL)
+    $codeExec = $bt + 'execution_role.can_execute' + $bt
+    $codeTask = $bt + 'arah task create' + $bt
+    $codeAssess = $bt + 'arah assess-repo' + $bt
+    $codeSkill = $bt + 'repo-perspective-assess' + $bt
+    $codeId = $bt + $AgentId + $bt
 
     @"
-# Visão — $AgentName (`$AgentId`)
+# Visão — $AgentName ($codeId)
 
 > **Experimental** · ARAH Repo Perspective Assessment  
-> Gerado em `$stamp` · harness `$harnessVersion` · modo `$mode`  
+> Gerado em $stamp · harness $harnessVersion · modo $mode  
 > Fase de bootstrap (pareceres em série; não substitui Execution Control em tarefas de entrega).
 
 ## Na cabeça deste papel
@@ -599,15 +605,15 @@ $tobeBlock
 ## Autonomia sugerida (gates / padrões)
 
 - Pode **propor** padrões, checklists e gates alinhados a este papel.
-- Só **executa** mudanças de produto se `execution_role.can_execute` e houver contrato ECP com este agent como primary_executor.
+- Só **executa** mudanças de produto se $codeExec e houver contrato ECP com este agent como primary_executor.
 - Em dúvida de segurança/compliance: parecer → humano ou security review — nunca bypass de gate.
 
 ## Próximo passo concreto
 
-Revise este arquivo, priorize 1–3 gaps, abra tarefa ECP (`arah task create`) com **um** executor. Não trate esta assessment como entrega.
+Revise este arquivo, priorize 1–3 gaps, abra tarefa ECP ($codeTask) com **um** executor. Não trate esta assessment como entrega.
 
 ---
-_Artefato gerado por ``arah assess-repo`` · skill ``repo-perspective-assess``_
+_Artefato gerado por $codeAssess · skill $codeSkill_
 "@
 }
 
@@ -686,6 +692,14 @@ if ($manifests.Count -eq 0) {
         if ($raw -match '(?ms)^description:\s*\|\s*\r?\n((?:\s+[^\r\n]+\r?\n)+)') {
             $desc = (($Matches[1] -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ' ')
         }
+        # domain-sync agents often use enrich: | instead of description
+        if (-not $desc -and $raw -match '(?ms)^enrich:\s*\|\s*\r?\n((?:\s+[^\r\n]+\r?\n)+)') {
+            $desc = (($Matches[1] -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ' ')
+        }
+        if (-not $desc) {
+            $desc = Get-ScalarField -Raw $raw -Field 'enrich'
+            if (-not $desc) { $desc = '' }
+        }
         $kind = 'operational'
         if ($m.Directory.Name -eq 'domain' -or ($raw -match '(?m)^type:\s*domain')) { $kind = 'domain' }
         if ($m.Directory.Name -eq 'specialists') { $kind = 'specialist' }
@@ -715,11 +729,19 @@ if ($manifests.Count -eq 0) {
 }
 
 # Index + summary
+$bt = [char]96
+$codeAssessIdx = $bt + 'arah assess-repo' + $bt
+$codeSkillIdx = $bt + 'repo-perspective-assess' + $bt
+$indexRows = ($results | ForEach-Object {
+    $idCode = $bt + $_.id + $bt
+    "| $($_.order) | $idCode | $($_.kind) | $($_.gap_signals) | [$($_.id).md]($($_.id).md) |"
+}) -join "`n"
+
 $indexMd = @"
 # ARAH Repo Visions (experimental)
 
-Gerado em `$stamp` · harness `$harnessVersion`  
-Comando: ``arah assess-repo`` · skill: ``repo-perspective-assess``
+Gerado em $stamp · harness $harnessVersion  
+Comando: $codeAssessIdx · skill: $codeSkillIdx
 
 ## Modelo de execução
 
@@ -738,15 +760,15 @@ são artefatos de observação, não uma tarefa de produto.
 
 | # | Agent | Tipo | Gaps (sinais) | Arquivo |
 |---|-------|------|---------------|---------|
-$(($results | ForEach-Object { "| $($_.order) | ``$($_.id)`` | $($_.kind) | $($_.gap_signals) | [$($_.id).md]($($_.id).md) |" }) -join "`n")
+$indexRows
 
 ## Como usar
 
 1. Leia a visão do papel relevante na primeira interação com o repo.
-2. Priorize gaps → ``arah task create`` com um executor.
-3. Re-rode ``arah assess-repo -Force`` após mudanças estruturais.
+2. Priorize gaps → $($bt)arah task create$($bt) com um executor.
+3. Re-rode $($bt)arah assess-repo -Force$($bt) após mudanças estruturais.
 
-Ver: [docs/REPO_VISIONS.md](../../docs/REPO_VISIONS.md) (no harness) ou a cópia instalada no consumidor.
+Ver docs/REPO_VISIONS.md no harness (ou cópia no consumidor).
 "@
 
 $summaryYaml = @"
