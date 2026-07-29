@@ -86,6 +86,14 @@ scope:
     Assert-True ($ev -match 'type: refresh') 'refresh appended event'
     $qa2 = Get-Content (Join-Path $out 'qa.md') -Raw
     Assert-True ($qa2 -match 'Memory|events') 'vision has memory section'
+    & $Pwsh -NoProfile -ExecutionPolicy Bypass -File $Script -RepoRoot $tmp -OutDir $out -Agents 'qa' -Refresh
+    Assert-True ($LASTEXITCODE -eq 0) 'filtered refresh exit 0'
+    $idx = Get-Content (Join-Path $out 'README.md') -Raw
+    Assert-True ($idx -match 'Visões:\s+\*\*2\*\*') 'filtered refresh keeps full vision count'
+    Assert-True ($idx -match '\|\s*`backend`\s*\|') 'filtered refresh keeps backend in index'
+    $sum = Get-Content (Join-Path $out 'summary.yaml') -Raw
+    Assert-True (([regex]::Matches($sum, '(?m)^  - id:\s+').Count) -eq 2) 'filtered refresh keeps summary inventory'
+    Assert-True ($sum -match '(?m)^  - id:\s+backend\s*$') 'filtered refresh keeps backend in summary'
 
     # Filter agents
     $out2 = Join-Path $tmp 'visions-filter'

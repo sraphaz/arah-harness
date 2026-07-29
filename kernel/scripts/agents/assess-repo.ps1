@@ -1216,6 +1216,153 @@ if ($manifests.Count -eq 0) {
     }
 }
 
+function Get-EntryValue {
+    param($Entry, [string]$Key)
+    if ($null -eq $Entry) { return $null }
+    if ($Entry -is [System.Collections.IDictionary] -and $Entry.Contains($Key)) {
+        return $Entry[$Key]
+    }
+    if ($Entry.PSObject -and $Entry.PSObject.Properties[$Key]) {
+        return $Entry.$Key
+    }
+    return $null
+}
+
+function Get-ExistingIndexEntries {
+    $entries = @()
+    $idxFile = Join-Path $outPath 'README.md'
+    if (-not (Test-Path -LiteralPath $idxFile)) { return $entries }
+    $raw = Get-Content -LiteralPath $idxFile -Raw
+    $matches = [regex]::Matches($raw, '(?m)^\|\s*(?<order>\d+)\s*\|\s*`(?<id>[^`]+)`\s*\|\s*(?<kind>[^|]+?)\s*\|\s*(?<gaps>\d+)\s*\|\s*(?<backlog>[^|]+?)\s*\|\s*\[[^\]]+\]\([^)]+\)\s*\|$')
+    foreach ($m in $matches) {
+        $id = $m.Groups['id'].Value.Trim()
+        if (-not $id) { continue }
+        $backlogRaw = $m.Groups['backlog'].Value.Trim()
+        $backlogCount = 0
+        if ($backlogRaw -match '^\d+$') { $backlogCount = [int]$backlogRaw }
+        $entries += [ordered]@{
+            id           = $id
+            kind         = $m.Groups['kind'].Value.Trim()
+            file         = Join-Path $OutDir "$id.md"
+            backlog_file = Join-Path $OutDir "$id.backlog.yaml"
+            gap_signals  = [int]$m.Groups['gaps'].Value
+            backlog      = $backlogCount
+            order        = [int]$m.Groups['order'].Value
+        }
+    }
+    return $entries
+}
+
+function Get-IndexedVisionEntryFromDisk {
+    param(
+        [string]$Id,
+        $SeedEntry
+    )
+
+    $mdFile = Join-Path $outPath "$Id.md"
+    $blFile = Join-Path $outPath "$Id.backlog.yaml"
+    $evFile = Join-Path $outPath "$Id.events.yaml"
+
+    $kind = Get-EntryValue -Entry $SeedEntry -Key 'kind'
+    if (-not $kind) { $kind = 'operational' }
+    if (Test-Path -LiteralPath $mdFile) {
+        $mdRaw = Get-Content -LiteralPath $mdFile -Raw
+        if ($mdRaw -match '(?m)^\*\*Tipo:\*\*\s*(.+?)\s*$') {
+            $kind = $Matches[1].Trim()
+        }
+    }
+
+    $gapCount = Get-EntryValue -Entry $SeedEntry -Key 'gap_signals'
+    if ($null -eq $gapCount -or "$gapCount" -notmatch '^\d+$') { $gapCount = 0 }
+    if (Test-Path -LiteralPath $evFile) {
+        $gapMatches = [regex]::Matches((Get-Content -LiteralPath $evFile -Raw), '(?m)^\s{4}gap_signals:\s*(\d+)\s*$')
+        if ($gapMatches.Count -gt 0) {
+            $gapCount = [int]$gapMatches[$gapMatches.Count - 1].Groups[1].Value
+        }
+    }
+
+    $backlogCount = Get-EntryValue -Entry $SeedEntry -Key 'backlog'
+    if ($null -eq $backlogCount -or "$backlogCount" -notmatch '^\d+$') { $backlogCount = 0 }
+    if (Test-Path -LiteralPath $blFile) {
+        $backlogCount = @(Parse-BacklogYaml -Path $blFile).Count
+    }
+
+    return [ordered]@{
+        id           = $Id
+        name         = Get-EntryValue -Entry $SeedEntry -Key 'name'
+        kind         = $kind
+        file         = Join-Path $OutDir "$Id.md"
+        backlog_file = Join-Path $OutDir "$Id.backlog.yaml"
+        gap_signals  = [int]$gapCount
+        backlog      = [int]$backlogCount
+        order        = 0
+        skipped      = $false
+    }
+}
+
+function Get-IndexResults {
+    $ids = @{}
+    $seedById = @{}
+    $sortOrder = @{}
+    $maxOrder = 0
+
+    foreach ($entry in @(Get-ExistingIndexEntries)) {
+        $ids[$entry.id] = $true
+        $seedById[$entry.id] = $entry
+        $sortOrder[$entry.id] = [int]$entry.order
+        if ([int]$entry.order -gt $maxOrder) { $maxOrder = [int]$entry.order }
+    }
+
+    foreach ($entry in @($results)) {
+        $ids[$entry.id] = $true
+        $seedById[$entry.id] = $entry
+        if (-not $sortOrder.ContainsKey($entry.id)) {
+            $entryOrder = Get-EntryValue -Entry $entry -Key 'order'
+            if ($null -ne $entryOrder -and "$entryOrder" -match '^\d+$') {
+                $sortOrder[$entry.id] = [int]$entryOrder
+                if ([int]$entryOrder -gt $maxOrder) { $maxOrder = [int]$entryOrder }
+            }
+        }
+    }
+
+    $visionFiles = @(Get-ChildItem -LiteralPath $outPath -Filter '*.md' -File -ErrorAction SilentlyContinue | Where-Object {
+        $_.Name -ne 'README.md'
+    })
+    foreach ($md in $visionFiles) {
+        $id = [System.IO.Path]::GetFileNameWithoutExtension($md.Name)
+        if (-not $id) { continue }
+        $ids[$id] = $true
+        if (-not $seedById.ContainsKey($id)) {
+            $seedById[$id] = [ordered]@{ id = $id }
+        }
+        if (-not $sortOrder.ContainsKey($id)) {
+            $maxOrder++
+            $sortOrder[$id] = $maxOrder
+        }
+    }
+
+    $merged = @()
+    foreach ($id in $ids.Keys) {
+        $merged += Get-IndexedVisionEntryFromDisk -Id $id -SeedEntry $seedById[$id]
+    }
+
+    $displayOrder = 0
+    return @($merged | Sort-Object @{ Expression = { $sortOrder[$_.id] } }, @{ Expression = { $_.id } } | ForEach-Object {
+        $displayOrder++
+        [ordered]@{
+            id           = $_.id
+            name         = Get-EntryValue -Entry $_ -Key 'name'
+            kind         = $_.kind
+            file         = $_.file
+            backlog_file = $_.backlog_file
+            gap_signals  = $_.gap_signals
+            backlog      = $_.backlog
+            order        = $displayOrder
+            skipped      = $false
+        }
+    })
+}
+
 # Index + summary
 $bt = [char]96
 $codeAssessIdx = $bt + 'arah assess-repo' + $bt
@@ -1223,7 +1370,12 @@ $codeRefreshIdx = $bt + 'arah assess-repo -Refresh' + $bt
 $codeVisionIdx = $bt + 'arah vision update' + $bt
 $codeBacklogIdx = $bt + 'arah backlog sync' + $bt
 $codeSkillIdx = $bt + 'repo-perspective-assess' + $bt
-$indexRows = ($results | ForEach-Object {
+$indexResults = @($results)
+if (-not $DryRun -and $filterIds.Count -gt 0) {
+    # Filtered refreshes should preserve the full inventory already materialized on disk.
+    $indexResults = @(Get-IndexResults)
+}
+$indexRows = ($indexResults | ForEach-Object {
     $idCode = $bt + $_.id + $bt
     $bl = if ($null -ne $_.backlog) { $_.backlog } else { '—' }
     "| $($_.order) | $idCode | $($_.kind) | $($_.gap_signals) | $bl | [$($_.id).md]($($_.id).md) |"
@@ -1257,7 +1409,7 @@ são artefatos de observação + **backlog/memória dinâmicos** por papel, não
 - App type: **$appType**
 - Linguagens: $(if ($languages.Count) { $languages -join ', ' } else { '—' })
 - Frameworks: $(if ($frameworks.Count) { $frameworks -join ', ' } else { '—' })
-- Visões: **$($results.Count)**
+- Visões: **$($indexResults.Count)**
 
 ## Índice
 
@@ -1298,7 +1450,7 @@ snapshot:
   has_docs: $($snapshot.has_docs.ToString().ToLower())
   has_specs: $($snapshot.has_specs.ToString().ToLower())
 visions:
-$(($results | ForEach-Object { @"
+$(($indexResults | ForEach-Object { @"
   - id: $($_.id)
     kind: $($_.kind)
     file: $($_.file)
