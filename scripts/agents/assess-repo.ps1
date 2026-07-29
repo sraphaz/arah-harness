@@ -206,16 +206,19 @@ $lenses = @{
             'CI cobre o caminho crítico antes do merge?'
             'Specs e Definition of Done estão amarrados a evidência de teste?'
             'Regressões conhecidas têm dono e gate?'
+            'Há meta mensurável de coverage no núcleo (ex. ≥50% packages/domain)?'
         )
         signals = @(
             @{ id = 'tests-dir'; ok = $hasTests; asis = 'Diretório/padrão de testes presente'; gap = 'Sem pasta ou convenção de testes detectável' }
             @{ id = 'test-files'; ok = ($testFileCount -gt 0); asis = "$testFileCount arquivo(s) de teste detectados"; gap = 'Nenhum arquivo *test* / *spec* encontrado' }
             @{ id = 'ci'; ok = $hasCi; asis = 'Workflows CI presentes'; gap = 'Sem CI detectável (.github/workflows etc.)' }
             @{ id = 'specs'; ok = $hasSpecs; asis = 'docs/specs presente'; gap = 'Sem docs/specs — SDD frágil para QA' }
+            @{ id = 'coverage-tool'; ok = (Test-RepoPath 'package.json') -and ((Get-Content (Join-Path $RepoRoot 'package.json') -Raw -ErrorAction SilentlyContinue) -match 'c8|nyc|istanbul|"coverage"'); asis = 'Tooling de coverage referenciado'; gap = 'Sem % de coverage / tooling c8|nyc detectável' }
         )
         action_plan = @(
             'Matriz de risco → casos críticos com gate no PR'
             'Comando `tests.all` estável no arah.config.yaml'
+            'Coverage MVP: ≥50% unitário em packages/domain (configurável)'
             'Checklist QA amarrado a evidência (não só review textual)'
         )
         backlog_seeds = @(
@@ -223,6 +226,13 @@ $lenses = @{
             @{ n = 2; title = 'Estabilizar comando tests.all no arah.config.yaml'; priority = 'P1' }
             @{ n = 3; title = 'Checklist QA com evidência obrigatória no PR template'; priority = 'P2' }
             @{ n = 4; title = 'Mapear pirâmide TEA (unit domínio / integração ports / e2e adapters)'; priority = 'P2' }
+            @{
+                n = 5
+                title = 'Coverage mínimo unitário no domínio (MVP)'
+                priority = 'P1'
+                goal = 'coverage ≥ 50% em packages/domain (configurável; default 50%)'
+                acceptance = 'Script test:coverage + relatório c8/nyc; baseline medido; gate CI warn opcional no escopo domain'
+            }
         )
     }
     'test-architect' = @{
@@ -233,21 +243,31 @@ $lenses = @{
             'Existe estratégia risk-based documentada?'
             'NFRs (a11y, performance, segurança) têm critérios mensuráveis?'
             'A pirâmide está alinhada ao risco do domínio?'
+            'Há meta mensurável de coverage no núcleo (ex. ≥50% domain)?'
         )
         signals = @(
             @{ id = 'testing-docs'; ok = (Test-RepoPath 'docs/testing') -or (Test-RepoPath 'docs/TEST_MATRIX.md'); asis = 'Documentação de testes/estratégia presente'; gap = 'Sem docs/testing ou TEST_MATRIX' }
             @{ id = 'tests'; ok = $hasTests; asis = 'Harness de testes detectado'; gap = 'Sem base de testes para derivar pirâmide' }
             @{ id = 'specs'; ok = $hasSpecs; asis = 'Specs disponíveis como input TEA'; gap = 'Sem specs — TEA opera no vazio' }
+            @{ id = 'coverage-tool'; ok = (Test-RepoPath 'package.json') -and ((Get-Content (Join-Path $RepoRoot 'package.json') -Raw -ErrorAction SilentlyContinue) -match 'c8|nyc|istanbul|coverage'); asis = 'Tooling de coverage referenciado'; gap = 'Sem % de coverage / tooling c8|nyc detectável' }
         )
         action_plan = @(
             'docs/testing/test-strategy.md com riscos e pirâmide'
             'Gates CI por classe de risco'
+            'Meta coverage configurável (default ≥50% packages/domain) + expandir depois'
             'Critérios a11y/perf explícitos onde o produto exigir'
         )
         backlog_seeds = @(
             @{ n = 1; title = 'Escrever test-strategy.md (riscos + pirâmide TEA)'; priority = 'P1' }
             @{ n = 2; title = 'Definir gates CI por classe de risco'; priority = 'P1' }
             @{ n = 3; title = 'Critérios NFR a11y/perf mensuráveis'; priority = 'P2' }
+            @{
+                n = 4
+                title = 'Plano de coverage: tooling + meta MVP domain'
+                priority = 'P1'
+                goal = 'coverage ≥ 50% em packages/domain primeiro; depois expandir'
+                acceptance = 'c8/nyc instalado; test:coverage; matriz de módulos críticos; CI warn (não fail) até baseline estável'
+            }
         )
     }
     'solutions-architect' = @{
@@ -640,13 +660,17 @@ function Parse-BacklogYaml {
         if ($b -match '(?m)^\s*title:\s*"?(?<t>.+?)"?\s*$') { $title = $Matches['t'].Trim().Trim('"') }
         if ($b -match '(?m)^\s*status:\s*(?<s>\w+)') { $status = $Matches['s'].Trim() }
         if ($b -match '(?m)^\s*priority:\s*(?<p>\S+)') { $priority = $Matches['p'].Trim() }
+        if ($b -match '(?m)^\s*goal:\s*"?(?<g>.+?)"?\s*$') { $goal = $Matches['g'].Trim().Trim('"') } else { $goal = '' }
+        if ($b -match '(?m)^\s*acceptance:\s*"?(?<a>.+?)"?\s*$') { $acceptance = $Matches['a'].Trim().Trim('"') } else { $acceptance = '' }
         if ($b -match '(?m)^\s*links:\s*\[(?<l>[^\]]*)\]') { $links = $Matches['l'].Trim() }
         $items += [ordered]@{
-            id       = $id
-            title    = $title
-            status   = $status
-            priority = $priority
-            links    = $links
+            id         = $id
+            title      = $title
+            status     = $status
+            priority   = $priority
+            goal       = $goal
+            acceptance = $acceptance
+            links      = $links
         }
     }
     return $items
@@ -662,7 +686,10 @@ function Merge-Backlog {
     foreach ($e in $Existing) {
         if ($e.id) { $byId[$e.id] = [ordered]@{
                 id = $e.id; title = $e.title; status = $e.status
-                priority = $e.priority; links = $e.links
+                priority = $e.priority
+                goal = $(if ($e.goal) { $e.goal } else { '' })
+                acceptance = $(if ($e.acceptance) { $e.acceptance } else { '' })
+                links = $e.links
             }
         }
     }
@@ -682,14 +709,18 @@ function Merge-Backlog {
                 $updated++
             }
             if ($s.priority) { $cur.priority = $s.priority }
+            if ($s.goal) { $cur.goal = $s.goal }
+            if ($s.acceptance) { $cur.acceptance = $s.acceptance }
             $byId[$id] = $cur
         } else {
             $byId[$id] = [ordered]@{
-                id       = $id
-                title    = $s.title
-                status   = 'todo'
-                priority = $(if ($s.priority) { $s.priority } else { 'P2' })
-                links    = ''
+                id         = $id
+                title      = $s.title
+                status     = 'todo'
+                priority   = $(if ($s.priority) { $s.priority } else { 'P2' })
+                goal       = $(if ($s.goal) { $s.goal } else { '' })
+                acceptance = $(if ($s.acceptance) { $s.acceptance } else { '' })
+                links      = ''
             }
             $added++
         }
@@ -719,6 +750,14 @@ function Write-BacklogYaml {
         $lines += "    title: `"$titleEsc`""
         $lines += "    status: $($it.status)"
         $lines += "    priority: $($it.priority)"
+        if ($it.goal) {
+            $goalEsc = ($it.goal -replace '"', '''')
+            $lines += "    goal: `"$goalEsc`""
+        }
+        if ($it.acceptance) {
+            $accEsc = ($it.acceptance -replace '"', '''')
+            $lines += "    acceptance: `"$accEsc`""
+        }
         $lines += "    links: $linksVal"
     }
     Set-Content -LiteralPath $Path -Value ($lines -join "`n") -Encoding UTF8
@@ -763,9 +802,19 @@ function Format-BacklogTable {
     if (-not $Items -or $Items.Count -eq 0) {
         return '_Nenhum item de backlog._'
     }
-    $rows = @('| ID | Priority | Status | Title |', '|----|----------|--------|-------|')
-    foreach ($it in $Items) {
-        $rows += "| ``$($it.id)`` | $($it.priority) | $($it.status) | $($it.title) |"
+    $hasGoal = @($Items | Where-Object { $_.goal -or $_.acceptance }).Count -gt 0
+    if ($hasGoal) {
+        $rows = @('| ID | Priority | Status | Title | Goal | Acceptance |', '|----|----------|--------|-------|------|------------|')
+        foreach ($it in $Items) {
+            $g = if ($it.goal) { $it.goal } else { '—' }
+            $a = if ($it.acceptance) { $it.acceptance } else { '—' }
+            $rows += "| ``$($it.id)`` | $($it.priority) | $($it.status) | $($it.title) | $g | $a |"
+        }
+    } else {
+        $rows = @('| ID | Priority | Status | Title |', '|----|----------|--------|-------|')
+        foreach ($it in $Items) {
+            $rows += "| ``$($it.id)`` | $($it.priority) | $($it.status) | $($it.title) |"
+        }
     }
     return ($rows -join "`n")
 }

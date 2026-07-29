@@ -28,6 +28,7 @@
 | `assess-repo` / `bootstrap-vision` | `-OutDir` `-Agents` `-Force` `-Refresh` `-BacklogOnly` `-DryRun` | `assess-repo.ps1` (**experimental** v2) |
 | `vision update` | mesmo que assess-repo `-Refresh` | merge backlog + evento |
 | `backlog sync` | assess-repo `-Refresh -BacklogOnly` | merge backlog |
+| `slice plan` | `-SliceId` `-Suggestions` `-VisionDir` `-OutDir` `-Executor` `-Force` `-DryRun` | `slice-compose.ps1` (**experimental**) |
 
 ## CLI Go (fase 1 — H-07)
 

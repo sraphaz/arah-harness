@@ -48,10 +48,11 @@ Opcional: `-OutDir docs/_arah/visions` se quiser versionar sob `docs/`.
 | Fase | Modelo |
 |------|--------|
 | **Bootstrap / assessment** | Vários pareceres **em série** (exceção controlada) — visão + backlog, não entrega |
+| **Slice compose** | Lê product ∩ agent-BL ∩ sugestões → `docs/_arah/slice-plans/` ([SLICE_COMPOSE.md](SLICE_COMPOSE.md)) — ainda não é entrega |
 | **Entrega de produto** | 1 `primary_executor` + consultas limitadas ([EXECUTION_CONTROL.md](EXECUTION_CONTROL.md)) |
 | **Feedback loop** | `assess-repo -Refresh` / `vision update` / `backlog sync` mescla backlog e registra evento |
 
-A assessment **não** é uma entrega. Não altera código de produto.
+A assessment **não** é uma entrega. Não altera código de produto. O slice plan **propõe** o que puxar do agent-BL na próxima fatia.
 
 ## CLI
 
@@ -81,8 +82,17 @@ Domain agents em `.agents/domain/` entram por padrão.
 
 - IDs estáveis: `qa-BL-001`, `security-BL-003`, …
 - Status `done` / `cancelled` **nunca** são sobrescritos pelo Refresh
-- Novos seeds entram; itens `todo`/`doing` podem atualizar título/priority
+- Novos seeds entram; itens `todo`/`doing` podem atualizar título/priority/`goal`/`acceptance`
 - Sidecar `*.backlog.yaml` é a fonte de merge; MD espelha a tabela
+- Campos opcionais mensuráveis: `goal` (ex. coverage ≥ 50%) e `acceptance` (DoD do item)
+
+## Slice compose (próximo passo após visions)
+
+```powershell
+arah slice plan -SliceId E1-S4 -Suggestions "quero coverage no domain" -Force
+```
+
+Detalhes: [SLICE_COMPOSE.md](SLICE_COMPOSE.md).
 
 ## Pós-install (opt-in)
 

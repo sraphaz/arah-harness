@@ -1,0 +1,13 @@
+id: slice-compose
+description: >
+  Experimental — compõe fatia de entrega a partir de product story ∩
+  backlogs de visão dos agents ∩ sugestões do usuário; grava
+  docs/_arah/slice-plans/<slice>.md (não é entrega de produto).
+run:
+  script: scripts/agents/slice-compose.ps1
+success: exit_code == 0
+guardrails:
+  - propose_only_artifacts
+  - does_not_bypass_execution_control
+  - reads_agent_backlogs_actively
+experimental: true

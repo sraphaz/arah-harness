@@ -110,11 +110,15 @@ Assert-True ($cliRaw -match "bootstrap-vision") 'CLI alias bootstrap-vision'
 Assert-True ($cliRaw -match "vision") 'CLI vision update'
 Assert-True ($cliRaw -match "backlog") 'CLI backlog sync'
 Assert-True ($cliRaw -match "Refresh") 'CLI Refresh flag'
+Assert-True ($cliRaw -match "slice") 'CLI slice plan'
 Assert-True (Test-Path (Join-Path $Root 'kernel/.skills/repo-perspective-assess.skill.yaml')) 'skill in kernel'
+Assert-True (Test-Path (Join-Path $Root 'kernel/.skills/slice-compose.skill.yaml')) 'slice-compose skill in kernel'
 Assert-True (Test-Path (Join-Path $Root 'docs/REPO_VISIONS.md')) 'docs present'
+Assert-True (Test-Path (Join-Path $Root 'docs/SLICE_COMPOSE.md')) 'slice compose docs present'
 $docs = Get-Content (Join-Path $Root 'docs/REPO_VISIONS.md') -Raw
 Assert-True ($docs -match 'backlog') 'docs mention backlog'
 Assert-True ($docs -match 'Refresh|vision update') 'docs mention refresh loop'
+Assert-True ($docs -match 'SLICE_COMPOSE|slice plan') 'visions docs link slice compose'
 
 if ($Fail -gt 0) {
     Write-Host "`nFAILED: $Fail assertion(s)"

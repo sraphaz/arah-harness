@@ -104,6 +104,18 @@ A assessment experimental **Repo Perspective** (`arah assess-repo` / skill `repo
 
 Detalhes: [REPO_VISIONS.md](REPO_VISIONS.md).
 
+## Exceção controlada — slice compose (`slice plan`)
+
+Antes da entrega, `arah slice plan` (skill `slice-compose`) gera um plano em `docs/_arah/slice-plans/` cruzando backlog de produto, prioridades dos agent-BL e sugestões do usuário. Isso **ainda não** é execução:
+
+| | Entrega (ECP) | Slice compose |
+|--|---------------|---------------|
+| Objetivo | alterar código / evidenciar done\|blocked | propor escopo da fatia |
+| Executores | exatamente um `primary_executor` | nenhum (só artefato de plano) |
+| Fonte | contrato | Product ∩ Agent-BL ∩ User |
+
+Detalhes: [SLICE_COMPOSE.md](SLICE_COMPOSE.md).
+
 ## Compatibilidade
 
 - Instalações novas: `execution_control.enabled: true`

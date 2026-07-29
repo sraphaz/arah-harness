@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks, task, assess-repo, vision, backlog
+  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks, task, assess-repo, vision, backlog, slice
 #>
 param(
     [Parameter(Position = 0)]
@@ -9,14 +9,14 @@ param(
         'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
         'export-graph', 'validate-runtime', 'discover', 'organism',
         'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks',
-        'task', 'update-check', 'assess-repo', 'bootstrap-vision', 'vision', 'backlog', 'help'
+        'task', 'update-check', 'assess-repo', 'bootstrap-vision', 'vision', 'backlog', 'slice', 'help'
     )]
     [string]$Command = 'help',
 
     [Parameter(Position = 1)]
     [ValidateSet(
         'sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', 'install',
-        'create', 'validate', 'complete', 'block', 'update', ''
+        'create', 'validate', 'complete', 'block', 'update', 'plan', ''
     )]
     [string]$SubCommand = '',
 
@@ -61,7 +61,17 @@ param(
     [switch]$IncludeSpecialists,
     [switch]$SkipIndex,
     [switch]$Refresh,
-    [switch]$BacklogOnly
+    [switch]$BacklogOnly,
+
+    # slice plan (experimental — composite slice compose)
+    [string]$SliceId = '',
+    [string]$Suggestions = '',
+    [string]$SuggestionsFile = '',
+    [string]$VisionDir = '',
+    [string]$ProductBacklog = '',
+    [string]$Executor = '',
+    [string]$Consultants = '',
+    [string]$Title = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -345,6 +355,41 @@ switch ($Command) {
         & $script @splat
         if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
+    'slice' {
+        # Experimental: compose product ∩ agent-BL ∩ user suggestions → slice-plans/
+        if ($SubCommand -ne 'plan') {
+            Write-Error 'Use: arah slice plan -SliceId E1-S4 [-Suggestions "…"] [-VisionDir docs/_arah/visions] [-OutDir docs/_arah/slice-plans]'
+            exit 1
+        }
+        if (-not $SliceId) {
+            Write-Error 'Use: arah slice plan -SliceId <E1-Sx> …'
+            exit 1
+        }
+        $script = Get-TargetScript 'scripts/agents/slice-compose.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'slice-compose.ps1'
+        }
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'kernel') 'scripts\agents') 'slice-compose.ps1'
+        }
+        $splat = @{
+            RepoRoot = $targetPath
+            SliceId  = $SliceId
+        }
+        if ($OutDir) { $splat.OutDir = $OutDir }
+        if ($VisionDir) { $splat.VisionDir = $VisionDir }
+        if ($ProductBacklog) { $splat.ProductBacklog = $ProductBacklog }
+        if ($Suggestions) { $splat.Suggestions = $Suggestions }
+        if ($SuggestionsFile) { $splat.SuggestionsFile = $SuggestionsFile }
+        if ($Agents) { $splat.Agents = $Agents }
+        if ($Executor) { $splat.Executor = $Executor }
+        if ($Consultants) { $splat.Consultants = $Consultants }
+        if ($Title) { $splat.Title = $Title }
+        if ($Force) { $splat.Force = $true }
+        if ($DryRun) { $splat.DryRun = $true }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
     default {
         Write-Host @"
 ARAH Harness CLI — TechOrganism
@@ -388,6 +433,9 @@ ARAH Harness CLI — TechOrganism
   powershell -File cli/arah.ps1 bootstrap-vision   # alias de assess-repo
   powershell -File cli/arah.ps1 vision update [-Target path] [-Agents qa,backend]   # Refresh + merge backlog
   powershell -File cli/arah.ps1 backlog sync [-Target path] [-Agents qa,backend]    # merge backlog only
+
+  # Experimental — composite slice compose (product ∩ agent-BL ∩ user)
+  powershell -File cli/arah.ps1 slice plan -SliceId E1-S4 [-Suggestions "…"] [-VisionDir docs/_arah/visions] [-OutDir docs/_arah/slice-plans] [-Executor backend] [-Force] [-DryRun]
 "@
     }
 }

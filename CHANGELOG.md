@@ -2,6 +2,18 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.4.4] - 2026-07-28
+
+### Added
+
+- **Slice Compose (experimental)** — fatia composta: product ∩ agent-BL ∩ sugestões do usuário
+  - CLI: `arah slice plan -SliceId E1-Sx`
+  - Script `scripts/agents/slice-compose.ps1` · skill `slice-compose`
+  - Output: `docs/_arah/slice-plans/<slice>.md` (Product | Agent priorities | User | Deferred | Executor)
+  - Docs [SLICE_COMPOSE.md](docs/SLICE_COMPOSE.md); testes `test-slice-compose.ps1`
+- **Agent backlog `goal` / `acceptance`** — metas mensuráveis (ex. coverage ≥ 50% em `packages/domain`)
+  - Seeds QA / test-architect para coverage MVP + sinal `coverage-tool`
+
 ## [0.4.3] - 2026-07-28
 
 ### Added
