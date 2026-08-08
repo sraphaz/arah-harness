@@ -69,6 +69,21 @@ def load_spec(path: Path) -> dict:
     return defaults
 
 
+def validate_timing_block(block: object, label: str) -> None:
+    """Ensure a timing block has numeric start/end usable by progress/motion_progress."""
+    if not isinstance(block, dict):
+        fail(f"{label} must be an object with start and end")
+    if "start" not in block or "end" not in block:
+        fail(f"{label} requires start and end")
+    try:
+        start = float(block["start"])
+        end = float(block["end"])
+    except (TypeError, ValueError):
+        fail(f"{label} start and end must be numbers")
+    if end <= start:
+        fail(f"{label} end must be greater than start: {start} -> {end}")
+
+
 def validate_spec(spec: dict) -> None:
     if not 1 <= int(spec["fps"]) <= 60:
         fail("fps must be between 1 and 60")
@@ -94,12 +109,39 @@ def validate_spec(spec: dict) -> None:
     if spec["dither"] not in allowed_dither:
         fail(f"unsupported dither mode: {spec['dither']}")
 
+    if not isinstance(spec["reveals"], list):
+        fail("reveals must be a list")
+    if not isinstance(spec["layers"], list):
+        fail("layers must be a list")
+
     ids: list[str] = []
-    for item in [*spec["reveals"], *spec["layers"]]:
-        element_id = item.get("id")
+    for index, reveal in enumerate(spec["reveals"]):
+        if not isinstance(reveal, dict):
+            fail(f"reveal[{index}] must be an object")
+        element_id = reveal.get("id")
         if not element_id:
             fail("every reveal and layer needs a non-empty id")
         ids.append(element_id)
+        label = f"reveal {element_id!r}"
+        validate_timing_block(reveal, label)
+        if reveal.get("exit") is not None:
+            validate_timing_block(reveal["exit"], f"{label} exit")
+
+    for index, layer in enumerate(spec["layers"]):
+        if not isinstance(layer, dict):
+            fail(f"layer[{index}] must be an object")
+        element_id = layer.get("id")
+        if not element_id:
+            fail("every reveal and layer needs a non-empty id")
+        ids.append(element_id)
+        label = f"layer {element_id!r}"
+        if "enter" not in layer:
+            fail(f"{label} requires an enter object with start and end")
+        if "exit" not in layer:
+            fail(f"{label} requires an exit object with start and end")
+        validate_timing_block(layer["enter"], f"{label} enter")
+        validate_timing_block(layer["exit"], f"{label} exit")
+
     if len(ids) != len(set(ids)):
         fail("motion element ids must be unique")
 
