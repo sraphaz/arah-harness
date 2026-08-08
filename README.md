@@ -5,6 +5,10 @@
 [![Version](https://img.shields.io/badge/version-0.4.4-green.svg)](VERSION)
 [![TechOrganism](https://img.shields.io/badge/TechOrganism-v0.3-0A7A5A.svg)](docs/TECHORGANISM.md)
 
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="ARAH Harness TechOrganism — discover → cells → signals → evolve; agentes propõem, humanos fazem merge">
+</p>
+
 **ARAH** — *Agent Runtime Autonomous Harness*  
 **TechOrganism** — a dimensão viva: descobrir, organizar, comunicar, evoluir.
 
@@ -33,6 +37,10 @@ Instale o harness uma vez. O **TechOrganism** observa domínio e stack, propõe 
 ```
 
 ---
+
+<p align="center">
+  <img src="./assets/readme/section-why.svg" width="100%" alt="Por que existe — sem harness cada repo replica manifests, coreografia, gates, CI e specs; ARAH versiona o kernel uma vez e o TechOrganism mantém vivo">
+</p>
 
 ## Por que existe
 
@@ -81,6 +89,10 @@ Nada de spawn silencioso. Nada de merge automático. Evolução por seleção vi
 
 ---
 
+<p align="center">
+  <img src="./assets/readme/section-start.svg" width="100%" alt="Começar em 60 segundos — clone, arah install, regenerate; revise docs/_meta/, arah.config.yaml e abra o PR">
+</p>
+
 ## Começar em 60 segundos
 
 ```powershell
@@ -99,6 +111,10 @@ Revise as propostas em `docs/_meta/`, ajuste `arah.config.yaml`, abra o PR.
 Guia: **[docs/INSTALL.md](docs/INSTALL.md)** · Checklist: **[docs/BOOTSTRAP.md](docs/BOOTSTRAP.md)**
 
 ---
+
+<p align="center">
+  <img src="./assets/readme/section-architecture.svg" width="100%" alt="Arquitetura — CLI, kernel, templates, organism no harness; config, .agents, docs/_meta, bus no repo → PR">
+</p>
 
 ## Arquitetura
 
@@ -138,6 +154,10 @@ flowchart TB
 | TechOrganism | Manifesto, sinais, evolução | Organismo + PR |
 
 ---
+
+<p align="center">
+  <img src="./assets/readme/section-cli.svg" width="100%" alt="CLI — install, doctor, update, domain sync; discover · evolve · regenerate">
+</p>
 
 ## CLI
 

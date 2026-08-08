@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200" viewBox="0 0 1200 200" role="img" aria-labelledby="title desc">
+  <title id="title">Por que existe</title>
+  <desc id="desc">Sem harness, cada repositório replica manifests, coreografia, gates, CI e specs. ARAH versiona o kernel uma vez; TechOrganism mantém o organismo vivo no repo.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0A0C0F"/>
+      <stop offset="100%" stop-color="#0D1412"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="200" rx="20" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1198" height="198" rx="19" fill="none" stroke="#1E2630"/>
+  <rect x="40" y="52" width="6" height="96" rx="3" fill="#0A7A5A"/>
+
+  <text x="68" y="58" fill="#5A6675" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" letter-spacing="2">REASON</text>
+  <text x="68" y="102" fill="#E7ECF1" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="40" font-weight="700">Por que existe</text>
+  <text x="68" y="148" fill="#9AA5B1" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">Sem harness, cada repo novo replica o kit à mão.</text>
+
+  <g transform="translate(600 28)" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">
+    <text x="0" y="18" fill="#5A6675" font-size="14" letter-spacing="1.5">DOR · O QUE SE RECRIA</text>
+
+    <rect x="0" y="34" width="108" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="54" y="55" fill="#9AA5B1" text-anchor="middle">manifests</text>
+    <rect x="118" y="34" width="128" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="182" y="55" fill="#9AA5B1" text-anchor="middle">coreografia</text>
+    <rect x="256" y="34" width="78" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="295" y="55" fill="#9AA5B1" text-anchor="middle">gates</text>
+    <rect x="344" y="34" width="98" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="393" y="55" fill="#9AA5B1" text-anchor="middle">hooks/CI</text>
+    <rect x="452" y="34" width="78" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="491" y="55" fill="#9AA5B1" text-anchor="middle">specs</text>
+
+    <text x="0" y="98" fill="#5A6675" font-size="14" letter-spacing="1.5">RESULTADO</text>
+    <rect x="0" y="112" width="530" height="44" rx="10" fill="#121820" stroke="#0A7A5A"/>
+    <circle cx="28" cy="134" r="5" fill="#3EE0C8"/>
+    <text x="48" y="140" fill="#E7ECF1" font-size="16">ARAH versiona uma vez · TechOrganism vivo no repo</text>
+  </g>
+</svg>

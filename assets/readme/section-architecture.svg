@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200" viewBox="0 0 1200 200" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitetura</title>
+  <desc id="desc">arah-harness entrega CLI, kernel, templates e TechOrganism; no repositório-alvo ficam arah.config.yaml, .agents/, docs/_meta/ e .arah/local/bus/ — propostas sobem via PR.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0A0C0F"/>
+      <stop offset="100%" stop-color="#0D1412"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="200" rx="20" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1198" height="198" rx="19" fill="none" stroke="#1E2630"/>
+  <rect x="40" y="52" width="6" height="96" rx="3" fill="#0A7A5A"/>
+
+  <text x="68" y="58" fill="#5A6675" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" letter-spacing="2">SYSTEM</text>
+  <text x="68" y="102" fill="#E7ECF1" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="40" font-weight="700">Arquitetura</text>
+  <text x="68" y="148" fill="#9AA5B1" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="18">Harness versionado → vivo no consumidor.</text>
+
+  <g transform="translate(600 28)" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">
+    <text x="0" y="18" fill="#5A6675" font-size="14" letter-spacing="1.5">HARNESS</text>
+
+    <rect x="0" y="34" width="68" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="34" y="55" fill="#9AA5B1" text-anchor="middle">CLI</text>
+    <rect x="78" y="34" width="98" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="127" y="55" fill="#9AA5B1" text-anchor="middle">kernel</text>
+    <rect x="186" y="34" width="118" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="245" y="55" fill="#9AA5B1" text-anchor="middle">templates</text>
+    <rect x="314" y="34" width="138" height="32" rx="8" fill="#121820" stroke="#2A3340"/>
+    <text x="383" y="55" fill="#9AA5B1" text-anchor="middle">organism</text>
+
+    <text x="0" y="98" fill="#5A6675" font-size="14" letter-spacing="1.5">NO REPO</text>
+    <rect x="0" y="112" width="530" height="44" rx="10" fill="#121820" stroke="#0A7A5A"/>
+    <circle cx="28" cy="134" r="5" fill="#3EE0C8"/>
+    <text x="48" y="140" fill="#E7ECF1" font-size="16">config · .agents · docs/_meta · bus → PR</text>
+  </g>
+</svg>
