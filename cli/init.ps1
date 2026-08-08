@@ -18,7 +18,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$HarnessRoot = Split-Path $PSScriptRoot -Parent
+$HarnessRoot = (Resolve-Path -LiteralPath (Split-Path $PSScriptRoot -Parent)).Path
 $KernelRoot = Join-Path $HarnessRoot 'kernel'
 $TemplatesRoot = Join-Path $HarnessRoot 'templates'
 $VersionFile = Join-Path $HarnessRoot 'VERSION'
