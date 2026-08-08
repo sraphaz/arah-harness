@@ -1,8 +1,8 @@
 # capabilities.yaml — fonte única de status de capacidades do ARAH Harness
 # Consumido pelo site (W-07) e por docs. Não duplicar status em outros arquivos.
 version: 1
-updated_at: 2026-07-19
-harness_version: "0.4.1"
+updated_at: 2026-08-08
+harness_version: "0.4.4"
 
 available:
   - id: agents-skills-manifests
@@ -49,6 +49,9 @@ experimental:
   - id: harness-update-check
     name: Harness update notifications
     notes: GitHub Releases + scheduled issue / Renovate pin
+  - id: autonomous-release
+    name: Autonomous tag + GitHub Release
+    notes: cut-release.ps1 on main — humano mergeia VERSION, Action publica
   - id: execution-control
     name: Execution Control Protocol
     notes: contratos de tarefa, executor primário, done|blocked
@@ -67,9 +70,6 @@ experimental:
   - id: knowledge-graph-graphify
     name: Knowledge Graph (Graphify)
     notes: Adapter opcional code-only; sibling do Agent Graph — docs/architecture/GRAPHIFY.md
-  - id: repo-perspective-assess
-    name: Repo Perspective Assessment
-    notes: arah assess-repo → visions v2 (opinião+As-Is+Gaps+action plan+backlog+memory); vision update / backlog sync
 
 planned:
   - id: arahd-daemon

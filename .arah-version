@@ -1,3 +1,4 @@
-﻿harness: arah-harness
-version: 0.4.2
-installed: 2026-07-19
+harness: arah-harness
+version: 0.4.4
+installed: 2026-08-08
+mode: full

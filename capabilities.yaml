@@ -1,8 +1,8 @@
 # capabilities.yaml — fonte única de status de capacidades do ARAH Harness
 # Consumido pelo site (W-07) e por docs. Não duplicar status em outros arquivos.
 version: 1
-updated_at: 2026-07-19
-harness_version: "0.4.2"
+updated_at: 2026-08-08
+harness_version: "0.4.4"
 
 available:
   - id: agents-skills-manifests
