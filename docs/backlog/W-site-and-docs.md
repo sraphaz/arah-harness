@@ -17,7 +17,7 @@ Next.js + TS + Tailwind + MDX (contentlayer ou next-mdx-remote). ESLint/Prettier
 - [x] Nav sticky com blur, wrap em telas estreitas, logo SVG do grafo, CTAs GitHub/Get Started
 - [x] Seletor EN|PT liga rotas `/en/*` ↔ `/pt/*`
 - [x] Footer com tagline + GitHub/Releases/Changelog/Contributing/License
-- [ ] Acessível por teclado; foco visível; contraste AA nos tons `#9AA5B1`+
+- [x] Acessível por teclado; foco visível; contraste AA nos tons `#9AA5B1`+
 
 ### W-03 · i18n `M`
 - [x] `/en` e `/pt` estáticos (SSG), `hreflang` correto
@@ -25,9 +25,9 @@ Next.js + TS + Tailwind + MDX (contentlayer ou next-mdx-remote). ESLint/Prettier
 - [x] 404 localizada
 
 ### W-04 · Home §1–4: hero animado, shift, problema, inversão `G`
-- [ ] Pipeline de 7 estágios com `flowDot` + `stagePulse` (CSS puro; `prefers-reduced-motion`)
-- [ ] Grades responsivas idênticas ao design
-- [ ] Lighthouse: sem CLS das animações
+- [x] Pipeline de 7 estágios com `flowDot` + `stagePulse` (CSS puro; `prefers-reduced-motion`)
+- [x] Grades responsivas idênticas ao design
+- [x] Lighthouse: sem CLS das animações
 
 ### W-05 · Home §5: Harness Explorer (13 componentes) `M`
 - [ ] Lista + painel sticky com FUNÇÃO/MATURIDADE/EXEMPLO

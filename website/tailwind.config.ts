@@ -43,13 +43,23 @@ const config: Config = {
         panel: "13px",
       },
       keyframes: {
+        // Opacity + top only — no layout size changes (CLS-safe).
         flowDot: {
-          "0%": { top: "0%" },
-          "100%": { top: "100%" },
+          "0%": { top: "0%", opacity: "0" },
+          "4%": { opacity: "1" },
+          "96%": { opacity: "1" },
+          "100%": { top: "calc(100% - 8px)", opacity: "0" },
         },
+        // Border/shadow only — reserved min-height on stages prevents CLS.
         stagePulse: {
-          "0%, 100%": { borderColor: "#1E2630" },
-          "40%, 60%": { borderColor: "oklch(75% 0.09 200 / .55)" },
+          "0%, 100%": {
+            borderColor: "#1E2630",
+            boxShadow: "none",
+          },
+          "50%": {
+            borderColor: "oklch(75% 0.09 200 / 0.6)",
+            boxShadow: "0 0 24px oklch(75% 0.09 200 / 0.12)",
+          },
         },
         cyclePulse: {
           "0%, 100%": { opacity: "0.4" },
@@ -60,7 +70,7 @@ const config: Config = {
           "50%": { opacity: "0.45", transform: "scale(0.85)" },
         },
         fadeUp: {
-          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "0%": { opacity: "0", transform: "translateY(14px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },

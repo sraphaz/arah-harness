@@ -45,6 +45,7 @@ export const navCopy = {
     github: "View on GitHub",
     start: "Get Started",
     tagline: "Agents propose. Humans select. The repository remembers.",
+    skipToContent: "Skip to content",
   },
   pt: {
     home: "Início",
@@ -57,5 +58,6 @@ export const navCopy = {
     github: "Ver no GitHub",
     start: "Começar",
     tagline: "Agentes propõem. Humanos selecionam. O repositório lembra.",
+    skipToContent: "Ir para o conteúdo",
   },
 } as const;
