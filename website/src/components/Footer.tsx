@@ -10,7 +10,7 @@ export function Footer({ locale }: { locale: Locale }) {
           <p className="font-display text-lg text-arah-text">ARAH Harness</p>
           <p className="mt-2 max-w-md text-[14.5px] text-arah-dim">{t.tagline}</p>
         </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-[12px] text-arah-dim">
+        <div className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-[12px] text-arah-muted">
           <a href="https://github.com/sraphaz/arah-harness" className="hover:text-arah-text">
             GitHub
           </a>

@@ -236,7 +236,7 @@ export default function HomePage({ params }: { params: { locale: string } }) {
   return (
     <>
       {/* Hero */}
-      <header className="mx-auto grid max-w-site items-center gap-16 px-8 pb-20 pt-24 md:grid-cols-2">
+      <header className="mx-auto grid max-w-site items-center gap-16 px-8 pb-20 pt-24 [grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))]">
         <div className="animate-fadeUp">
           <p className="eyebrow mb-[22px] text-accent">{home.hero.eyebrow}</p>
           <h1 className="mb-6 font-display text-[clamp(34px,5.5vw,56px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
@@ -284,7 +284,7 @@ export default function HomePage({ params }: { params: { locale: string } }) {
 
       {/* Shift */}
       <section className="section-alt section-pad">
-        <div className="mx-auto grid max-w-site items-start gap-14 md:grid-cols-2">
+        <div className="mx-auto grid max-w-site items-start gap-14 [grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr))]">
           <div>
             <p className="eyebrow mb-4">{home.shift.eyebrow}</p>
             <h2 className="mb-5 font-display text-[clamp(28px,4.2vw,38px)] font-bold leading-[1.15] tracking-[-0.015em] text-balance">
@@ -297,11 +297,11 @@ export default function HomePage({ params }: { params: { locale: string } }) {
               {home.shift.quote}
             </blockquote>
           </div>
-          <div className="grid grid-cols-2 gap-2.5 pt-12">
+          <div className="grid grid-cols-2 gap-2.5 pt-[52px]">
             {home.shift.tiles.map((tile) => (
               <div
                 key={`${tile.kind}-${tile.label}`}
-                className="rounded-card border border-arah-line px-[18px] py-4 text-[14.5px]"
+                className="rounded-[9px] border border-arah-line px-[18px] py-4 text-[14.5px]"
               >
                 <span className="mb-1.5 block font-mono text-[11px] text-arah-fade">
                   {tile.kind}
@@ -325,7 +325,7 @@ export default function HomePage({ params }: { params: { locale: string } }) {
               {home.problem.body}
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,235px),1fr))]">
             {home.problem.items.map((item, i) => (
               <div
                 key={item.id}
@@ -358,7 +358,7 @@ export default function HomePage({ params }: { params: { locale: string } }) {
               {home.inversion.body}
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))]">
             <div className="rounded-panel border border-arah-line bg-arah-surface p-7">
               <p className="mb-5 font-mono text-xs uppercase tracking-[0.12em] text-arah-faint">
                 {t.agentFirstTitle}
