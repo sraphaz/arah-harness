@@ -36,11 +36,25 @@ if (-not $ProjectName) {
     $ProjectName = Split-Path $Target -Leaf
 }
 
-Write-Host "ARAH init → $Target (project: $ProjectName)"
+# Self-hosted: harness root == target (this repo). Skip tree copies that would
+# overwrite a path with itself or regress local overlays with the distributable kernel.
+$SelfHosted = [string]::Equals(
+    ($HarnessRoot -replace '[\\/]+$', ''),
+    ($Target -replace '[\\/]+$', ''),
+    [System.StringComparison]::OrdinalIgnoreCase
+)
+
+Write-Host "ARAH init → $Target (project: $ProjectName)$(if ($SelfHosted) { ' [self-hosted]' })"
 
 function Copy-Tree {
     param([string]$From, [string]$To, [switch]$Overwrite)
     if (-not (Test-Path $From)) { return }
+    $fromFull = (Resolve-Path -LiteralPath $From).Path
+    $toFull = if (Test-Path -LiteralPath $To) { (Resolve-Path -LiteralPath $To).Path } else { $To }
+    if ([string]::Equals($fromFull, $toFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Host "  skip (same path): $From"
+        return
+    }
     Get-ChildItem $From -Recurse -File | ForEach-Object {
         $rel = $_.FullName.Substring($From.Length).TrimStart('\', '/')
         $dest = Join-Path $To $rel
@@ -49,23 +63,33 @@ function Copy-Tree {
         if ((Test-Path $dest) -and -not $Overwrite) {
             Write-Host "  skip (exists): $rel"
         } else {
+            $srcResolved = $_.FullName
+            $destResolved = if (Test-Path -LiteralPath $dest) { (Resolve-Path -LiteralPath $dest).Path } else { $null }
+            if ($destResolved -and [string]::Equals($srcResolved, $destResolved, [System.StringComparison]::OrdinalIgnoreCase)) {
+                Write-Host "  skip (same file): $rel"
+                return
+            }
             Copy-Item $_.FullName $dest -Force
             Write-Host "  installed: $rel"
         }
     }
 }
 
-# Kernel → target repo root
-Copy-Tree -From (Join-Path $KernelRoot '.agents') -To (Join-Path $Target '.agents') -Overwrite:$Force
-Copy-Tree -From (Join-Path $KernelRoot '.skills') -To (Join-Path $Target '.skills') -Overwrite:$Force
-Copy-Tree -From (Join-Path $KernelRoot '.cursor') -To (Join-Path $Target '.cursor') -Overwrite:$Force
-Copy-Tree -From (Join-Path $KernelRoot 'scripts') -To (Join-Path $Target 'scripts') -Overwrite:$Force
+if ($SelfHosted) {
+    Write-Host "  preserve: kernel overlays (.agents/.skills/.cursor/scripts) — pin-only update"
+} else {
+    # Kernel → target repo root
+    Copy-Tree -From (Join-Path $KernelRoot '.agents') -To (Join-Path $Target '.agents') -Overwrite:$Force
+    Copy-Tree -From (Join-Path $KernelRoot '.skills') -To (Join-Path $Target '.skills') -Overwrite:$Force
+    Copy-Tree -From (Join-Path $KernelRoot '.cursor') -To (Join-Path $Target '.cursor') -Overwrite:$Force
+    Copy-Tree -From (Join-Path $KernelRoot 'scripts') -To (Join-Path $Target 'scripts') -Overwrite:$Force
 
-# Schemas (Execution Control + harness contracts) — optional but required for validators
-$schemasFrom = Join-Path $HarnessRoot 'schemas/arah-harness'
-$schemasTo = Join-Path $Target 'schemas/arah-harness'
-if (Test-Path -LiteralPath $schemasFrom) {
-    Copy-Tree -From $schemasFrom -To $schemasTo -Overwrite:$Force
+    # Schemas (Execution Control + harness contracts) — optional but required for validators
+    $schemasFrom = Join-Path $HarnessRoot 'schemas/arah-harness'
+    $schemasTo = Join-Path $Target 'schemas/arah-harness'
+    if (Test-Path -LiteralPath $schemasFrom) {
+        Copy-Tree -From $schemasFrom -To $schemasTo -Overwrite:$Force
+    }
 }
 
 # Execution ledger dirs (hot state; gitignored via .arah/local/)

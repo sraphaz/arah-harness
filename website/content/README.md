@@ -15,7 +15,7 @@ The extractor:
 - Parses `<script data-dc-script>` class field arrays via a Node `vm` sandbox
 - Pulls static section copy (eyebrows, headlines, body) from HTML
 - Normalizes stage labels to slugs (`available`, `experimental`, `planned`)
-- Rewrites design mock versions (`1.5.0`) to the harness `VERSION` file (currently **`0.4.1`**)
+- Rewrites design mock versions (`1.5.0`) to the harness `VERSION` file (currently **`0.4.4`**)
 - Calibrates agent/skill counts from the repo (`.agents/**/*.agent.yaml`, `.skills/*.skill.yaml`)
 
 ## Layout
