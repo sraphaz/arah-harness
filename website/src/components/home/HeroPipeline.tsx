@@ -19,7 +19,7 @@ export function HeroPipeline({
       <p className="mb-[18px] font-mono text-[11.5px] uppercase tracking-[0.12em] text-arah-fade">
         {title}
       </p>
-      <ol className="relative flex flex-col gap-2.5">
+      <div className="relative">
         {/* Rail + flowing dot — absolute so it never shifts layout (CLS-safe) */}
         <div
           className="pointer-events-none absolute bottom-3.5 left-[11px] top-3.5 w-0.5 bg-arah-line"
@@ -27,59 +27,61 @@ export function HeroPipeline({
         >
           <span className="absolute left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-[oklch(80%_0.11_200)] shadow-[0_0_12px_oklch(80%_0.11_200_/_0.8)] animate-flowDot" />
         </div>
-        {stages.map((s, idx) => {
-          const accent = idx === 2;
-          const amber = idx === 6;
-          const delay = STAGE_DELAYS_S[idx] ?? idx;
-          return (
-            <li
-              key={s.num}
-              className="relative z-[1] flex items-center gap-3.5 pr-3.5 first:pt-2.5"
-            >
-              <span
-                className="w-6 shrink-0 bg-[#0B0E12] text-center font-mono text-[11px]"
-                style={{
-                  color: accent
-                    ? "oklch(78% 0.09 200)"
-                    : amber
-                      ? "oklch(78% 0.09 80)"
-                      : "#5A6675",
-                }}
-              >
-                {s.num}
-              </span>
-              <div
-                className={`animate-stagePulse min-h-[42px] flex-1 rounded-lg border px-3.5 py-2.5 text-[14px] ${
-                  accent
-                    ? "border-[oklch(75%_0.09_200_/_0.35)] bg-[oklch(75%_0.09_200_/_0.05)]"
-                    : amber
-                      ? "border-[oklch(75%_0.09_80_/_0.35)] bg-[oklch(75%_0.09_80_/_0.05)]"
-                      : "border-arah-line bg-transparent"
-                }`}
-                style={{ animationDelay: `${delay}s` }}
+        <ol className="relative flex flex-col gap-2.5">
+          {stages.map((s, idx) => {
+            const accent = idx === 2;
+            const amber = idx === 6;
+            const delay = STAGE_DELAYS_S[idx] ?? idx;
+            return (
+              <li
+                key={s.num}
+                className="relative z-[1] flex items-center gap-3.5 pr-3.5 first:pt-2.5"
               >
                 <span
-                  className="font-semibold"
+                  className="w-6 shrink-0 bg-[#0B0E12] text-center font-mono text-[11px]"
                   style={{
                     color: accent
-                      ? "oklch(84% 0.07 200)"
+                      ? "oklch(78% 0.09 200)"
                       : amber
-                        ? "oklch(84% 0.07 80)"
-                        : undefined,
+                        ? "oklch(78% 0.09 80)"
+                        : "#5A6675",
                   }}
                 >
-                  {s.name}
+                  {s.num}
                 </span>
-                {s.hint ? (
-                  <span className="ml-2 font-mono text-[12.5px] text-arah-fade">
-                    {s.hint}
+                <div
+                  className={`animate-stagePulse min-h-[42px] flex-1 rounded-lg border px-3.5 py-2.5 text-[14px] ${
+                    accent
+                      ? "border-[oklch(75%_0.09_200_/_0.35)] bg-[oklch(75%_0.09_200_/_0.05)]"
+                      : amber
+                        ? "border-[oklch(75%_0.09_80_/_0.35)] bg-[oklch(75%_0.09_80_/_0.05)]"
+                        : "border-arah-line bg-transparent"
+                  }`}
+                  style={{ animationDelay: `${delay}s` }}
+                >
+                  <span
+                    className="font-semibold"
+                    style={{
+                      color: accent
+                        ? "oklch(84% 0.07 200)"
+                        : amber
+                          ? "oklch(84% 0.07 80)"
+                          : undefined,
+                    }}
+                  >
+                    {s.name}
                   </span>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+                  {s.hint ? (
+                    <span className="ml-2 font-mono text-[12.5px] text-arah-fade">
+                      {s.hint}
+                    </span>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </div>
   );
 }
