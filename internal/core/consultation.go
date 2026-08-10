@@ -1,6 +1,8 @@
 package core
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -9,6 +11,7 @@ import (
 // ConsultationResult is the structured consultant output (no free chat).
 type ConsultationResult struct {
 	Version         string   `yaml:"version" json:"version"`
+	ID              string   `yaml:"id" json:"id"`
 	TaskID          string   `yaml:"task_id" json:"task_id"`
 	ConsultantID    string   `yaml:"consultant_id" json:"consultant_id"`
 	Summary         string   `yaml:"summary" json:"summary"`
@@ -19,8 +22,8 @@ type ConsultationResult struct {
 
 // SubmitConsultation validates and stores a consultant opinion for the executor.
 // Order: bump counter + Save, then write YAML, then emit timeline event.
-// Any failure after the counter save compensates (decrement / remove file) so
-// retries cannot exceed max_consultations with orphan artifacts.
+// A process-local mutex serializes check+reserve so concurrent callers cannot
+// both pass MaxConsultations for the same task.
 func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, recommendations, blockers []string) (*ConsultationResult, string, error) {
 	taskID = strings.TrimSpace(taskID)
 	consultantID = strings.TrimSpace(consultantID)
@@ -34,6 +37,13 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 	if summary == "" {
 		return nil, "", errf("EXECUTION.CONSULTATION_SUMMARY_REQUIRED", "consultation summary is required", nil)
 	}
+	if s.Consultations == nil {
+		return nil, "", errf("STATE.CONSULTATION_STORE_UNAVAILABLE", "consultation writer not configured", nil)
+	}
+
+	s.consultMu.Lock()
+	defer s.consultMu.Unlock()
+
 	c, _, err := s.Store.Get(taskID)
 	if err != nil {
 		return nil, "", err
@@ -65,11 +75,9 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 			"primary_executor cannot submit consultation as consultant",
 			map[string]any{"task_id": taskID})
 	}
-	if s.Consultations == nil {
-		return nil, "", errf("STATE.CONSULTATION_STORE_UNAVAILABLE", "consultation writer not configured", nil)
-	}
 	res := &ConsultationResult{
 		Version:         "1.0",
+		ID:              newConsultationID(),
 		TaskID:          taskID,
 		ConsultantID:    consultantID,
 		Summary:         summary,
@@ -78,7 +86,6 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 		SubmittedAt:     time.Now().UTC().Format(time.RFC3339Nano),
 	}
 
-	// Reserve a consultation slot before writing the artifact.
 	c.Counters.Consultations++
 	if _, err := s.Store.Save(c); err != nil {
 		return nil, "", wrapStore(err)
@@ -92,6 +99,7 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 	if err := s.emitCorrelated(c, "consultation.submitted", map[string]any{
 		"consultant_id": consultantID,
 		"path":          path,
+		"id":            res.ID,
 	}); err != nil {
 		_ = s.Consultations.RemoveConsultation(path)
 		s.rollbackConsultationSlot(c)
@@ -105,4 +113,12 @@ func (s *TaskService) rollbackConsultationSlot(c *Contract) {
 		c.Counters.Consultations--
 	}
 	_, _ = s.Store.Save(c)
+}
+
+func newConsultationID() string {
+	var b [6]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return fmt.Sprintf("c-%d", time.Now().UnixNano())
+	}
+	return "c-" + hex.EncodeToString(b[:])
 }

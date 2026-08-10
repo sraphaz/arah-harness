@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/sraphaz/arah-harness/internal/envelope"
@@ -18,6 +19,8 @@ type TaskService struct {
 	Router        ChoreographyResolver
 	Briefings     BriefingWriter     // optional; writes BRIEFING.md on create
 	Consultations ConsultationWriter // optional; structured consultant opinions
+
+	consultMu sync.Mutex // serializes consultation check+reserve within a process
 }
 
 // MutateOptions controls plan → validate → apply behaviour (H-14).
@@ -189,7 +192,11 @@ func (s *TaskService) Context(taskID string, budget ContextBudget) (*TaskContext
 	}
 	var events []Event
 	if s.Events != nil {
-		events, _ = s.Events.ListByTask(taskID)
+		var lerr error
+		events, lerr = s.Events.ListByTask(taskID)
+		if lerr != nil {
+			return nil, errf("STATE.EVENT_STORE_UNAVAILABLE", lerr.Error(), map[string]any{"task_id": taskID})
+		}
 	}
 	briefing := ""
 	if budget == BudgetFull {

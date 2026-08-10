@@ -5,8 +5,10 @@ package evidence
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -113,6 +115,7 @@ func (b *Builder) Build() (*Graph, error) {
 	if b.Store == nil {
 		return g, nil
 	}
+	taskIDs := make([]string, 0)
 	for _, bucket := range []string{"active", "completed", "blocked"} {
 		list, err := b.Store.List(bucket)
 		if err != nil {
@@ -121,6 +124,7 @@ func (b *Builder) Build() (*Graph, error) {
 		for _, c := range list {
 			tid := "task:" + c.TaskID
 			add(Node{ID: tid, Type: "task", Label: c.Objective})
+			taskIDs = append(taskIDs, c.TaskID)
 			if c.PrimaryExecutor != "" {
 				aid := "agent:" + c.PrimaryExecutor
 				add(Node{ID: aid, Type: "agent", Label: c.PrimaryExecutor})
@@ -160,18 +164,20 @@ func (b *Builder) Build() (*Graph, error) {
 		}
 	}
 
-	// Runtime events → validated_by edges (deterministic; EventStore when present)
+	// Runtime events → validated_by edges (full per-task history)
 	if b.Events != nil {
-		recent, err := b.Events.ListRecent(200)
-		if err == nil {
-			for _, ev := range recent {
-				if ev.TaskID == "" {
+		seenEv := map[string]bool{}
+		for _, taskID := range taskIDs {
+			evs, err := b.Events.ListByTask(taskID)
+			if err != nil {
+				continue
+			}
+			tid := "task:" + taskID
+			for _, ev := range evs {
+				if ev.ID == "" || seenEv[ev.ID] {
 					continue
 				}
-				tid := "task:" + ev.TaskID
-				if !idx[tid] {
-					continue
-				}
+				seenEv[ev.ID] = true
 				eid := "event:" + ev.ID
 				label := ev.Kind
 				if ev.CorrelationID != "" {
@@ -192,6 +198,10 @@ func (b *Builder) Build() (*Graph, error) {
 
 // Explain returns a human-readable slice of the graph for one task (H-18 evidence explain).
 func (b *Builder) Explain(taskID string) (map[string]any, error) {
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return nil, fmt.Errorf("task_id is required")
+	}
 	g, err := b.Build()
 	if err != nil {
 		return nil, err
@@ -200,6 +210,9 @@ func (b *Builder) Explain(taskID string) (map[string]any, error) {
 	nodes := map[string]Node{}
 	for _, n := range g.Nodes {
 		nodes[n.ID] = n
+	}
+	if _, ok := nodes[tid]; !ok {
+		return nil, fmt.Errorf("unknown task_id: %s", taskID)
 	}
 	var edges []Edge
 	related := map[string]bool{tid: true}
@@ -216,6 +229,7 @@ func (b *Builder) Explain(taskID string) (map[string]any, error) {
 			outNodes = append(outNodes, n)
 		}
 	}
+	sort.Slice(outNodes, func(i, j int) bool { return outNodes[i].ID < outNodes[j].ID })
 	return map[string]any{
 		"task_id": taskID,
 		"nodes":   outNodes,

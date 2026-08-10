@@ -335,10 +335,16 @@ func runEconomy(root string, args []string, jsonOut bool) int {
 	}
 	// Persist cold evidence under docs/_meta/runs when writing to this repo.
 	outDir := filepath.Join(root, "docs", "_meta", "runs", "context-budget")
-	_ = os.MkdirAll(outDir, 0o755)
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, "cannot create context-budget run dir: "+err.Error(), map[string]any{"path": outDir}))
+	}
 	summaryPath := filepath.Join(outDir, "summary.json")
-	if b, err := json.MarshalIndent(data, "", "  "); err == nil {
-		_ = os.WriteFile(summaryPath, b, 0o644)
+	b, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
+	}
+	if err := os.WriteFile(summaryPath, b, 0o644); err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, "cannot write context-budget summary: "+err.Error(), map[string]any{"path": summaryPath}))
 	}
 	data["summary_path"] = "docs/_meta/runs/context-budget/summary.json"
 	if jsonOut {

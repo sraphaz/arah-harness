@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -160,22 +161,69 @@ func recentEventKinds(events []Event, n int) []string {
 }
 
 func stringifyTaskContext(tc *TaskContext) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "%s %s %s %s %s ", tc.Budget, tc.TaskID, tc.State, tc.PrimaryExecutor, tc.Objective)
-	b.WriteString(strings.Join(tc.AllowedPaths, " "))
-	b.WriteString(strings.Join(tc.Consultants, " "))
-	b.WriteString(strings.Join(tc.RecentEventKinds, " "))
-	b.WriteString(strings.Join(tc.Evidence, " "))
-	b.WriteString(tc.BriefingMarkdown)
-	if tc.Contract != nil {
-		fmt.Fprintf(&b, " contract:%s", tc.Contract.TaskID)
-		b.WriteString(strings.Join(tc.Contract.Scope.AllowedPaths, " "))
-		b.WriteString(tc.Contract.Objective)
+	// Projection of every model-facing field except estimated_tokens (avoid recursion).
+	type eventProj struct {
+		ID            string         `json:"id"`
+		TaskID        string         `json:"task_id,omitempty"`
+		Kind          string         `json:"kind"`
+		At            string         `json:"at"`
+		Payload       map[string]any `json:"payload,omitempty"`
+		TraceID       string         `json:"trace_id,omitempty"`
+		RunID         string         `json:"run_id,omitempty"`
+		CorrelationID string         `json:"correlation_id,omitempty"`
+		AgentID       string         `json:"agent_id,omitempty"`
+		SessionID     string         `json:"session_id,omitempty"`
+	}
+	proj := struct {
+		Budget           ContextBudget `json:"budget"`
+		TaskID           string        `json:"task_id"`
+		State            State         `json:"state"`
+		PrimaryExecutor  string        `json:"primary_executor"`
+		Objective        string        `json:"objective"`
+		ChoreographyRule string        `json:"choreography_rule,omitempty"`
+		WorkClass        WorkClass     `json:"work_class,omitempty"`
+		Area             string        `json:"area,omitempty"`
+		AllowedPaths     []string      `json:"allowed_paths,omitempty"`
+		Consultants      []string      `json:"consultants,omitempty"`
+		Limits           *Limits       `json:"limits,omitempty"`
+		RecentEventKinds []string      `json:"recent_event_kinds,omitempty"`
+		Evidence         []string      `json:"evidence,omitempty"`
+		BlockingReason   *string       `json:"blocking_reason,omitempty"`
+		BriefingMarkdown string        `json:"briefing_markdown,omitempty"`
+		Contract         *Contract     `json:"contract,omitempty"`
+		Events           []eventProj   `json:"events,omitempty"`
+		DisclosureNotes  []string      `json:"disclosure_notes"`
+	}{
+		Budget:           tc.Budget,
+		TaskID:           tc.TaskID,
+		State:            tc.State,
+		PrimaryExecutor:  tc.PrimaryExecutor,
+		Objective:        tc.Objective,
+		ChoreographyRule: tc.ChoreographyRule,
+		WorkClass:        tc.WorkClass,
+		Area:             tc.Area,
+		AllowedPaths:     tc.AllowedPaths,
+		Consultants:      tc.Consultants,
+		Limits:           tc.Limits,
+		RecentEventKinds: tc.RecentEventKinds,
+		Evidence:         tc.Evidence,
+		BlockingReason:   tc.BlockingReason,
+		BriefingMarkdown: tc.BriefingMarkdown,
+		Contract:         tc.Contract,
+		DisclosureNotes:  tc.DisclosureNotes,
 	}
 	for _, ev := range tc.Events {
-		fmt.Fprintf(&b, " %s %s", ev.Kind, ev.At)
+		proj.Events = append(proj.Events, eventProj{
+			ID: ev.ID, TaskID: ev.TaskID, Kind: ev.Kind, At: ev.At, Payload: ev.Payload,
+			TraceID: ev.TraceID, RunID: ev.RunID, CorrelationID: ev.CorrelationID,
+			AgentID: ev.AgentID, SessionID: ev.SessionID,
+		})
 	}
-	return b.String()
+	b, err := json.Marshal(proj)
+	if err != nil {
+		return fmt.Sprintf("%s %s %s", tc.Budget, tc.TaskID, tc.Objective)
+	}
+	return string(b)
 }
 
 // BaselinePromptTokens estimates the legacy "dump everything" agent context size.

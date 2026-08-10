@@ -342,21 +342,22 @@ func TestInvalidConfigFixture(t *testing.T) {
 func TestMonorepoRouting(t *testing.T) {
 	root := copyFixture(t, "monorepo")
 	svc := serviceFor(t, root)
+	// ExplainRoute is area-based (not file-path based); assert area shortcuts.
 	front, err := svc.ExplainRoute("frontend", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if front["primary_executor"] != "frontend" && front["primary_executor"] != "backend" {
-		// area string maps via Resolve(area) — choreography uses path hints; area "frontend" may fall through
-		t.Logf("route=%v", front)
+	if front["primary_executor"] != "frontend" {
+		t.Fatalf("frontend area → want frontend, got %v", front["primary_executor"])
 	}
 	back, err := svc.Create("api change", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{DryRun: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if back.Contract.PrimaryExecutor == "" {
-		t.Fatal("expected executor")
+	if back.Contract.PrimaryExecutor != "backend" {
+		t.Fatalf("backend area → want backend, got %s", back.Contract.PrimaryExecutor)
 	}
+	_ = root
 }
 
 func TestKernelVerifyCleanOnModuleRoot(t *testing.T) {
@@ -372,26 +373,16 @@ func TestKernelVerifyCleanOnModuleRoot(t *testing.T) {
 
 func TestKernelDriftFixtureFails(t *testing.T) {
 	root := copyFixture(t, "valid-minimal")
-	// Seed a fake kernel/ with stale manifest so verify fails when sources exist.
-	_ = os.MkdirAll(filepath.Join(root, "kernel"), 0o755)
-	_ = os.WriteFile(filepath.Join(root, "kernel", "manifest.json"), []byte(`{"files":{"AGENTS.md":"deadbeef"}}`), 0o644)
-	_ = os.WriteFile(filepath.Join(root, "AGENTS.md"), []byte("# real\n"), 0o644)
-	// Sync would fix; verify should report drift if AGENTS.md is a tracked source.
-	// If AGENTS.md is not in ListSources, force a tracked path from kernel package.
-	sources, err := kernel.ListSources(root)
-	if err != nil || len(sources) == 0 {
-		// Fixture may not include .agents skills — create a tracked file that sync would copy.
-		_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
-		_ = os.WriteFile(filepath.Join(root, ".agents", "README.md"), []byte("x"), 0o644)
-		_ = os.WriteFile(filepath.Join(root, "kernel", "manifest.json"), []byte(`{"files":{".agents/README.md":"0000"}}`), 0o644)
-		_ = os.MkdirAll(filepath.Join(root, "kernel", ".agents"), 0o755)
-		_ = os.WriteFile(filepath.Join(root, "kernel", ".agents", "README.md"), []byte("stale"), 0o644)
-	}
+	// Ensure a tracked source exists under allowlist and kernel copy is stale.
+	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, ".agents", "README.md"), []byte("source-content\n"), 0o644)
+	_ = os.MkdirAll(filepath.Join(root, "kernel", ".agents"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "kernel", ".agents", "README.md"), []byte("stale\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "kernel", "manifest.json"), []byte(`{"files":{".agents/README.md":"0000000000000000000000000000000000000000000000000000000000000000"}}`), 0o644)
+
 	drifts, err := kernel.Verify(root)
 	if err != nil {
-		// missing payload is ok as drift signal
-		t.Log(err)
-		return
+		t.Fatalf("Verify should return drifts, not error: %v", err)
 	}
 	if len(drifts) == 0 {
 		t.Fatal("expected kernel drift in fixture")

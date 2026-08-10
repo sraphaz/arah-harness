@@ -9,7 +9,7 @@ Proves Runtime Cohesion 0.5 invariants against fixture repositories.
 | `valid-minimal/` | Healthy choreography + config |
 | `invalid-config/` | Missing `primary_executor` |
 | `monorepo/` | Multi-path routing skeleton |
-| `task-blocked/` | Seeded blocked-task flow |
+| `task-blocked/` | Same choreography as valid-minimal; test creates a task then blocks it |
 | `empty/` | Bare directory |
 | `drift-kernel/` | Built in-test from valid-minimal + stale kernel |
 

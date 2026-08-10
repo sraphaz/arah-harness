@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/sraphaz/arah-harness/internal/adapters/choreography"
@@ -165,5 +167,43 @@ func TestSubmitConsultationEmitsOrRollsBack(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("missing consultation.submitted in %#v", evs)
+	}
+}
+
+func TestSubmitConsultationConcurrentRespectsLimit(t *testing.T) {
+	_, svc, _ := sqliteSvc(t)
+	created, err := svc.Create("concurrent consult", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// WorkStandard MaxConsultations=1
+	id := created.Contract.TaskID
+	var (
+		wg       sync.WaitGroup
+		okCount  atomic.Int32
+		errCount atomic.Int32
+	)
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func(n int) {
+			defer wg.Done()
+			_, _, err := svc.SubmitConsultation(id, "solutions-architect", fmt.Sprintf("opinion %d", n), nil, nil)
+			if err == nil {
+				okCount.Add(1)
+			} else {
+				errCount.Add(1)
+			}
+		}(i)
+	}
+	wg.Wait()
+	if okCount.Load() != 1 {
+		t.Fatalf("expected exactly 1 success, got ok=%d err=%d", okCount.Load(), errCount.Load())
+	}
+	got, _, err := svc.Get(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Counters.Consultations != 1 {
+		t.Fatalf("counter=%d", got.Counters.Consultations)
 	}
 }

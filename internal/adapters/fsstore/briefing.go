@@ -1,6 +1,8 @@
 package fsstore
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -34,7 +36,7 @@ func (s *Store) WriteBriefing(c *core.Contract) (string, error) {
 	return path, nil
 }
 
-// WriteConsultation persists a structured consultant opinion YAML.
+// WriteConsultation persists a structured consultant opinion YAML with exclusive create.
 func (s *Store) WriteConsultation(taskID string, result *core.ConsultationResult) (string, error) {
 	if result == nil {
 		return "", fmt.Errorf("consultation result required")
@@ -43,20 +45,24 @@ func (s *Store) WriteConsultation(taskID string, result *core.ConsultationResult
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
-	stamp := time.Now().UTC().Format("20060102-150405.000")
-	stamp = strings.ReplaceAll(stamp, ".", "")
-	name := fmt.Sprintf("%s-%s.yaml", stamp, sanitizeID(result.ConsultantID))
+	if strings.TrimSpace(result.ID) == "" {
+		result.ID = newConsultationID()
+	}
+	stamp := time.Now().UTC().Format("20060102-150405")
+	name := fmt.Sprintf("%s-%s-%s.yaml", stamp, sanitizeID(result.ConsultantID), sanitizeID(result.ID))
 	path := filepath.Join(dir, name)
 	raw, err := yaml.Marshal(result)
 	if err != nil {
 		return "", err
 	}
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil {
 		return "", err
 	}
-	if err := os.Rename(tmp, path); err != nil {
-		_ = os.Remove(tmp)
+	defer f.Close()
+	if _, err := f.Write(raw); err != nil {
+		_ = f.Close()
+		_ = os.Remove(path)
 		return "", err
 	}
 	return path, nil
@@ -68,7 +74,6 @@ func (s *Store) RemoveConsultation(path string) error {
 	if path == "" {
 		return nil
 	}
-	// Only allow deletes under this store's execution root.
 	root, err := filepath.Abs(s.root())
 	if err != nil {
 		return err
@@ -81,6 +86,14 @@ func (s *Store) RemoveConsultation(path string) error {
 		return fmt.Errorf("consultation path outside execution root")
 	}
 	return os.Remove(abs)
+}
+
+func newConsultationID() string {
+	var b [6]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return fmt.Sprintf("c-%d", time.Now().UnixNano())
+	}
+	return "c-" + hex.EncodeToString(b[:])
 }
 
 func sanitizeID(s string) string {
