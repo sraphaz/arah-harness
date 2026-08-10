@@ -165,9 +165,11 @@ OpenTelemetry como adapter opcional; default 100% local.
 fonte canônica → validação → geração do pacote → manifest de hashes → install
 ```
 
-Preferência: `go:embed` no binário (fase 2 — install sem checkout). Hoje (fase 1):
-fonte canônica na raiz → `arah kernel sync` → `kernel/` + `kernel/manifest.json`
-(SHA-256) → `arah kernel verify` / CI. `kernel/` no release **não** é editado à mão.
+Preferência cumprida na fase 2: `go:embed` de `internal/kernel/payload/kernel.zip`.
+Hoje: fonte canônica na raiz → `arah kernel sync` → `kernel/` + manifest SHA-256 +
+payload zip → `arah kernel verify` / CI; `arah kernel install` extrai o embed.
+`kernel/` no release **não** é editado à mão.
+
 
 
 **Princípio:** se dois arquivos precisam permanecer iguais, um deles não

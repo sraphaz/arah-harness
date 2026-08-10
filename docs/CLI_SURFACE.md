@@ -44,7 +44,7 @@ Módulo raiz `github.com/sraphaz/arah-harness` · binário [`cmd/arah`](../cmd/a
 | `arah task create\|status\|complete\|block\|timeline` | Execution Control via `internal/core` + SQLite |
 | `arah evidence graph` | Evidence Graph determinístico (H-18) |
 | `arah mcp serve` | MCP stdio — ver [mcp-tool-contract.md](architecture/mcp-tool-contract.md) |
-| `arah kernel sync\|verify` | H-15 — gera/verifica `kernel/` a partir da raiz + manifest SHA-256 |
+| `arah kernel sync\|verify\|install` | H-15 — gera/verifica `kernel/` + embed zip; install sem checkout |
 
 Hot state canônico: `.arah/local/runtime.db` (SQLite WAL). YAML em
 `.arah/local/execution/` permanece como mirror de compatibilidade.

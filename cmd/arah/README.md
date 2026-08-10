@@ -14,12 +14,14 @@ go build -o arah ./cmd/arah
 ./arah mcp serve -target .
 ./arah kernel sync -target .
 ./arah kernel verify -target .
+./arah kernel install -target /path/to/consumer --force
 ```
 
 Hot state: `.arah/local/runtime.db` (SQLite WAL) with YAML mirror under
 `.arah/local/execution/` for PowerShell compatibility.
 
 Kernel package (H-15): edit root sources, then `kernel sync`. Do not hand-edit `kernel/`.
+`kernel install` extracts the embedded payload zip (no harness checkout required).
 
 | Exit | Meaning |
 |------|---------|

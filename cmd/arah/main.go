@@ -156,8 +156,8 @@ func runTask(root string, args []string, jsonOut bool) int {
 func runKernel(root string, args []string, jsonOut bool) int {
 	sub := stripGlobalFlags(args)
 	if len(sub) == 0 {
-		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah kernel <sync|verify>", nil,
-			"arah kernel sync|verify [-target path] [--json]"))
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah kernel <sync|verify|install>", nil,
+			"arah kernel sync|verify|install [-target path] [--force] [--json]"))
 	}
 	switch sub[0] {
 	case "sync":
@@ -169,12 +169,13 @@ func runKernel(root string, args []string, jsonOut bool) int {
 			"files":        len(m.Files),
 			"copied":       n,
 			"manifest":     kernel.ManifestRel,
+			"payload_zip":  kernel.PayloadZipRel,
 			"generated_at": m.GeneratedAt,
 		}
 		if jsonOut {
 			return envelope.WriteJSON(os.Stdout, envelope.OK(data))
 		}
-		fmt.Printf("kernel sync: %d files → kernel/ (%s)\n", len(m.Files), kernel.ManifestRel)
+		fmt.Printf("kernel sync: %d files → kernel/ + %s\n", len(m.Files), kernel.PayloadZipRel)
 		return 0
 	case "verify":
 		drifts, err := kernel.Verify(root)
@@ -199,9 +200,26 @@ func runKernel(root string, args []string, jsonOut bool) int {
 		}
 		fmt.Println("kernel verify: OK")
 		return 0
+	case "install":
+		force := hasFlag(args, "--force") || hasFlag(args, "-force")
+		n, err := kernel.Install(root, nil, kernel.InstallOptions{Force: force})
+		if err != nil {
+			return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
+		}
+		data := map[string]any{
+			"installed": n,
+			"target":    root,
+			"force":     force,
+			"source":    "embed",
+		}
+		if jsonOut {
+			return envelope.WriteJSON(os.Stdout, envelope.OK(data))
+		}
+		fmt.Printf("kernel install: %d files → %s\n", n, root)
+		return 0
 	default:
 		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "unknown kernel action: "+sub[0], nil,
-			"arah kernel sync|verify"))
+			"arah kernel sync|verify|install"))
 	}
 }
 
@@ -382,10 +400,11 @@ func usage() {
   arah task timeline -task-id ID [--json]
   arah evidence graph [--json]
   arah mcp serve [-target path]
-  arah kernel sync|verify [-target path] [--json]
+  arah kernel sync|verify|install [-target path] [--force] [--json]
 
 Hot state: .arah/local/runtime.db (SQLite WAL) + YAML mirror for PS.
-Kernel: edit root sources, then "arah kernel sync"; CI runs "arah kernel verify".
+Kernel: edit root sources, then "arah kernel sync"; CI runs "arah kernel verify";
+install extracts the go:embed payload zip without a harness checkout.
 Exit codes: 0 ok · 1 error · 2 drift · 4 unhealthy · 10 usage
 `)
 }

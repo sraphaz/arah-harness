@@ -1,12 +1,11 @@
 // Package kernel generates and verifies the distributable kernel/ tree (H-15).
 //
 // Canonical sources live at the repository root (.agents, .skills, .cursor,
-// scripts/agents, scripts/harness). kernel/ is a generated package plus a
-// SHA-256 manifest. Do not hand-edit files under kernel/ — run
-// `arah kernel sync` after changing sources.
+// scripts/agents, scripts/harness). Sync produces:
+//   - kernel/ + kernel/manifest.json (checkout / PowerShell init)
+//   - internal/kernel/payload/kernel.zip (go:embed for `arah kernel install`)
 //
-// Phase 2 (install without a checkout) may embed the generated payload via
-// go:embed; this package keeps sources→kernel as the single writable path.
+// Do not hand-edit files under kernel/ — run `arah kernel sync` after changing sources.
 package kernel
 
 import (
@@ -260,6 +259,9 @@ func Sync(repoRoot string) (*Manifest, int, error) {
 	if err := writeManifest(repoRoot, m); err != nil {
 		return nil, 0, err
 	}
+	if _, err := writePayloadZip(repoRoot, entries, m); err != nil {
+		return nil, 0, fmt.Errorf("payload zip: %w", err)
+	}
 	return m, copied, nil
 }
 
@@ -344,6 +346,7 @@ func Verify(repoRoot string) ([]Drift, error) {
 		}
 		return nil
 	})
+	drifts = append(drifts, verifyPayloadZip(repoRoot, entries, m)...)
 	sort.Slice(drifts, func(i, j int) bool { return drifts[i].Path < drifts[j].Path })
 	return drifts, nil
 }

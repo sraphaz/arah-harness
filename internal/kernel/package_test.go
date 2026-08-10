@@ -131,6 +131,41 @@ func TestListSourcesSkipsArahLiveTelemetry(t *testing.T) {
 	}
 }
 
+func TestInstallFromZip(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root)
+	if _, _, err := kernel.Sync(root); err != nil {
+		t.Fatal(err)
+	}
+	zipPath := filepath.Join(root, filepath.FromSlash(kernel.PayloadZipRel))
+	raw, err := os.ReadFile(zipPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := t.TempDir()
+	n, err := kernel.Install(target, raw, kernel.InstallOptions{Force: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n < 5 {
+		t.Fatalf("installed=%d", n)
+	}
+	if _, err := os.Stat(filepath.Join(target, ".agents", "choreography.yaml")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(target, ".arah", "kernel.manifest.json")); err != nil {
+		t.Fatal(err)
+	}
+	// without force, existing files are skipped
+	n2, err := kernel.Install(target, raw, kernel.InstallOptions{Force: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n2 != 0 {
+		t.Fatalf("expected skip when present, installed=%d", n2)
+	}
+}
+
 func TestVerifyMalformedManifestDigest(t *testing.T) {
 	root := t.TempDir()
 	writeTree(t, root)
