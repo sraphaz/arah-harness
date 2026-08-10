@@ -205,6 +205,8 @@ ON CONFLICT(task_id) DO UPDATE SET
 }
 
 // Get returns a contract from SQLite, falling back to the filesystem mirror.
+// When both exist, the fresher copy wins and is written back into SQLite so
+// PowerShell-only updates (complete/block) are not shadowed by a stale row.
 func (s *Store) Get(taskID string) (*core.Contract, string, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return nil, "", err
@@ -212,17 +214,70 @@ func (s *Store) Get(taskID string) (*core.Contract, string, error) {
 	var yamlBody string
 	err := s.db.QueryRow(`SELECT contract_yaml FROM tasks WHERE task_id = ?`, taskID).Scan(&yamlBody)
 	if err == sql.ErrNoRows {
-		// Fallback to filesystem (pre-migration callers / dual-write lag)
 		return s.fs.Get(taskID)
 	}
 	if err != nil {
 		return nil, "", err
 	}
-	var c core.Contract
-	if err := yaml.Unmarshal([]byte(yamlBody), &c); err != nil {
+	var dbContract core.Contract
+	if err := yaml.Unmarshal([]byte(yamlBody), &dbContract); err != nil {
 		return nil, "", err
 	}
-	return &c, "sqlite:" + s.DBPath + "#" + taskID, nil
+	fsContract, fsPath, fsErr := s.fs.Get(taskID)
+	if fsErr != nil {
+		return &dbContract, "sqlite:" + s.DBPath + "#" + taskID, nil
+	}
+	chosen := preferFresher(&dbContract, fsContract)
+	ref := "sqlite:" + s.DBPath + "#" + taskID
+	if chosen == fsContract {
+		if _, err := s.saveDB(chosen); err != nil {
+			// Still return the fresher FS view even if reconcile write fails.
+			return chosen, fsPath, nil
+		}
+	}
+	return chosen, ref, nil
+}
+
+// preferFresher chooses the contract that best reflects recent writes.
+// Terminal filesystem updates from PowerShell must win over a stale SQLite row.
+func preferFresher(db, fs *core.Contract) *core.Contract {
+	if db == nil {
+		return fs
+	}
+	if fs == nil {
+		return db
+	}
+	dbTerm := core.IsTerminal(db.State)
+	fsTerm := core.IsTerminal(fs.State)
+	if fsTerm && !dbTerm {
+		return fs
+	}
+	if dbTerm && !fsTerm {
+		return db
+	}
+	dbAt := lastHistoryAt(db)
+	fsAt := lastHistoryAt(fs)
+	switch {
+	case fsAt > dbAt:
+		return fs
+	case dbAt > fsAt:
+		return db
+	case len(fs.History) > len(db.History):
+		return fs
+	case len(db.History) > len(fs.History):
+		return db
+	case len(fs.Execution.CompletionEvidence) > len(db.Execution.CompletionEvidence):
+		return fs
+	default:
+		return db
+	}
+}
+
+func lastHistoryAt(c *core.Contract) string {
+	if c == nil || len(c.History) == 0 {
+		return ""
+	}
+	return c.History[len(c.History)-1].At
 }
 
 // List returns contracts in a bucket, merging SQLite rows with filesystem-only tasks.
@@ -238,7 +293,6 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	seen := map[string]bool{}
 	var out []*core.Contract
 	for rows.Next() {
 		var body string
@@ -249,25 +303,42 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 		if err := yaml.Unmarshal([]byte(body), &c); err != nil {
 			continue
 		}
-		seen[c.TaskID] = true
 		out = append(out, &c)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	// Merge filesystem-only tasks (PS writers / pre-import) so List matches Get fallback.
+	// Merge filesystem tasks; prefer fresher copy when both sides have the same ID.
 	fsList, err := s.fs.List(bucket)
 	if err != nil {
 		return nil, fmt.Errorf("list filesystem bucket %s: %w", bucket, err)
 	}
+	byID := map[string]*core.Contract{}
+	order := make([]string, 0, len(out)+len(fsList))
+	for _, c := range out {
+		byID[c.TaskID] = c
+		order = append(order, c.TaskID)
+	}
 	for _, c := range fsList {
-		if c == nil || seen[c.TaskID] {
+		if c == nil {
 			continue
 		}
-		seen[c.TaskID] = true
-		out = append(out, c)
+		if existing, ok := byID[c.TaskID]; ok {
+			chosen := preferFresher(existing, c)
+			byID[c.TaskID] = chosen
+			if chosen == c {
+				_, _ = s.saveDB(chosen)
+			}
+			continue
+		}
+		byID[c.TaskID] = c
+		order = append(order, c.TaskID)
 	}
-	return out, nil
+	merged := make([]*core.Contract, 0, len(order))
+	for _, id := range order {
+		merged = append(merged, byID[id])
+	}
+	return merged, nil
 }
 
 // Append implements EventStore.

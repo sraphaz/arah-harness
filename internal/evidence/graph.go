@@ -3,6 +3,8 @@
 package evidence
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"strings"
@@ -130,7 +132,7 @@ func (b *Builder) Build() (*Graph, error) {
 				link(tid, aid, "consulted")
 			}
 			for _, ev := range c.Execution.CompletionEvidence {
-				eid := "evidence:" + short(ev)
+				eid := "evidence:" + stableID(ev)
 				add(Node{ID: eid, Type: "evidence", Label: ev})
 				link(tid, eid, "evidenced_by")
 			}
@@ -140,7 +142,7 @@ func (b *Builder) Build() (*Graph, error) {
 				link(tid, pid, "produced")
 			}
 			if c.State == core.StateBlocked && c.Result.BlockingReason != nil {
-				bid := "block:" + short(*c.Result.BlockingReason)
+				bid := "block:" + stableID(*c.Result.BlockingReason)
 				add(Node{ID: bid, Type: "blocker", Label: *c.Result.BlockingReason})
 				link(tid, bid, "blocked_by")
 			}
@@ -161,10 +163,8 @@ func (b *Builder) Build() (*Graph, error) {
 	return g, nil
 }
 
-func short(s string) string {
-	s = strings.TrimSpace(s)
-	if len(s) > 64 {
-		return s[:64]
-	}
-	return s
+// stableID returns a collision-resistant id fragment for free-form strings.
+func stableID(s string) string {
+	sum := sha256.Sum256([]byte(strings.TrimSpace(s)))
+	return hex.EncodeToString(sum[:16])
 }

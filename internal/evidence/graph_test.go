@@ -3,6 +3,7 @@ package evidence_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/sraphaz/arah-harness/internal/adapters/choreography"
@@ -55,5 +56,51 @@ func TestEvidenceGraphFromTask(t *testing.T) {
 	}
 	if !hasSpec || !hasAssigned {
 		t.Fatalf("expected spec+assigned_to, graph=%+v", g)
+	}
+}
+
+func TestEvidenceNodeIDsDoNotCollideOnPrefix(t *testing.T) {
+	root := t.TempDir()
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	prefix := strings.Repeat("a", 64)
+	a := &core.Contract{
+		Version: "1.0", TaskID: "task-a", Objective: "a", State: core.StateDone,
+		PrimaryExecutor: "backend", WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		Execution: core.Execution{CompletionEvidence: []string{prefix + "-one"}},
+	}
+	b := &core.Contract{
+		Version: "1.0", TaskID: "task-b", Objective: "b", State: core.StateDone,
+		PrimaryExecutor: "backend", WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		Execution: core.Execution{CompletionEvidence: []string{prefix + "-two"}},
+	}
+	if _, err := store.Save(a); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Save(b); err != nil {
+		t.Fatal(err)
+	}
+	g, err := (&evidence.Builder{RepoRoot: root, Store: store}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	evidenceNodes := 0
+	ids := map[string]string{}
+	for _, n := range g.Nodes {
+		if n.Type != "evidence" {
+			continue
+		}
+		evidenceNodes++
+		if prev, ok := ids[n.ID]; ok && prev != n.Label {
+			t.Fatalf("colliding evidence id %s for %q and %q", n.ID, prev, n.Label)
+		}
+		ids[n.ID] = n.Label
+	}
+	if evidenceNodes < 2 {
+		t.Fatalf("expected distinct evidence nodes, got %d", evidenceNodes)
 	}
 }
