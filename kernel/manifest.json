@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-10T04:04:34Z",
+  "generated_at": "2026-08-10T04:16:35Z",
   "files": {
     ".agents/README.md": "6df58203d110cbd417d87c081161329584168da526d9959a901e0992f591bbab",
     ".agents/agent-graph.schema.yaml": "ee506d1f877693c7dfcdbe26f3d284facc0446f1b84bc0eb65f7f18d29427c24",
@@ -96,7 +96,7 @@
     "scripts/agents/regenerate-harness.ps1": "3e949eac3ce70dee6092cf3fc910c1c956c1d1f9e11b9b233c7dac12c1b75224",
     "scripts/agents/register-adr.ps1": "2ccd35807bff74cffbb909d9d6e28943f75a88ad5e37c0214f4a9c47b25ded79",
     "scripts/agents/run-gates.ps1": "e67487fac09c418d89eef86ee624c70b69c25ffc1b6da13639a7b75b6b1c09e0",
-    "scripts/agents/session-telemetry.ps1": "ce8d7fc28249cafcba6a1abe303f7d6a049a7fda88631bf9e0edef8bbe421c80",
+    "scripts/agents/session-telemetry.ps1": "69153363620dcef6ff7e3f1ec3fa2267c4bac96f97c23fccf515c8b637313dd0",
     "scripts/agents/signal-bus.ps1": "76968697ae514141784216b563b5811e82a6b9f8e37029781a36ead6c9570233",
     "scripts/agents/slice-compose.ps1": "79078d91071802e02757fa48116a92d67ac022e2661a55d2d97f43b601ee1e8d",
     "scripts/agents/spec-gate-check.ps1": "ec95a0e95cabfc651ebaa648a56923cd296dbfcfa32060f3912fdd378617e2b9",
