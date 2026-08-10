@@ -20,7 +20,7 @@
 | H-13 | `arah-core` tipado (Go) | **in progress** — domain + task CLI + MCP stdio |
 | H-14 | Contratos JSON + `plan→validate→apply` | **partial** — envelope + dry-run + diff + idempotência complete/block |
 | H-15 | Kernel gerado (fim da segunda fonte) | **partial** — `arah kernel sync\|verify` + manifest SHA-256; go:embed install TBD |
-| H-16 | StateStore SQLite + migração | **done** — `.arah/local/runtime.db` WAL + mirror YAML |
+| H-16 | StateStore SQLite + migração | **done** — WAL + mirror YAML; schema Up/Down testados (v2) |
 | H-17 | MCP serve (mesmos use cases da CLI) | **in progress** — tools ECP + timeline + evidence; `dry_run` nas mutações |
 | H-18 | Evidence Graph determinístico | **in progress** — `arah evidence graph` + MCP tool |
 | H-19 | Timeline unificada task/run | **partial** — `task timeline` + EventStore; correlacionadores amplos TBD |
@@ -98,6 +98,8 @@ Não editar `kernel/` à mão. `go:embed` do payload para `install` sem checkout
 Hot state em `.arah/local/runtime.db` (SQLite WAL, `modernc.org/sqlite`).
 Migração automática a partir de YAML; mirror filesystem para PS. EventStore
 `task_events` append-only (timeline). Reconcile de frescor YAML↔SQLite no Get/List.
+Schema versionado (`schema_meta`) com Up/Down testados — v2 adiciona
+`idx_events_kind`; `RollbackTo` para recuperação controlada / testes DoD.
 
 ### H-17 · MCP primeira classe — in progress P1
 `arah mcp serve` + [mcp-tool-contract.md](../architecture/mcp-tool-contract.md).

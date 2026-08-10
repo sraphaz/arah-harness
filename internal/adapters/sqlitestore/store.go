@@ -19,8 +19,6 @@ import (
 	"github.com/sraphaz/arah-harness/internal/core"
 )
 
-const schemaVersion = 1
-
 // Store is the SQLite-backed StateStore and EventStore for a single repository.
 // Path: <repo>/.arah/local/runtime.db (WAL). YAML under execution/ is a best-effort mirror.
 type Store struct {
@@ -77,43 +75,6 @@ func (s *Store) EnsureLayout() error {
 	}
 	s.db = db
 	return s.importFilesystemIfEmpty()
-}
-
-func migrate(db *sql.DB) error {
-	_, err := db.Exec(`
-CREATE TABLE IF NOT EXISTS schema_meta (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS tasks (
-  task_id TEXT PRIMARY KEY,
-  state TEXT NOT NULL,
-  bucket TEXT NOT NULL,
-  primary_executor TEXT,
-  objective TEXT,
-  work_class TEXT,
-  intent_type TEXT,
-  choreography_rule TEXT,
-  contract_yaml TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_tasks_bucket ON tasks(bucket);
-CREATE TABLE IF NOT EXISTS task_events (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  event_id TEXT NOT NULL UNIQUE,
-  task_id TEXT,
-  kind TEXT NOT NULL,
-  at TEXT NOT NULL,
-  trace_id TEXT,
-  payload_json TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_events_task ON task_events(task_id);
-`)
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec(`INSERT OR IGNORE INTO schema_meta(key, value) VALUES('version', ?)`, fmt.Sprintf("%d", schemaVersion))
-	return err
 }
 
 func (s *Store) importFilesystemIfEmpty() error {

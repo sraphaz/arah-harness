@@ -245,7 +245,8 @@ contratos estáveis · swarm irrestrito · expandir Graphify antes da porta
 4. Todas as transições do Execution Control têm testes no core.
 5. Toda decisão de policy é explicável.
 6. Toda conclusão possui evidência verificável.
-7. Upgrade e rollback de schema do StateStore são testados.
+7. Upgrade e rollback de schema do StateStore são testados
+   (`internal/adapters/sqlitestore` — `SchemaVersion` / `RollbackTo`).
 8. Repo sem daemon ou provider semântico continua funcionando.
 9. Nenhum campo governado é interpretado por LLM.
 10. Os próprios repositórios Arah passam na conformance suite.
