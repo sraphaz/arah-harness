@@ -127,7 +127,7 @@ func (s *Store) importFilesystemIfEmpty() error {
 	for _, bucket := range []string{"active", "completed", "blocked"} {
 		list, err := s.fs.List(bucket)
 		if err != nil {
-			continue
+			return fmt.Errorf("migrate filesystem bucket %s: %w", bucket, err)
 		}
 		for _, c := range list {
 			if _, err := s.saveDB(c); err != nil {
@@ -258,7 +258,7 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	// Merge filesystem-only tasks (PS writers / pre-import) so List matches Get fallback.
 	fsList, err := s.fs.List(bucket)
 	if err != nil {
-		return out, nil
+		return nil, fmt.Errorf("list filesystem bucket %s: %w", bucket, err)
 	}
 	for _, c := range fsList {
 		if c == nil || seen[c.TaskID] {

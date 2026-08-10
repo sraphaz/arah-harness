@@ -124,3 +124,26 @@ func TestTimelineRequiresExistingTask(t *testing.T) {
 	}
 }
 
+func TestImportPropagatesListErrors(t *testing.T) {
+	root := t.TempDir()
+	fs := fsstore.New(root)
+	seed := &core.Contract{
+		Version: "1.0", TaskID: "task-seed", Objective: "seed",
+		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		State: core.StateExecuting, PrimaryExecutor: "backend",
+	}
+	if _, err := fs.Save(seed); err != nil {
+		t.Fatal(err)
+	}
+	active := filepath.Join(root, ".arah", "local", "execution", "active")
+	if err := os.Chmod(active, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chmod(active, 0o755) }()
+
+	_, err := sqlitestore.New(root)
+	if err == nil {
+		t.Fatal("expected migration to fail when filesystem List fails")
+	}
+}
+
