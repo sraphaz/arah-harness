@@ -32,24 +32,31 @@
 | `backlog sync` | assess-repo `-Refresh -BacklogOnly` | merge backlog |
 | `slice plan` | `-SliceId` `-Suggestions` `-VisionDir` `-OutDir` `-Executor` `-Force` `-DryRun` | `slice-compose.ps1` (**experimental**) |
 
-## CLI Go (fase 1 — H-07)
+## CLI Go — arah-core (0.5 foundation)
 
-Binário paralelo em [`cmd/arah/`](../cmd/arah/) (não substitui `cli/arah.ps1`):
+Módulo raiz `github.com/sraphaz/arah-harness` · binário [`cmd/arah`](../cmd/arah/):
 
 | Comando | Notas |
 |---------|-------|
-| `arah doctor -target` | Checks mínimos de layout |
-| `arah sync-check -target` | Drift vs `.arah-version` / kernel |
-| `arah version` | `0.3.1-phase1` |
+| `arah doctor -target [--json]` | Checks mínimos de layout |
+| `arah sync-check -target [--json]` | Drift vs `.arah-version` / graph |
+| `arah version [--json]` | `0.5.0-dev` |
+| `arah task create\|status\|complete\|block` | Execution Control via `internal/core` |
+| `arah mcp serve` | MCP stdio — ver [mcp-tool-contract.md](architecture/mcp-tool-contract.md) |
 
-Live Service (épico C): [`live/cmd/arah-live`](../live/README.md) — REST+WS read-only.
+CLI e MCP compartilham os mesmos use cases. PowerShell permanece canônico para
+organism/discover/evolve/regenerate até migração por estrangulamento.
+
+Inspiração de engenharia: [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern)
+(hexagonal + MCP; sem RAG/ontologia).
 
 ## Gaps conhecidos (aceitos)
 
 | Gap | Notas |
 |-----|-------|
 | `signal-bus -List` | Disponível no script; use Live Console (`/api/feed`) ou o script |
-| Paridade total Go | Write/organism ainda PowerShell; `export-graph` na fase 2 |
+| Paridade total Go | Organism/write amplo ainda PowerShell; task ECP já no Go |
+| SQLite StateStore | H-16 — filesystem adapter agora |
 | `arahd` | H-08 backlog |
 
 ## Exit codes (alvo para H-07)
