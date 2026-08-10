@@ -44,6 +44,51 @@ func (s *TaskService) emit(taskID, kind string, payload map[string]any) error {
 	})
 }
 
+func (s *TaskService) mutationEvent(taskID, kind, fingerprint string, payload map[string]any) Event {
+	return Event{
+		ID:      mutationEventID(taskID, kind, fingerprint),
+		TaskID:  taskID,
+		Kind:    kind,
+		At:      time.Now().UTC().Format(time.RFC3339Nano),
+		TraceID: envelope.NewTraceID(),
+		Payload: payload,
+	}
+}
+
+// persistTerminal saves the contract and appends the mutation event. When Store
+// implements TerminalApplier and is the same object as Events, both happen in
+// one adapter transaction.
+func (s *TaskService) persistTerminal(c *Contract, ev Event) (string, error) {
+	if at, ok := s.Store.(TerminalApplier); ok && s.Events != nil && sameConcrete(s.Store, s.Events) {
+		path, err := at.ApplyTerminal(c, ev)
+		if err != nil {
+			return "", wrapStore(err)
+		}
+		return path, nil
+	}
+	path, err := s.Store.Save(c)
+	if err != nil {
+		return "", wrapStore(err)
+	}
+	if s.Events != nil {
+		if err := s.Events.Append(ev); err != nil {
+			return path, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": ev.Kind})
+		}
+	}
+	return path, nil
+}
+
+// ensureMutationEvent reconciles a missing terminal timeline row on idempotent retry.
+func (s *TaskService) ensureMutationEvent(ev Event) error {
+	if s.Events == nil {
+		return nil
+	}
+	if err := s.Events.Append(ev); err != nil {
+		return errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": ev.TaskID, "kind": ev.Kind})
+	}
+	return nil
+}
+
 func resultOf(c *Contract, path string, before, after mutateSnapshot, opts MutateOptions, idempotent bool) *MutationResult {
 	diff := ""
 	if !idempotent {
@@ -113,7 +158,8 @@ func (s *TaskService) Get(taskID string) (*Contract, string, error) {
 }
 
 // Complete validates concrete evidence and transitions the task to done.
-// Re-completing an already-done task with the same evidence is idempotent (no Save/emit).
+// Re-completing an already-done task with the same evidence is idempotent; a
+// missing task.completed event is reconciled before success is returned.
 func (s *TaskService) Complete(taskID string, evidence []string, opts MutateOptions) (*MutationResult, error) {
 	load := s.Store.Get
 	if opts.DryRun {
@@ -124,10 +170,15 @@ func (s *TaskService) Complete(taskID string, evidence []string, opts MutateOpti
 		return nil, err
 	}
 	before := snapContract(c)
+	fp := evidenceFingerprint(evidence)
+	payload := map[string]any{"evidence": evidence, "state": string(StateDone)}
+	ev := s.mutationEvent(taskID, "task.completed", fp, payload)
 	if c.State == StateDone && evidenceSameSet(c, evidence) {
 		outPath := path
 		if opts.DryRun {
 			outPath = "dry-run:" + path
+		} else if err := s.ensureMutationEvent(ev); err != nil {
+			return nil, err
 		}
 		return resultOf(c, outPath, before, before, opts, true), nil
 	}
@@ -143,21 +194,16 @@ func (s *TaskService) Complete(taskID string, evidence []string, opts MutateOpti
 	if opts.DryRun {
 		return resultOf(&planned, "dry-run:"+path, before, after, opts, false), nil
 	}
-	path, err = s.Store.Save(&planned)
+	path, err = s.persistTerminal(&planned, ev)
 	if err != nil {
-		return nil, wrapStore(err)
-	}
-	if err := s.emit(planned.TaskID, "task.completed", map[string]any{
-		"evidence": evidence,
-		"state":    string(planned.State),
-	}); err != nil {
-		return resultOf(&planned, path, before, after, opts, false), errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": planned.TaskID})
+		return resultOf(&planned, path, before, after, opts, false), err
 	}
 	return resultOf(&planned, path, before, after, opts, false), nil
 }
 
 // Block records a concrete blocking reason and moves the task to blocked.
-// Re-blocking with the same reason is idempotent (no Save/emit).
+// Re-blocking with the same reason is idempotent; a missing task.blocked event
+// is reconciled before success is returned.
 func (s *TaskService) Block(taskID, reason string, opts MutateOptions) (*MutationResult, error) {
 	load := s.Store.Get
 	if opts.DryRun {
@@ -169,10 +215,14 @@ func (s *TaskService) Block(taskID, reason string, opts MutateOptions) (*Mutatio
 	}
 	reason = strings.TrimSpace(reason)
 	before := snapContract(c)
+	payload := map[string]any{"reason": reason, "state": string(StateBlocked)}
+	ev := s.mutationEvent(taskID, "task.blocked", reason, payload)
 	if c.State == StateBlocked && c.Result.BlockingReason != nil && *c.Result.BlockingReason == reason && reason != "" {
 		outPath := path
 		if opts.DryRun {
 			outPath = "dry-run:" + path
+		} else if err := s.ensureMutationEvent(ev); err != nil {
+			return nil, err
 		}
 		return resultOf(c, outPath, before, before, opts, true), nil
 	}
@@ -185,15 +235,9 @@ func (s *TaskService) Block(taskID, reason string, opts MutateOptions) (*Mutatio
 	if opts.DryRun {
 		return resultOf(&planned, "dry-run:"+path, before, after, opts, false), nil
 	}
-	path, err = s.Store.Save(&planned)
+	path, err = s.persistTerminal(&planned, ev)
 	if err != nil {
-		return nil, wrapStore(err)
-	}
-	if err := s.emit(planned.TaskID, "task.blocked", map[string]any{
-		"reason": reason,
-		"state":  string(planned.State),
-	}); err != nil {
-		return resultOf(&planned, path, before, after, opts, false), errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": planned.TaskID})
+		return resultOf(&planned, path, before, after, opts, false), err
 	}
 	return resultOf(&planned, path, before, after, opts, false), nil
 }
@@ -211,4 +255,8 @@ func (s *TaskService) Timeline(taskID string) ([]Event, error) {
 
 func wrapStore(err error) error {
 	return errf("STATE.STORE_ERROR", err.Error(), nil)
+}
+
+func sameConcrete(a, b any) bool {
+	return a != nil && b != nil && a == b
 }

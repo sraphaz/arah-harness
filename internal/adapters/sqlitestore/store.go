@@ -353,7 +353,7 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	return merged, nil
 }
 
-// Append implements EventStore.
+// Append implements EventStore. Duplicate event_id is a no-op (idempotent retries).
 func (s *Store) Append(ev core.Event) error {
 	if err := s.EnsureLayout(); err != nil {
 		return err
@@ -371,9 +371,71 @@ func (s *Store) Append(ev core.Event) error {
 		payload = []byte("{}")
 	}
 	_, err := s.db.Exec(`
-INSERT INTO task_events(event_id, task_id, kind, at, trace_id, payload_json)
+INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json)
 VALUES(?,?,?,?,?,?)`, ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload))
 	return err
+}
+
+// ApplyTerminal saves the contract and appends the mutation event in one SQLite transaction.
+func (s *Store) ApplyTerminal(c *core.Contract, ev core.Event) (string, error) {
+	if err := s.EnsureLayout(); err != nil {
+		return "", err
+	}
+	if ev.ID == "" {
+		var b [4]byte
+		_, _ = rand.Read(b[:])
+		ev.ID = fmt.Sprintf("ev-%d-%x", time.Now().UnixNano(), b)
+	}
+	if ev.At == "" {
+		ev.At = time.Now().UTC().Format(time.RFC3339Nano)
+	}
+	payload, _ := json.Marshal(ev.Payload)
+	if payload == nil {
+		payload = []byte("{}")
+	}
+	raw, err := yaml.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	bucket := bucketOf(c.State)
+	_, err = tx.Exec(`
+INSERT INTO tasks(task_id, state, bucket, primary_executor, objective, work_class, intent_type, choreography_rule, contract_yaml, updated_at)
+VALUES(?,?,?,?,?,?,?,?,?,?)
+ON CONFLICT(task_id) DO UPDATE SET
+  state=excluded.state,
+  bucket=excluded.bucket,
+  primary_executor=excluded.primary_executor,
+  objective=excluded.objective,
+  work_class=excluded.work_class,
+  intent_type=excluded.intent_type,
+  choreography_rule=excluded.choreography_rule,
+  contract_yaml=excluded.contract_yaml,
+  updated_at=excluded.updated_at
+`, c.TaskID, string(c.State), bucket, c.PrimaryExecutor, c.Objective, string(c.WorkClass), string(c.IntentType),
+		c.ChoreographyRule, string(raw), time.Now().UTC().Format(time.RFC3339Nano))
+	if err != nil {
+		return "", err
+	}
+	_, err = tx.Exec(`
+INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json)
+VALUES(?,?,?,?,?,?)`, ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload))
+	if err != nil {
+		return "", err
+	}
+	if err := tx.Commit(); err != nil {
+		return "", err
+	}
+	// YAML mirror is best-effort after the canonical transaction commits.
+	if _, err := s.fs.Save(c); err != nil {
+		_ = err
+	}
+	return "sqlite:" + s.DBPath + "#" + c.TaskID, nil
 }
 
 func (s *Store) ListByTask(taskID string) ([]core.Event, error) {

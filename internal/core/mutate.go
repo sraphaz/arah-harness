@@ -1,7 +1,10 @@
 package core
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -129,4 +132,21 @@ func normalizedEvidenceSet(items []string) map[string]bool {
 		out[e] = true
 	}
 	return out
+}
+
+func evidenceFingerprint(evidence []string) string {
+	set := normalizedEvidenceSet(evidence)
+	keys := make([]string, 0, len(set))
+	for k := range set {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, "\n")
+}
+
+// mutationEventID is a stable identity for a terminal mutation so retries and
+// concurrent applies share one timeline row (UNIQUE event_id).
+func mutationEventID(taskID, kind, fingerprint string) string {
+	sum := sha256.Sum256([]byte(taskID + "\n" + kind + "\n" + fingerprint))
+	return fmt.Sprintf("mut-%s-%s", kind, hex.EncodeToString(sum[:12]))
 }
