@@ -12,6 +12,12 @@ type StateStore interface {
 	Delete(taskID string) error
 }
 
+// ConsultationReserver atomically reserves a consultation slot under MaxConsultations.
+// Implemented by stores that can serialize across processes (e.g. SQLite BEGIN IMMEDIATE).
+type ConsultationReserver interface {
+	ReserveConsultationSlot(taskID string, max int) (*Contract, error)
+}
+
 // Event is an append-only runtime fact used for timelines and Evidence Graph input.
 type Event struct {
 	ID            string         `json:"id"`

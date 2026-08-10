@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 func TestBuildTaskContextBudgets(t *testing.T) {
@@ -48,6 +49,18 @@ func TestRecentEventKindsUsesTail(t *testing.T) {
 	std := BuildTaskContext(c, events, BudgetStandard, "")
 	if std.RecentEventKinds[0] != "k4" || std.RecentEventKinds[len(std.RecentEventKinds)-1] != "k11" {
 		t.Fatalf("standard used head instead of tail: %v", std.RecentEventKinds)
+	}
+}
+
+func TestTruncateUTF8Safe(t *testing.T) {
+	s := strings.Repeat("ação", 50) // multibyte runes
+	got := truncate(s, 10)
+	if !utf8.ValidString(got) {
+		t.Fatalf("invalid utf8: %q", got)
+	}
+	runes := []rune(got)
+	if runes[len(runes)-1] != '…' {
+		t.Fatalf("expected ellipsis, got %q", got)
 	}
 }
 

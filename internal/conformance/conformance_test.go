@@ -342,20 +342,26 @@ func TestInvalidConfigFixture(t *testing.T) {
 func TestMonorepoRouting(t *testing.T) {
 	root := copyFixture(t, "monorepo")
 	svc := serviceFor(t, root)
-	// ExplainRoute is area-based (not file-path based); assert area shortcuts.
-	front, err := svc.ExplainRoute("frontend", "")
+	front, err := svc.ExplainRoute("apps/web/index.ts.txt", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if front["primary_executor"] != "frontend" {
-		t.Fatalf("frontend area → want frontend, got %v", front["primary_executor"])
+		t.Fatalf("apps/web path → want frontend, got %v", front["primary_executor"])
 	}
-	back, err := svc.Create("api change", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{DryRun: true})
+	backRoute, err := svc.ExplainRoute("services/api.go.txt", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if backRoute["primary_executor"] != "backend" {
+		t.Fatalf("services path → want backend, got %v", backRoute["primary_executor"])
+	}
+	back, err := svc.Create("api change", "services/api.go.txt", core.WorkStandard, core.IntentExecution, core.MutateOptions{DryRun: true})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if back.Contract.PrimaryExecutor != "backend" {
-		t.Fatalf("backend area → want backend, got %s", back.Contract.PrimaryExecutor)
+		t.Fatalf("backend path create → want backend, got %s", back.Contract.PrimaryExecutor)
 	}
 	_ = root
 }

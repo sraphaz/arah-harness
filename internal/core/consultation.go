@@ -21,9 +21,9 @@ type ConsultationResult struct {
 }
 
 // SubmitConsultation validates and stores a consultant opinion for the executor.
-// Order: bump counter + Save, then write YAML, then emit timeline event.
-// A process-local mutex serializes check+reserve so concurrent callers cannot
-// both pass MaxConsultations for the same task.
+// Slot reservation prefers ConsultationReserver (SQLite BEGIN IMMEDIATE) so CLI
+// and MCP cannot both pass MaxConsultations across processes; falls back to
+// mutex + Save for stores without that capability.
 func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, recommendations, blockers []string) (*ConsultationResult, string, error) {
 	taskID = strings.TrimSpace(taskID)
 	consultantID = strings.TrimSpace(consultantID)
@@ -53,11 +53,6 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 			fmt.Sprintf("task is terminal (%s)", c.State),
 			map[string]any{"task_id": taskID})
 	}
-	if c.Limits.MaxConsultations == 0 || c.Counters.Consultations >= c.Limits.MaxConsultations {
-		return nil, "", errf("EXECUTION.CONSULTATION_LIMIT_REACHED",
-			"max_consultations reached for this work class",
-			map[string]any{"task_id": taskID, "max": c.Limits.MaxConsultations})
-	}
 	allowed := false
 	for _, x := range c.Participants.Consultants {
 		if x == consultantID {
@@ -75,6 +70,25 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 			"primary_executor cannot submit consultation as consultant",
 			map[string]any{"task_id": taskID})
 	}
+
+	max := c.Limits.MaxConsultations
+	if r, ok := s.Store.(ConsultationReserver); ok {
+		c, err = r.ReserveConsultationSlot(taskID, max)
+		if err != nil {
+			return nil, "", err
+		}
+	} else {
+		if max == 0 || c.Counters.Consultations >= max {
+			return nil, "", errf("EXECUTION.CONSULTATION_LIMIT_REACHED",
+				"max_consultations reached for this work class",
+				map[string]any{"task_id": taskID, "max": max})
+		}
+		c.Counters.Consultations++
+		if _, err := s.Store.Save(c); err != nil {
+			return nil, "", wrapStore(err)
+		}
+	}
+
 	res := &ConsultationResult{
 		Version:         "1.0",
 		ID:              newConsultationID(),
@@ -84,11 +98,6 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 		Recommendations: append([]string{}, recommendations...),
 		Blockers:        append([]string{}, blockers...),
 		SubmittedAt:     time.Now().UTC().Format(time.RFC3339Nano),
-	}
-
-	c.Counters.Consultations++
-	if _, err := s.Store.Save(c); err != nil {
-		return nil, "", wrapStore(err)
 	}
 
 	path, err := s.Consultations.WriteConsultation(taskID, res)

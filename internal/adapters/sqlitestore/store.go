@@ -3,6 +3,7 @@
 package sqlitestore
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/json"
@@ -339,6 +340,86 @@ func (s *Store) Delete(taskID string) error {
 		return err
 	}
 	return tx.Commit()
+}
+
+// ReserveConsultationSlot atomically increments Counters.Consultations under a write lock.
+// Cross-process safe (CLI vs MCP) via BEGIN IMMEDIATE.
+func (s *Store) ReserveConsultationSlot(taskID string, max int) (*core.Contract, error) {
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return nil, fmt.Errorf("task_id required")
+	}
+	if err := s.EnsureLayout(); err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	conn, err := s.db.Conn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	if _, err := conn.ExecContext(ctx, `BEGIN IMMEDIATE`); err != nil {
+		return nil, err
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_, _ = conn.ExecContext(ctx, `ROLLBACK`)
+		}
+	}()
+
+	var yamlBody string
+	err = conn.QueryRowContext(ctx, `SELECT contract_yaml FROM tasks WHERE task_id = ?`, taskID).Scan(&yamlBody)
+	if err == sql.ErrNoRows {
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.TASK_NOT_FOUND",
+			Message: "task not found: " + taskID,
+			Details: map[string]any{"task_id": taskID},
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	var c core.Contract
+	if err := yaml.Unmarshal([]byte(yamlBody), &c); err != nil {
+		return nil, err
+	}
+	if core.IsTerminal(c.State) {
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.TERMINAL_STATE_IMMUTABLE",
+			Message: fmt.Sprintf("task is terminal (%s)", c.State),
+			Details: map[string]any{"task_id": taskID},
+		}
+	}
+	if max == 0 || c.Counters.Consultations >= max {
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.CONSULTATION_LIMIT_REACHED",
+			Message: "max_consultations reached for this work class",
+			Details: map[string]any{"task_id": taskID, "max": max},
+		}
+	}
+	c.Counters.Consultations++
+	raw, err := yaml.Marshal(&c)
+	if err != nil {
+		return nil, err
+	}
+	bucket := bucketOf(c.State)
+	_, err = conn.ExecContext(ctx, `
+UPDATE tasks SET
+  state=?, bucket=?, primary_executor=?, objective=?, work_class=?, intent_type=?,
+  choreography_rule=?, contract_yaml=?, updated_at=?
+WHERE task_id=?`,
+		string(c.State), bucket, c.PrimaryExecutor, c.Objective, string(c.WorkClass), string(c.IntentType),
+		c.ChoreographyRule, string(raw), time.Now().UTC().Format(time.RFC3339Nano), c.TaskID)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := conn.ExecContext(ctx, `COMMIT`); err != nil {
+		return nil, err
+	}
+	committed = true
+	_, _ = s.fs.Save(&c) // best-effort mirror
+	return &c, nil
 }
 
 // Append implements EventStore. Duplicate event_id is a no-op (idempotent retries).

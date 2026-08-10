@@ -131,10 +131,17 @@ func BuildTaskContext(c *Contract, events []Event, budget ContextBudget, briefin
 
 func truncate(s string, n int) string {
 	s = strings.TrimSpace(s)
-	if len(s) <= n {
+	if n <= 1 {
+		if n == 1 {
+			return "…"
+		}
+		return ""
+	}
+	runes := []rune(s)
+	if len(runes) <= n {
 		return s
 	}
-	return s[:n-1] + "…"
+	return string(runes[:n-1]) + "…"
 }
 
 func capStrings(in []string, n int) []string {
