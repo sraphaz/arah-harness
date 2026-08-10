@@ -314,8 +314,32 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	return merged, nil
 }
 
+func (s *Store) loadDBContract(taskID string) (*core.Contract, error) {
+	var yamlBody string
+	err := s.db.QueryRow(`SELECT contract_yaml FROM tasks WHERE task_id = ?`, taskID).Scan(&yamlBody)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var c core.Contract
+	if err := yaml.Unmarshal([]byte(yamlBody), &c); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (s *Store) restoreFilesystemMirror(c *core.Contract) {
+	if c == nil {
+		return
+	}
+	_, _ = s.fs.Save(c)
+	_, _ = s.fs.WriteBriefing(c)
+}
+
 // Delete removes filesystem mirror/artifacts first, then SQLite rows.
-// FS-first avoids Get falling back to a leftover YAML mirror after the DB row is gone.
+// It preflights the DB and restores the mirror if the SQL delete fails.
 func (s *Store) Delete(taskID string) error {
 	taskID = strings.TrimSpace(taskID)
 	if taskID == "" {
@@ -324,7 +348,8 @@ func (s *Store) Delete(taskID string) error {
 	if err := s.EnsureLayout(); err != nil {
 		return err
 	}
-	if err := s.fs.Delete(taskID); err != nil {
+	restore, err := s.loadDBContract(taskID)
+	if err != nil {
 		return err
 	}
 	tx, err := s.db.Begin()
@@ -332,13 +357,22 @@ func (s *Store) Delete(taskID string) error {
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
+	if err := s.fs.Delete(taskID); err != nil {
+		return err
+	}
 	if _, err := tx.Exec(`DELETE FROM task_events WHERE task_id = ?`, taskID); err != nil {
+		s.restoreFilesystemMirror(restore)
 		return err
 	}
 	if _, err := tx.Exec(`DELETE FROM tasks WHERE task_id = ?`, taskID); err != nil {
+		s.restoreFilesystemMirror(restore)
 		return err
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		s.restoreFilesystemMirror(restore)
+		return err
+	}
+	return nil
 }
 
 // Append implements EventStore. Duplicate event_id is a no-op (idempotent retries).
