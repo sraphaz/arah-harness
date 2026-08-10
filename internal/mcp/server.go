@@ -14,6 +14,7 @@ import (
 	"github.com/sraphaz/arah-harness/internal/evidence"
 )
 
+// Server exposes arah-core TaskService (and optional Evidence builder) over MCP stdio.
 type Server struct {
 	Tasks    *core.TaskService
 	Evidence *evidence.Builder
@@ -47,6 +48,7 @@ type toolCallParams struct {
 	Arguments map[string]any `json:"arguments"`
 }
 
+// Run serves MCP JSON-RPC requests line-delimited on Reader/Writer until EOF.
 func (s *Server) Run() error {
 	if s.Reader == nil {
 		s.Reader = os.Stdin

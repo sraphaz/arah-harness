@@ -8,14 +8,14 @@ type StateStore interface {
 	List(bucket string) ([]*Contract, error)
 }
 
-// Event is an append-only runtime fact (timeline / Evidence Graph input).
+// Event is an append-only runtime fact used for timelines and Evidence Graph input.
 type Event struct {
-	ID        string         `json:"id"`
-	TaskID    string         `json:"task_id,omitempty"`
-	Kind      string         `json:"kind"`
-	At        string         `json:"at"`
-	Payload   map[string]any `json:"payload,omitempty"`
-	TraceID   string         `json:"trace_id,omitempty"`
+	ID      string         `json:"id"`
+	TaskID  string         `json:"task_id,omitempty"`
+	Kind    string         `json:"kind"`
+	At      string         `json:"at"`
+	Payload map[string]any `json:"payload,omitempty"`
+	TraceID string         `json:"trace_id,omitempty"`
 }
 
 // EventStore is the append-only outbound port for runtime events.

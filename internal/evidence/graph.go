@@ -12,30 +12,35 @@ import (
 	"github.com/sraphaz/arah-harness/internal/core"
 )
 
+// Node is a vertex in the Evidence Graph.
 type Node struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
+	ID    string `json:"id"`
+	Type  string `json:"type"`
 	Label string `json:"label,omitempty"`
 }
 
+// Edge is a typed relation between two nodes.
 type Edge struct {
 	From string `json:"from"`
 	To   string `json:"to"`
 	Rel  string `json:"rel"`
 }
 
+// Graph is a deterministic evidence graph export (no LLM).
 type Graph struct {
 	Version string `json:"version"`
 	Nodes   []Node `json:"nodes"`
 	Edges   []Edge `json:"edges"`
 }
 
+// Builder assembles an Evidence Graph from specs, capabilities, and tasks.
 type Builder struct {
 	RepoRoot string
 	Store    core.StateStore
 	Events   core.EventStore
 }
 
+// Build derives nodes and edges exclusively from Arah schemas and runtime state.
 func (b *Builder) Build() (*Graph, error) {
 	g := &Graph{Version: "1"}
 	idx := map[string]bool{}

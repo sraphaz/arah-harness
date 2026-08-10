@@ -12,10 +12,12 @@ import (
 	"github.com/sraphaz/arah-harness/internal/core"
 )
 
+// Store persists Execution Control contracts as YAML under .arah/local/execution/.
 type Store struct {
 	RepoRoot string
 }
 
+// New returns a filesystem StateStore rooted at repoRoot.
 func New(repoRoot string) *Store {
 	return &Store{RepoRoot: repoRoot}
 }
@@ -24,6 +26,7 @@ func (s *Store) root() string {
 	return filepath.Join(s.RepoRoot, ".arah", "local", "execution")
 }
 
+// EnsureLayout creates active/completed/blocked directories.
 func (s *Store) EnsureLayout() error {
 	for _, b := range []string{"active", "completed", "blocked"} {
 		if err := os.MkdirAll(filepath.Join(s.root(), b), 0o755); err != nil {
@@ -44,6 +47,7 @@ func (s *Store) bucket(state core.State) string {
 	}
 }
 
+// Save writes the contract into the bucket for its state (write-then-delete across buckets).
 func (s *Store) Save(c *core.Contract) (string, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return "", err
@@ -74,6 +78,7 @@ func (s *Store) Save(c *core.Contract) (string, error) {
 	return dest, nil
 }
 
+// Get loads a contract by scanning active, completed, then blocked buckets.
 func (s *Store) Get(taskID string) (*core.Contract, string, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return nil, "", err
@@ -99,6 +104,7 @@ func (s *Store) Get(taskID string) (*core.Contract, string, error) {
 	}
 }
 
+// List returns contracts present in the given bucket directory.
 func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return nil, err

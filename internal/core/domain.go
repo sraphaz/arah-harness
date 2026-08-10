@@ -11,6 +11,7 @@ import (
 
 type State string
 
+// Execution Control lifecycle states.
 const (
 	StateIntake    State = "intake"
 	StateRouted    State = "routed"
@@ -20,22 +21,24 @@ const (
 	StateBlocked   State = "blocked"
 )
 
+// WorkClass selects policy limits (trivial → release).
 type WorkClass string
 
 const (
-	WorkTrivial        WorkClass = "trivial"
-	WorkStandard       WorkClass = "standard"
-	WorkArchitectural  WorkClass = "architectural"
-	WorkRelease        WorkClass = "release"
+	WorkTrivial       WorkClass = "trivial"
+	WorkStandard      WorkClass = "standard"
+	WorkArchitectural WorkClass = "architectural"
+	WorkRelease       WorkClass = "release"
 )
 
+// IntentType distinguishes execution from analysis/review/planning.
 type IntentType string
 
 const (
-	IntentAnalysis   IntentType = "analysis"
-	IntentExecution  IntentType = "execution"
-	IntentReview     IntentType = "review"
-	IntentPlanning   IntentType = "planning"
+	IntentAnalysis  IntentType = "analysis"
+	IntentExecution IntentType = "execution"
+	IntentReview    IntentType = "review"
+	IntentPlanning  IntentType = "planning"
 )
 
 // DomainError carries a stable machine code (envelope-friendly).
@@ -46,6 +49,7 @@ type DomainError struct {
 	Remediation []string
 }
 
+// Error implements the error interface using Message when present.
 func (e *DomainError) Error() string {
 	if e.Message != "" {
 		return e.Message
@@ -66,6 +70,7 @@ var validTransitions = map[State][]State{
 	StateBlocked:   {},
 }
 
+// TransitionAllowed reports whether from → to is a legal Execution Control edge.
 func TransitionAllowed(from, to State) bool {
 	for _, s := range validTransitions[from] {
 		if s == to {
@@ -75,6 +80,7 @@ func TransitionAllowed(from, to State) bool {
 	return false
 }
 
+// IsTerminal reports whether the state is done or blocked.
 func IsTerminal(s State) bool {
 	return s == StateDone || s == StateBlocked
 }
@@ -99,36 +105,42 @@ type Contract struct {
 	History          []HistoryEntry    `yaml:"history" json:"history"`
 }
 
+// Participants lists non-primary collaborators on a contract.
 type Participants struct {
 	Consultants  []string `yaml:"consultants" json:"consultants"`
 	Reviewers    []string `yaml:"reviewers" json:"reviewers"`
 	Subordinates []string `yaml:"subordinates" json:"subordinates"`
 }
 
+// Scope bounds which paths an executor may change.
 type Scope struct {
 	Area           string   `yaml:"area" json:"area"`
 	AllowedPaths   []string `yaml:"allowed_paths" json:"allowed_paths"`
 	ForbiddenPaths []string `yaml:"forbidden_paths" json:"forbidden_paths"`
 }
 
+// Execution holds expected outputs, verification commands, and completion evidence.
 type Execution struct {
 	ExpectedOutputs      []string `yaml:"expected_outputs" json:"expected_outputs"`
 	VerificationCommands []string `yaml:"verification_commands" json:"verification_commands"`
 	CompletionEvidence   []string `yaml:"completion_evidence" json:"completion_evidence"`
 }
 
+// Limits are max handoffs/consultations/analysis cycles for the work class.
 type Limits struct {
-	MaxHandoffs         int `yaml:"max_handoffs" json:"max_handoffs"`
-	MaxConsultations    int `yaml:"max_consultations" json:"max_consultations"`
-	MaxAnalysisCycles   int `yaml:"max_analysis_cycles" json:"max_analysis_cycles"`
+	MaxHandoffs       int `yaml:"max_handoffs" json:"max_handoffs"`
+	MaxConsultations  int `yaml:"max_consultations" json:"max_consultations"`
+	MaxAnalysisCycles int `yaml:"max_analysis_cycles" json:"max_analysis_cycles"`
 }
 
+// Counters track consumed limits during the task lifetime.
 type Counters struct {
-	Handoffs        int `yaml:"handoffs" json:"handoffs"`
-	Consultations   int `yaml:"consultations" json:"consultations"`
-	AnalysisCycles  int `yaml:"analysis_cycles" json:"analysis_cycles"`
+	Handoffs       int `yaml:"handoffs" json:"handoffs"`
+	Consultations  int `yaml:"consultations" json:"consultations"`
+	AnalysisCycles int `yaml:"analysis_cycles" json:"analysis_cycles"`
 }
 
+// Result accumulates changed files, commands, evidence, and optional block reason.
 type Result struct {
 	ChangedFiles     []string `yaml:"changed_files" json:"changed_files"`
 	CommandsExecuted []string `yaml:"commands_executed" json:"commands_executed"`
@@ -136,6 +148,7 @@ type Result struct {
 	BlockingReason   *string  `yaml:"blocking_reason" json:"blocking_reason"`
 }
 
+// HistoryEntry records one state transition.
 type HistoryEntry struct {
 	At   string `yaml:"at" json:"at"`
 	From string `yaml:"from" json:"from"`
@@ -153,7 +166,7 @@ type ResolvedRouting struct {
 	AllowedPaths     []string
 }
 
-// WorkClassPolicy returns default limits/policy flags for a class.
+// WorkClassPolicy returns default limits and policy flags for a class.
 func WorkClassPolicy(wc WorkClass) (Limits, map[string]any) {
 	switch wc {
 	case WorkTrivial:
@@ -170,6 +183,7 @@ func WorkClassPolicy(wc WorkClass) (Limits, map[string]any) {
 	}
 }
 
+// NewTaskID creates a unique task-* identifier.
 func NewTaskID() string {
 	stamp := time.Now().UTC().Format("20060102-150405.000")
 	stamp = strings.ReplaceAll(stamp, ".", "")
@@ -180,6 +194,7 @@ func shortRand() string {
 	return fmt.Sprintf("%06x", time.Now().UnixNano()&0xffffff)
 }
 
+// NewContract constructs an intake contract with a resolved primary executor.
 func NewContract(objective, area string, wc WorkClass, intent IntentType, routing ResolvedRouting) (*Contract, error) {
 	if strings.TrimSpace(objective) == "" {
 		return nil, errf("EXECUTION.OBJECTIVE_REQUIRED", "objective is required", nil, "Pass a non-empty objective")
@@ -233,7 +248,7 @@ func (c *Contract) addHistory(from, to, note string) {
 	})
 }
 
-// Transition applies a validated state change.
+// Transition applies a validated state change or returns a DomainError.
 func (c *Contract) Transition(to State, note string) error {
 	from := c.State
 	if from == to {
@@ -268,7 +283,7 @@ func (c *Contract) Transition(to State, note string) error {
 var concreteEvidenceRe = regexp.MustCompile(`(?i)(updated|created|removed|deleted|wrote|patched|test(s)?\s+(pass|ok|green)|executed|file:|path:|\.(ts|tsx|js|go|ps1|yaml|yml|md)\b)`)
 var analysisOnlyRe = regexp.MustCompile(`(?i)^(analy[sz]e|análise|parecer|review only)`)
 
-// HasConcreteEvidence mirrors Test-EcpConcreteEvidence.
+// HasConcreteEvidence reports whether evidence is concrete enough for the intent type.
 func (c *Contract) HasConcreteEvidence(extra []string) bool {
 	all := append([]string{}, extra...)
 	all = append(all, c.Execution.CompletionEvidence...)
@@ -305,7 +320,7 @@ func filterNonEmpty(in []string) []string {
 	return out
 }
 
-// Start moves intake → routed → executing (orchestration start).
+// Start moves the contract from intake through routed into executing.
 func (c *Contract) Start() error {
 	if c.State == StateIntake {
 		if err := c.Transition(StateRouted, "choreography resolved"); err != nil {
@@ -318,7 +333,7 @@ func (c *Contract) Start() error {
 	return nil
 }
 
-// Complete validates evidence and transitions to done.
+// Complete validates evidence and transitions the contract to done.
 func (c *Contract) Complete(evidence []string) error {
 	if IsTerminal(c.State) {
 		return errf("EXECUTION.TERMINAL_STATE_IMMUTABLE",
@@ -351,7 +366,7 @@ func (c *Contract) Complete(evidence []string) error {
 	return nil
 }
 
-// Block records a concrete blocking reason.
+// Block records a concrete blocking reason and transitions to blocked.
 func (c *Contract) Block(reason string) error {
 	reason = strings.TrimSpace(reason)
 	if reason == "" {

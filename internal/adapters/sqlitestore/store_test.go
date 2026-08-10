@@ -72,3 +72,55 @@ func TestSQLiteLifecycleAndMigration(t *testing.T) {
 		t.Fatalf("expected timeline events, got %d", len(evs))
 	}
 }
+
+func TestListMergesFilesystemOnlyTasks(t *testing.T) {
+	root := t.TempDir()
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	fsOnly := &core.Contract{
+		Version: "1.0", TaskID: "task-fs-only", Objective: "ps writer",
+		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		State: core.StateExecuting, PrimaryExecutor: "backend",
+	}
+	if _, err := fsstore.New(root).Save(fsOnly); err != nil {
+		t.Fatal(err)
+	}
+	list, err := store.List("active")
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, c := range list {
+		if c.TaskID == "task-fs-only" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("filesystem-only task missing from List")
+	}
+}
+
+func TestTimelineRequiresExistingTask(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, ".agents", "choreography.yaml"), []byte("version: 2\nrules: []\n"), 0o644)
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	svc := &core.TaskService{Store: store, Events: store, Router: choreography.New(root)}
+	_, err = svc.Timeline("task-does-not-exist")
+	if err == nil {
+		t.Fatal("expected TASK_NOT_FOUND")
+	}
+	de, ok := err.(*core.DomainError)
+	if !ok || de.Code != "EXECUTION.TASK_NOT_FOUND" {
+		t.Fatalf("got %#v", err)
+	}
+}
+

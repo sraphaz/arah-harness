@@ -3,6 +3,7 @@
 package sqlitestore
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -20,6 +21,8 @@ import (
 
 const schemaVersion = 1
 
+// Store is the SQLite-backed StateStore and EventStore for a single repository.
+// Path: <repo>/.arah/local/runtime.db (WAL). YAML under execution/ is a best-effort mirror.
 type Store struct {
 	RepoRoot string
 	DBPath   string
@@ -27,6 +30,7 @@ type Store struct {
 	fs       *fsstore.Store // migration source / dual-read fallback
 }
 
+// New opens (or creates) the repository runtime database and imports YAML tasks if empty.
 func New(repoRoot string) (*Store, error) {
 	s := &Store{
 		RepoRoot: repoRoot,
@@ -39,6 +43,7 @@ func New(repoRoot string) (*Store, error) {
 	return s, nil
 }
 
+// EnsureLayout creates directories and applies schema migrations.
 func (s *Store) EnsureLayout() error {
 	if err := os.MkdirAll(filepath.Dir(s.DBPath), 0o755); err != nil {
 		return err
@@ -133,6 +138,7 @@ func (s *Store) importFilesystemIfEmpty() error {
 	return nil
 }
 
+// Close releases the database handle.
 func (s *Store) Close() error {
 	if s.db == nil {
 		return nil
@@ -153,6 +159,7 @@ func bucketOf(state core.State) string {
 	}
 }
 
+// Save upserts the contract in SQLite (canonical) and mirrors YAML best-effort.
 func (s *Store) Save(c *core.Contract) (string, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return "", err
@@ -161,9 +168,11 @@ func (s *Store) Save(c *core.Contract) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// Keep YAML mirror for PS compatibility during strangler migration.
+	// YAML mirror is best-effort for PowerShell strangler compatibility.
+	// SQLite is the canonical hot store; mirror failure must not undo a committed row
+	// or report failure that invites duplicate Create retries.
 	if _, err := s.fs.Save(c); err != nil {
-		return ref, fmt.Errorf("sqlite ok but filesystem mirror failed: %w", err)
+		_ = err // intentional: canonical save already succeeded
 	}
 	return ref, nil
 }
@@ -195,6 +204,7 @@ ON CONFLICT(task_id) DO UPDATE SET
 	return "sqlite:" + s.DBPath + "#" + c.TaskID, nil
 }
 
+// Get returns a contract from SQLite, falling back to the filesystem mirror.
 func (s *Store) Get(taskID string) (*core.Contract, string, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return nil, "", err
@@ -215,6 +225,7 @@ func (s *Store) Get(taskID string) (*core.Contract, string, error) {
 	return &c, "sqlite:" + s.DBPath + "#" + taskID, nil
 }
 
+// List returns contracts in a bucket, merging SQLite rows with filesystem-only tasks.
 func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return nil, err
@@ -227,6 +238,7 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 		return nil, err
 	}
 	defer rows.Close()
+	seen := map[string]bool{}
 	var out []*core.Contract
 	for rows.Next() {
 		var body string
@@ -237,9 +249,25 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 		if err := yaml.Unmarshal([]byte(body), &c); err != nil {
 			continue
 		}
+		seen[c.TaskID] = true
 		out = append(out, &c)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	// Merge filesystem-only tasks (PS writers / pre-import) so List matches Get fallback.
+	fsList, err := s.fs.List(bucket)
+	if err != nil {
+		return out, nil
+	}
+	for _, c := range fsList {
+		if c == nil || seen[c.TaskID] {
+			continue
+		}
+		seen[c.TaskID] = true
+		out = append(out, c)
+	}
+	return out, nil
 }
 
 // Append implements EventStore.
@@ -248,7 +276,9 @@ func (s *Store) Append(ev core.Event) error {
 		return err
 	}
 	if ev.ID == "" {
-		ev.ID = fmt.Sprintf("ev-%d", time.Now().UnixNano())
+		var b [4]byte
+		_, _ = rand.Read(b[:])
+		ev.ID = fmt.Sprintf("ev-%d-%x", time.Now().UnixNano(), b)
 	}
 	if ev.At == "" {
 		ev.At = time.Now().UTC().Format(time.RFC3339Nano)
