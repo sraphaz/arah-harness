@@ -1,12 +1,14 @@
 // Package conformance holds harness conformance checks for arah-core (H-20).
-// Fixtures are created in-process; proofs cover CLI≡MCP parity, dry-run, and error codes.
+// Fixtures are created in-process; proofs cover CLI↔MCP parity, dry-run, and error codes.
 package conformance_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -45,6 +47,27 @@ rules:
 	return root, svc
 }
 
+func moduleRoot(t *testing.T) string {
+	t.Helper()
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("runtime.Caller failed")
+	}
+	return filepath.Clean(filepath.Join(filepath.Dir(file), "../.."))
+}
+
+func buildArahCLI(t *testing.T) string {
+	t.Helper()
+	bin := filepath.Join(t.TempDir(), "arah")
+	cmd := exec.Command("go", "build", "-o", bin, "./cmd/arah")
+	cmd.Dir = moduleRoot(t)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("go build ./cmd/arah: %v\n%s", err, out)
+	}
+	return bin
+}
+
 func TestDryRunCreateDoesNotPersist(t *testing.T) {
 	_, svc := fixtureRepo(t)
 	c, path, err := svc.Create("plan only", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{DryRun: true})
@@ -78,10 +101,30 @@ func TestStableErrorCodes(t *testing.T) {
 }
 
 func TestCLIMCPParityOnCreateDecision(t *testing.T) {
-	_, svc := fixtureRepo(t)
-	cli, _, err := svc.Create("parity", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{DryRun: true})
+	root, svc := fixtureRepo(t)
+	bin := buildArahCLI(t)
+
+	cliCmd := exec.Command(bin, "task", "create",
+		"--objective", "parity",
+		"--area", "backend",
+		"--dry-run",
+		"--json",
+		"--target", root,
+	)
+	cliOut, err := cliCmd.CombinedOutput()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("cli create: %v\n%s", err, cliOut)
+	}
+	var cliEnv envelope.Envelope
+	if err := json.Unmarshal(cliOut, &cliEnv); err != nil {
+		t.Fatalf("cli envelope: %v\n%s", err, cliOut)
+	}
+	if !cliEnv.OK {
+		t.Fatalf("cli not ok: %#v", cliEnv)
+	}
+	cliData, ok := cliEnv.Data.(map[string]any)
+	if !ok {
+		t.Fatalf("cli data type %T", cliEnv.Data)
 	}
 
 	in := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"arah_create_task","arguments":{"objective":"parity","area":"backend","dry_run":true}}}` + "\n"
@@ -99,19 +142,23 @@ func TestCLIMCPParityOnCreateDecision(t *testing.T) {
 		t.Fatalf("mcp error: %#v", result)
 	}
 	text := result["content"].([]any)[0].(map[string]any)["text"].(string)
-	var env envelope.Envelope
-	if err := json.Unmarshal([]byte(text), &env); err != nil {
+	var mcpEnv envelope.Envelope
+	if err := json.Unmarshal([]byte(text), &mcpEnv); err != nil {
 		t.Fatal(err)
 	}
-	data := env.Data.(map[string]any)
-	if data["primary_executor"] != cli.PrimaryExecutor {
-		t.Fatalf("executor cli=%s mcp=%v", cli.PrimaryExecutor, data["primary_executor"])
+	mcpData := mcpEnv.Data.(map[string]any)
+
+	if mcpData["primary_executor"] != cliData["primary_executor"] {
+		t.Fatalf("executor cli=%v mcp=%v", cliData["primary_executor"], mcpData["primary_executor"])
 	}
-	if data["state"] != string(cli.State) {
-		t.Fatalf("state cli=%s mcp=%v", cli.State, data["state"])
+	if mcpData["state"] != cliData["state"] {
+		t.Fatalf("state cli=%v mcp=%v", cliData["state"], mcpData["state"])
 	}
-	if data["dry_run"] != true {
-		t.Fatalf("dry_run=%v", data["dry_run"])
+	if cliData["dry_run"] != true || mcpData["dry_run"] != true {
+		t.Fatalf("dry_run cli=%v mcp=%v", cliData["dry_run"], mcpData["dry_run"])
+	}
+	if cliData["state"] != string(core.StateExecuting) {
+		t.Fatalf("expected executing plan, got %v", cliData["state"])
 	}
 }
 

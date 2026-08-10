@@ -5,6 +5,8 @@ type StateStore interface {
 	EnsureLayout() error
 	Save(c *Contract) (path string, err error)
 	Get(taskID string) (*Contract, string, error)
+	// Peek loads a contract without side effects (no freshness reconcile writes).
+	Peek(taskID string) (*Contract, string, error)
 	List(bucket string) ([]*Contract, error)
 }
 

@@ -342,6 +342,27 @@ func hasFlag(args []string, name string) bool {
 	return false
 }
 
+// boolFlag accepts bare flags (--dry-run) and equals forms (--dry-run=true|false|1|0|yes|no).
+func boolFlag(args []string, names ...string) bool {
+	for _, a := range args {
+		for _, name := range names {
+			if a == name {
+				return true
+			}
+			prefix := name + "="
+			if strings.HasPrefix(a, prefix) {
+				switch strings.ToLower(strings.TrimSpace(strings.TrimPrefix(a, prefix))) {
+				case "true", "1", "yes", "y", "on", "":
+					return true
+				default:
+					return false
+				}
+			}
+		}
+	}
+	return false
+}
+
 func flagValue(args []string, names ...string) string {
 	def := ""
 	if len(names) > 0 {
@@ -386,13 +407,17 @@ func stripGlobalFlags(args []string) []string {
 		}
 		a := args[i]
 		switch a {
-		case "--json", "--dry-run", "-dry-run":
+		case "--json":
 			continue
 		case "-target", "--target":
 			skip = true
 			continue
 		default:
 			if strings.HasPrefix(a, "-target=") || strings.HasPrefix(a, "--target=") {
+				continue
+			}
+			if a == "--dry-run" || a == "-dry-run" ||
+				strings.HasPrefix(a, "--dry-run=") || strings.HasPrefix(a, "-dry-run=") {
 				continue
 			}
 			out = append(out, a)

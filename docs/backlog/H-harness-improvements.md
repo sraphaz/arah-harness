@@ -21,10 +21,10 @@
 | H-14 | Contratos JSON + `plan→validate→apply` | **partial** — envelope + `--dry-run` create/complete/block |
 | H-15 | Kernel gerado (fim da segunda fonte) | **backlog 0.5 P0** |
 | H-16 | StateStore SQLite + migração | **done** — `.arah/local/runtime.db` WAL + mirror YAML |
-| H-17 | MCP serve (mesmos use cases da CLI) | **in progress** — tools ECP + timeline + evidence + dry_run |
+| H-17 | MCP serve (mesmos use cases da CLI) | **in progress** — tools ECP + timeline + evidence; `dry_run` nas mutações |
 | H-18 | Evidence Graph determinístico | **in progress** — `arah evidence graph` + MCP tool |
 | H-19 | Timeline unificada task/run | **partial** — `task timeline` + EventStore; correlacionadores amplos TBD |
-| H-20 | Conformance suite + fixtures | **partial** — `internal/conformance` CLI≡MCP, dry-run, error codes |
+| H-20 | Conformance suite + fixtures | **partial** — `internal/conformance` create dry-run CLI↔MCP, error codes |
 
 **Direção 0.5:** [ADR-002](../adr/002-runtime-cohesion-0.5.md) · [RUNTIME_COHESION.md](../architecture/RUNTIME_COHESION.md)
 
@@ -98,7 +98,8 @@ Migração automática a partir de YAML; mirror filesystem para PS. EventStore
 
 ### H-17 · MCP primeira classe — in progress P1
 `arah mcp serve` + [mcp-tool-contract.md](../architecture/mcp-tool-contract.md).
-Tools: capabilities, get/create/complete/block task, timeline, evidence graph, dry_run.
+Tools: capabilities, get/create/complete/block task, timeline, evidence graph.
+`dry_run` é opção das tools de mutação de task — não é tool MCP à parte.
 
 ### H-18 · Evidence Graph — in progress P1
 Grafo determinístico schemas→arestas (`internal/evidence`). CLI
@@ -109,4 +110,5 @@ Grafo determinístico schemas→arestas (`internal/evidence`). CLI
 
 ### H-20 · Conformance suite — partial P1
 `internal/conformance` — dry-run não persiste; error codes estáveis; paridade
-CLI≡MCP no roteamento create. Fixtures ampliadas (monorepo/drift) TBD.
+`arah task create --dry-run` (CLI real) ↔ MCP `arah_create_task` no roteamento
+(executor/state/`dry_run`). Fixtures ampliadas (monorepo/drift) TBD.

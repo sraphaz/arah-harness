@@ -63,7 +63,7 @@ experimental:
     notes: H-14 — ok/code/trace_id/remediation + dry-run mutações
   - id: mcp-harness-surface
     name: MCP serve do harness
-    notes: H-17 — arah mcp serve; task + timeline + evidence graph + dry_run
+    notes: H-17 — arah mcp serve; task + timeline + evidence; dry_run nas mutações
   - id: state-store-sqlite
     name: StateStore local (SQLite WAL)
     notes: H-16 — .arah/local/runtime.db + YAML mirror; EventStore task_events
@@ -72,7 +72,7 @@ experimental:
     notes: H-18 — arah evidence graph; schemas→arestas
   - id: conformance-suite
     name: Conformance suite do harness
-    notes: H-20 partial — internal/conformance (dry-run, error codes, CLI≡MCP); fixtures amplas TBD
+    notes: H-20 partial — internal/conformance (dry-run, error codes, create CLI↔MCP); fixtures amplas TBD
   - id: session-telemetry
     name: Session telemetry rica
     notes: .cursor/arah-live diagnostics

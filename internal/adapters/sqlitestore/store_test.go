@@ -1,9 +1,12 @@
 package sqlitestore_test
 
 import (
+	"database/sql"
 	"os"
 	"path/filepath"
 	"testing"
+
+	_ "modernc.org/sqlite"
 
 	"github.com/sraphaz/arah-harness/internal/adapters/choreography"
 	"github.com/sraphaz/arah-harness/internal/adapters/fsstore"
@@ -194,6 +197,70 @@ func TestGetReconcilesFresherFilesystemState(t *testing.T) {
 	}
 	if got2.State != core.StateDone {
 		t.Fatalf("sqlite still stale: %s", got2.State)
+	}
+}
+
+func sqliteTaskState(t *testing.T, dbPath, taskID string) string {
+	t.Helper()
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	var state string
+	if err := db.QueryRow(`SELECT state FROM tasks WHERE task_id = ?`, taskID).Scan(&state); err != nil {
+		t.Fatal(err)
+	}
+	return state
+}
+
+func TestPeekAndDryRunDoNotReconcileSQLite(t *testing.T) {
+	root := t.TempDir()
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	executing := &core.Contract{
+		Version: "1.0", TaskID: "task-dry-run-peek", Objective: "no reconcile on dry-run",
+		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		State: core.StateExecuting, PrimaryExecutor: "backend",
+		History: []core.HistoryEntry{{At: "2026-08-10T01:00:00Z", From: "routed", To: "executing"}},
+	}
+	if _, err := store.Save(executing); err != nil {
+		t.Fatal(err)
+	}
+
+	// Filesystem is ahead (PS complete); SQLite row stays executing until Get reconciles.
+	done := *executing
+	done.State = core.StateDone
+	done.Execution.CompletionEvidence = []string{"scripts/agents/task-control.ps1 completed"}
+	done.History = append(append([]core.HistoryEntry{}, executing.History...), core.HistoryEntry{
+		At: "2026-08-10T02:00:00Z", From: "executing", To: "done", Note: "ps complete",
+	})
+	if _, err := fsstore.New(root).Save(&done); err != nil {
+		t.Fatal(err)
+	}
+
+	peeked, _, err := store.Peek("task-dry-run-peek")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if peeked.State != core.StateDone {
+		t.Fatalf("peek should see fresher FS state, got %s", peeked.State)
+	}
+	if got := sqliteTaskState(t, store.DBPath, "task-dry-run-peek"); got != string(core.StateExecuting) {
+		t.Fatalf("peek must not write reconcile; sqlite state=%s", got)
+	}
+
+	svc := &core.TaskService{Store: store}
+	_, _, err = svc.Complete("task-dry-run-peek", []string{"would complete"}, core.MutateOptions{DryRun: true})
+	if err == nil {
+		t.Fatal("dry-run complete on terminal FS state should fail without mutating sqlite")
+	}
+	if got := sqliteTaskState(t, store.DBPath, "task-dry-run-peek"); got != string(core.StateExecuting) {
+		t.Fatalf("dry-run complete must leave sqlite untouched; state=%s", got)
 	}
 }
 

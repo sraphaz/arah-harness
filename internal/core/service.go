@@ -97,7 +97,11 @@ func (s *TaskService) Get(taskID string) (*Contract, string, error) {
 
 // Complete validates concrete evidence and transitions the task to done.
 func (s *TaskService) Complete(taskID string, evidence []string, opts MutateOptions) (*Contract, string, error) {
-	c, path, err := s.Store.Get(taskID)
+	load := s.Store.Get
+	if opts.DryRun {
+		load = s.Store.Peek
+	}
+	c, path, err := load(taskID)
 	if err != nil {
 		return nil, "", err
 	}
@@ -127,7 +131,11 @@ func (s *TaskService) Complete(taskID string, evidence []string, opts MutateOpti
 
 // Block records a concrete blocking reason and moves the task to blocked.
 func (s *TaskService) Block(taskID, reason string, opts MutateOptions) (*Contract, string, error) {
-	c, path, err := s.Store.Get(taskID)
+	load := s.Store.Get
+	if opts.DryRun {
+		load = s.Store.Peek
+	}
+	c, path, err := load(taskID)
 	if err != nil {
 		return nil, "", err
 	}
