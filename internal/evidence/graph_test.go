@@ -26,12 +26,11 @@ func TestEvidenceGraphFromTask(t *testing.T) {
 	}
 	defer store.Close()
 	svc := &core.TaskService{Store: store, Events: store, Router: choreography.New(root)}
-	c, _, err := svc.Create("implement demo-spec", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	created, err := svc.Create("implement demo-spec", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = svc.Complete(c.TaskID, []string{"internal/core/domain.go updated"}, core.MutateOptions{})
-	if err != nil {
+	if _, err = svc.Complete(created.Contract.TaskID, []string{"internal/core/domain.go updated"}, core.MutateOptions{}); err != nil {
 		t.Fatal(err)
 	}
 

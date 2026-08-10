@@ -27,6 +27,12 @@ type EventStore interface {
 	ListRecent(limit int) ([]Event, error)
 }
 
+// TerminalApplier persists a terminal contract and its mutation event atomically
+// when the adapter can (e.g. SQLite transaction). Optional capability on StateStore.
+type TerminalApplier interface {
+	ApplyTerminal(c *Contract, ev Event) (path string, err error)
+}
+
 // ChoreographyResolver selects primary_executor and participants for an area.
 type ChoreographyResolver interface {
 	Resolve(area, preferredExecutor string) (ResolvedRouting, error)

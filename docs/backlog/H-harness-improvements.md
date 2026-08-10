@@ -18,7 +18,7 @@
 | H-11 | Modo mínimo de adoção | **done** — `install -Minimal` |
 | H-12 | Knowledge Graph (Graphify) | **fase 0 done** — adapter opcional; fases 1–3 backlog |
 | H-13 | `arah-core` tipado (Go) | **in progress** — domain + task CLI + MCP stdio |
-| H-14 | Contratos JSON + `plan→validate→apply` | **partial** — envelope + `--dry-run` create/complete/block |
+| H-14 | Contratos JSON + `plan→validate→apply` | **partial** — envelope + dry-run + diff + idempotência complete/block |
 | H-15 | Kernel gerado (fim da segunda fonte) | **partial** — `arah kernel sync\|verify` + manifest SHA-256; go:embed install TBD |
 | H-16 | StateStore SQLite + migração | **done** — `.arah/local/runtime.db` WAL + mirror YAML |
 | H-17 | MCP serve (mesmos use cases da CLI) | **in progress** — tools ECP + timeline + evidence; `dry_run` nas mutações |
@@ -85,7 +85,8 @@ Ports no core; adapters `fsstore`, `choreography`, `mcp`. Inspirado em kern ADR-
 ### H-14 · Envelope JSON + pipeline único — partial P0
 `--json` com `ok` / `code` / `message` / `trace_id` / `details` / `remediation`
 (`internal/envelope`). Mutações aceitam `--dry-run` / `dry_run` (plan sem persistir).
-Diff textual idempotente ainda TBD.
+Resposta inclui `diff` textual e `idempotent` (re-complete/re-block com a mesma
+evidência/razão não persiste de novo).
 
 ### H-15 · Kernel gerado — partial P0
 Fonte canônica na raiz (`.agents` / `.skills` / `.cursor` / `scripts/{agents,harness}`,

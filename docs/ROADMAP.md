@@ -17,9 +17,9 @@ Spec: `arah-runtime-cohesion`
 ### P0
 
 - **H-13** `arah-core` (Go) — modelo tipado Task/Run/Policy/Evidence/ExecutionContract
-- **H-14** Pipeline único `plan → validate → apply` + catálogo de erros JSON
-- **H-15** Kernel como artefato gerado (fim da segunda fonte manual)
-- **H-16** StateStore (SQLite WAL) + migração versionada do hot state
+- **H-14** Pipeline único `plan → validate → apply` + dry-run + diff + idempotência
+- **H-15** Kernel gerado — `arah kernel sync|verify` + manifest (go:embed install TBD)
+- **H-16** StateStore (SQLite WAL) + migração — **done**
 
 ### P1
 
