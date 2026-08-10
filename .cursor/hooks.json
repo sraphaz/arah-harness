@@ -55,6 +55,12 @@
         "loop_limit": 1
       }
     ],
+    "beforeReadFile": [
+      {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .cursor/hooks/live-session.ps1 -Event conversation-focus",
+        "timeout": 8
+      }
+    ],
     "beforeSubmitPrompt": [
       {
         "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .cursor/hooks/live-session.ps1 -Event conversation-focus -PromptHook",

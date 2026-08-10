@@ -68,8 +68,8 @@ acceptance:
   - id: AC-07
     when: pacote kernel é gerado no build
     then: não há edição manual de segunda fonte equivalente no tree de release
-    status: pending
-    covered_by: null
+    status: covered
+    covered_by: internal/kernel/package.go
 
   - id: AC-08
     when: estado quente é acessado pelo CLI Go

@@ -5,6 +5,7 @@ Obrigado por considerar contribuir com o **ARAH Harness**.
 ## Princípios
 
 - **Kernel genérico** — sem paths ou domínios de um produto específico no `kernel/`
+- **Uma fonte** — edite `.agents` / `.skills` / `.cursor` / `scripts/{agents,harness}` na raiz; rode `go run ./cmd/arah kernel sync` (não edite `kernel/` à mão). CI falha em drift (`arah kernel verify`)
 - **Overlays locais** — customização via `arah.config.yaml` e `choreography.*.yaml` no projeto-alvo
 - **Determinismo** — scripts PowerShell 5.1+, sem dependências npm para o core
 - **Economia de tokens** — comunicação passiva entre agentes (arquivo + CI)

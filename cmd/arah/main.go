@@ -12,6 +12,7 @@ import (
 	"github.com/sraphaz/arah-harness/internal/core"
 	"github.com/sraphaz/arah-harness/internal/envelope"
 	"github.com/sraphaz/arah-harness/internal/evidence"
+	"github.com/sraphaz/arah-harness/internal/kernel"
 	arahmcp "github.com/sraphaz/arah-harness/internal/mcp"
 )
 
@@ -62,11 +63,13 @@ func main() {
 		if err := srv.Run(); err != nil {
 			failEnv(true, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
 		}
+	case "kernel":
+		os.Exit(runKernel(root, args, jsonOut))
 	case "help", "-h", "--help":
 		usage()
 	default:
 		msg := fmt.Sprintf("unknown command %q", cmd)
-		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, msg, nil, "arah doctor|sync-check|version|task|evidence|mcp"))
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, msg, nil, "arah doctor|sync-check|version|task|evidence|mcp|kernel"))
 	}
 }
 
@@ -147,6 +150,58 @@ func runTask(root string, args []string, jsonOut bool) int {
 	default:
 		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "unknown task action: "+action, nil,
 			"arah task create|status|complete|block|timeline"))
+	}
+}
+
+func runKernel(root string, args []string, jsonOut bool) int {
+	sub := stripGlobalFlags(args)
+	if len(sub) == 0 {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah kernel <sync|verify>", nil,
+			"arah kernel sync|verify [-target path] [--json]"))
+	}
+	switch sub[0] {
+	case "sync":
+		m, n, err := kernel.Sync(root)
+		if err != nil {
+			return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
+		}
+		data := map[string]any{
+			"files":        len(m.Files),
+			"copied":       n,
+			"manifest":     kernel.ManifestRel,
+			"generated_at": m.GeneratedAt,
+		}
+		if jsonOut {
+			return envelope.WriteJSON(os.Stdout, envelope.OK(data))
+		}
+		fmt.Printf("kernel sync: %d files → kernel/ (%s)\n", len(m.Files), kernel.ManifestRel)
+		return 0
+	case "verify":
+		drifts, err := kernel.Verify(root)
+		if err != nil {
+			return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
+		}
+		if len(drifts) > 0 {
+			details := map[string]any{"drift_count": len(drifts), "drifts": drifts}
+			if jsonOut {
+				_ = envelope.WriteJSON(os.Stdout, envelope.Fail("KERNEL.DRIFT", "kernel/ out of sync with sources", details,
+					"arah kernel sync -target ."))
+				return 2
+			}
+			fmt.Fprintf(os.Stderr, "kernel verify: %d drift(s)\n", len(drifts))
+			for _, d := range drifts {
+				fmt.Fprintf(os.Stderr, "  %s\n", d)
+			}
+			return 2
+		}
+		if jsonOut {
+			return envelope.WriteJSON(os.Stdout, envelope.OK(map[string]any{"drift": false}))
+		}
+		fmt.Println("kernel verify: OK")
+		return 0
+	default:
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "unknown kernel action: "+sub[0], nil,
+			"arah kernel sync|verify"))
 	}
 }
 
@@ -327,8 +382,10 @@ func usage() {
   arah task timeline -task-id ID [--json]
   arah evidence graph [--json]
   arah mcp serve [-target path]
+  arah kernel sync|verify [-target path] [--json]
 
 Hot state: .arah/local/runtime.db (SQLite WAL) + YAML mirror for PS.
+Kernel: edit root sources, then "arah kernel sync"; CI runs "arah kernel verify".
 Exit codes: 0 ok · 1 error · 2 drift · 4 unhealthy · 10 usage
 `)
 }
