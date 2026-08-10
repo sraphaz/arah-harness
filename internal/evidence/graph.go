@@ -78,9 +78,10 @@ func (b *Builder) Build() (*Graph, error) {
 
 	coversBySpec := map[string][]string{}
 
-	// Specs → covers / depends_on / supersedes
+	// Specs: load all first so depends_on/supersedes stubs cannot steal the real title.
 	specDir := filepath.Join(b.RepoRoot, "docs", "specs")
 	entries, _ := os.ReadDir(specDir)
+	docsByID := map[string]specDoc{}
 	for _, e := range entries {
 		name := e.Name()
 		if e.IsDir() || !(strings.HasSuffix(name, ".spec.yaml") || strings.HasSuffix(name, ".yaml")) {
@@ -97,20 +98,39 @@ func (b *Builder) Build() (*Graph, error) {
 		if yaml.Unmarshal(raw, &doc) != nil || doc.ID == "" {
 			continue
 		}
+		docsByID[doc.ID] = doc
+	}
+	specIDs := make([]string, 0, len(docsByID))
+	for id := range docsByID {
+		specIDs = append(specIDs, id)
+	}
+	sort.Strings(specIDs)
+	for _, id := range specIDs {
+		doc := docsByID[id]
 		sid := "spec:" + doc.ID
-		add(Node{ID: sid, Type: "spec", Label: doc.Title})
+		label := doc.Title
+		if label == "" {
+			label = doc.ID
+		}
+		add(Node{ID: sid, Type: "spec", Label: label})
 		coversBySpec[doc.ID] = append([]string(nil), doc.Covers...)
 		for _, c := range doc.Covers {
 			pid := "path:" + c
 			add(Node{ID: pid, Type: "path", Label: c})
 			link(sid, pid, "covers")
 		}
+	}
+	for _, id := range specIDs {
+		doc := docsByID[id]
+		sid := "spec:" + doc.ID
 		for _, dep := range doc.DependsOn {
 			if dep == "" {
 				continue
 			}
 			did := "spec:" + dep
-			add(Node{ID: did, Type: "spec", Label: dep})
+			if _, ok := docsByID[dep]; !ok {
+				add(Node{ID: did, Type: "spec", Label: dep})
+			}
 			link(sid, did, "depends_on")
 		}
 		for _, old := range doc.Supersedes {
@@ -118,7 +138,9 @@ func (b *Builder) Build() (*Graph, error) {
 				continue
 			}
 			oid := "spec:" + old
-			add(Node{ID: oid, Type: "spec", Label: old})
+			if _, ok := docsByID[old]; !ok {
+				add(Node{ID: oid, Type: "spec", Label: old})
+			}
 			link(sid, oid, "supersedes")
 		}
 	}

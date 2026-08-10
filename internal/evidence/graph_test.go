@@ -140,6 +140,31 @@ func TestEvidenceGraphRejectsFreeTextImplements(t *testing.T) {
 	}
 }
 
+func TestEvidenceGraphPreservesDependencySpecTitles(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	// Filename order: demo.spec.yaml before other.spec.yaml — previously stole the title.
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "demo.spec.yaml"), []byte(
+		"id: demo-spec\ntitle: Demo\ncovers:\n  - cmd/\ndepends_on:\n  - other-spec\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "other.spec.yaml"), []byte(
+		"id: other-spec\ntitle: Other Canonical Title\ncovers:\n  - docs/\n"), 0o644)
+
+	g, err := (&evidence.Builder{RepoRoot: root}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var label string
+	for _, n := range g.Nodes {
+		if n.ID == "spec:other-spec" {
+			label = n.Label
+			break
+		}
+	}
+	if label != "Other Canonical Title" {
+		t.Fatalf("expected YAML title on dependency node, got %q", label)
+	}
+}
+
 func TestEvidenceNodeIDsDoNotCollideOnPrefix(t *testing.T) {
 	root := t.TempDir()
 	store, err := sqlitestore.New(root)
