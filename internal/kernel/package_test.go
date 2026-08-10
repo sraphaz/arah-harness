@@ -320,6 +320,53 @@ func TestInstallRejectsAbsoluteEntry(t *testing.T) {
 	}
 }
 
+func TestInstallRejectsDriveRelativeEntry(t *testing.T) {
+	target := t.TempDir()
+	raw := buildTestZip(t, map[string]string{
+		"C:evil": "nope\n",
+	})
+	n, err := kernel.Install(target, raw, kernel.InstallOptions{Force: true})
+	if err == nil {
+		t.Fatal("expected drive-relative entry rejection")
+	}
+	if n != 0 {
+		t.Fatalf("installed=%d want 0", n)
+	}
+}
+
+func TestInstallRejectsSymlinkDestination(t *testing.T) {
+	target := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "outside.yaml")
+	if err := os.WriteFile(outside, []byte("outside\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	agents := filepath.Join(target, ".agents")
+	if err := os.MkdirAll(agents, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(agents, "choreography.yaml")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Fatal(err)
+	}
+	raw := buildTestZip(t, map[string]string{
+		".agents/choreography.yaml": "from-zip\n",
+	})
+	n, err := kernel.Install(target, raw, kernel.InstallOptions{Force: true})
+	if err == nil {
+		t.Fatal("expected symlink destination rejection")
+	}
+	if n != 0 {
+		t.Fatalf("installed=%d want 0", n)
+	}
+	got, err := os.ReadFile(outside)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "outside\n" {
+		t.Fatalf("symlink target mutated: %q", got)
+	}
+}
+
 func TestInstallRollbackOnPartialFailure(t *testing.T) {
 	target := t.TempDir()
 	// Second entry needs dir "blocked/c.txt", but "blocked" is a file → MkdirAll fails after first write.
@@ -339,6 +386,39 @@ func TestInstallRollbackOnPartialFailure(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(target, ".agents", "ok.yaml")); err == nil {
 		t.Fatal("partial install must roll back .agents/ok.yaml")
+	}
+}
+
+func TestInstallRollbackRestoresOverwrite(t *testing.T) {
+	target := t.TempDir()
+	seed := filepath.Join(target, ".agents", "keep.yaml")
+	if err := os.MkdirAll(filepath.Dir(seed), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const original = "original-content\n"
+	if err := os.WriteFile(seed, []byte(original), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "blocked"), []byte("not a dir\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	raw := buildTestZip(t, map[string]string{
+		".agents/keep.yaml": "replacement\n",
+		"blocked/c.txt":     "fail\n",
+	})
+	n, err := kernel.Install(target, raw, kernel.InstallOptions{Force: true})
+	if err == nil {
+		t.Fatal("expected install failure")
+	}
+	if n != 0 {
+		t.Fatalf("installed=%d want 0 after rollback", n)
+	}
+	got, err := os.ReadFile(seed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != original {
+		t.Fatalf("overwrite must be restored on rollback, got %q", got)
 	}
 }
 

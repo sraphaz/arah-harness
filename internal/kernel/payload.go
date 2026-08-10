@@ -172,14 +172,18 @@ type InstallOptions struct {
 }
 
 // joinUnderTarget resolves name under target and rejects path escape
-// (absolute names, ".." segments, or cleaned paths leaving the tree).
+// (absolute names, Windows volumes, ".." segments, or cleaned paths leaving the tree).
 func joinUnderTarget(target, name string) (string, error) {
 	name = filepath.ToSlash(strings.TrimSpace(name))
 	if name == "" {
 		return "", fmt.Errorf("kernel install: empty zip entry name")
 	}
+	// Slash-rooted and Windows volume/drive-relative names (reject on every GOOS).
+	if strings.HasPrefix(name, "/") || windowsVolumePrefix(name) {
+		return "", fmt.Errorf("kernel install: absolute zip entry rejected: %s", name)
+	}
 	rel := filepath.FromSlash(name)
-	if filepath.IsAbs(rel) {
+	if filepath.IsAbs(rel) || filepath.VolumeName(rel) != "" {
 		return "", fmt.Errorf("kernel install: absolute zip entry rejected: %s", name)
 	}
 	cleaned := filepath.Clean(rel)
@@ -214,14 +218,27 @@ func joinUnderTarget(target, name string) (string, error) {
 	return absDest, nil
 }
 
+// windowsVolumePrefix reports drive-relative (C:evil) or UNC (//server/share) zip names.
+func windowsVolumePrefix(slashName string) bool {
+	if len(slashName) >= 2 && slashName[1] == ':' {
+		c := slashName[0]
+		if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
+			return true
+		}
+	}
+	return strings.HasPrefix(slashName, "//")
+}
+
 type installItem struct {
-	dest string
-	body []byte
+	dest    string
+	body    []byte
+	prev    []byte
+	existed bool
 }
 
 // Install extracts a kernel zip payload into target (overlay of .agents/.skills/.cursor/scripts).
-// All entries are validated and buffered before any write. On write failure, files created
-// in this call are removed so the target is not left partially applied.
+// All entries are validated and buffered before any write. On write failure, newly created
+// files are removed and overwritten files are restored to their prior contents.
 func Install(target string, zipData []byte, opts InstallOptions) (int, error) {
 	if len(zipData) == 0 {
 		zipData = EmbeddedZip()
@@ -247,10 +264,23 @@ func Install(target string, zipData []byte, opts InstallOptions) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		if !opts.Force {
-			if _, err := os.Stat(dest); err == nil {
+		item := installItem{dest: dest}
+		fi, lerr := os.Lstat(dest)
+		if lerr == nil {
+			if fi.Mode()&os.ModeSymlink != 0 {
+				return 0, fmt.Errorf("kernel install: refusing symlink destination: %s", name)
+			}
+			if !opts.Force {
 				continue
 			}
+			prev, err := os.ReadFile(dest)
+			if err != nil {
+				return 0, err
+			}
+			item.prev = prev
+			item.existed = true
+		} else if !os.IsNotExist(lerr) {
+			return 0, lerr
 		}
 		rc, err := f.Open()
 		if err != nil {
@@ -261,13 +291,19 @@ func Install(target string, zipData []byte, opts InstallOptions) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		plan = append(plan, installItem{dest: dest, body: body})
+		item.body = body
+		plan = append(plan, item)
 	}
 
-	written := make([]string, 0, len(plan))
+	written := make([]installItem, 0, len(plan))
 	rollback := func() {
 		for i := len(written) - 1; i >= 0; i-- {
-			_ = os.Remove(written[i])
+			w := written[i]
+			if w.existed {
+				_ = os.WriteFile(w.dest, w.prev, 0o644)
+			} else {
+				_ = os.Remove(w.dest)
+			}
 		}
 	}
 	for _, it := range plan {
@@ -279,7 +315,7 @@ func Install(target string, zipData []byte, opts InstallOptions) (int, error) {
 			rollback()
 			return 0, err
 		}
-		written = append(written, it.dest)
+		written = append(written, it)
 	}
 	return len(written), nil
 }
