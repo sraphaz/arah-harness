@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/sraphaz/arah-harness/internal/core"
 	"github.com/sraphaz/arah-harness/internal/envelope"
@@ -137,6 +138,7 @@ func toolDefs() []map[string]any {
 				"area":        map[string]any{"type": "string"},
 				"work_class":  map[string]any{"type": "string"},
 				"intent_type": map[string]any{"type": "string"},
+				"dry_run":     map[string]any{"type": "boolean"},
 			},
 		}),
 		tool("arah_complete_task", "Complete a task with concrete evidence", map[string]any{
@@ -145,6 +147,7 @@ func toolDefs() []map[string]any {
 			"properties": map[string]any{
 				"task_id":  map[string]any{"type": "string"},
 				"evidence": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+				"dry_run":  map[string]any{"type": "boolean"},
 			},
 		}),
 		tool("arah_block_task", "Block a task with a concrete reason", map[string]any{
@@ -153,6 +156,7 @@ func toolDefs() []map[string]any {
 			"properties": map[string]any{
 				"task_id": map[string]any{"type": "string"},
 				"reason":  map[string]any{"type": "string"},
+				"dry_run": map[string]any{"type": "boolean"},
 			},
 		}),
 		tool("arah_get_timeline", "List append-only runtime events for a task", map[string]any{
@@ -197,17 +201,20 @@ func (s *Server) callTool(name string, args map[string]any) (envelope.Envelope, 
 		area, _ := args["area"].(string)
 		wc, _ := args["work_class"].(string)
 		it, _ := args["intent_type"].(string)
-		c, path, err := s.Tasks.Create(obj, area, core.WorkClass(wc), core.IntentType(it))
+		opts := core.MutateOptions{DryRun: boolArg(args["dry_run"])}
+		c, path, err := s.Tasks.Create(obj, area, core.WorkClass(wc), core.IntentType(it), opts)
 		return mapResult(c, path, err)
 	case "arah_complete_task":
 		id, _ := args["task_id"].(string)
 		ev := stringList(args["evidence"])
-		c, path, err := s.Tasks.Complete(id, ev)
+		opts := core.MutateOptions{DryRun: boolArg(args["dry_run"])}
+		c, path, err := s.Tasks.Complete(id, ev, opts)
 		return mapResult(c, path, err)
 	case "arah_block_task":
 		id, _ := args["task_id"].(string)
 		reason, _ := args["reason"].(string)
-		c, path, err := s.Tasks.Block(id, reason)
+		opts := core.MutateOptions{DryRun: boolArg(args["dry_run"])}
+		c, path, err := s.Tasks.Block(id, reason, opts)
 		return mapResult(c, path, err)
 	case "arah_get_timeline":
 		id, _ := args["task_id"].(string)
@@ -235,13 +242,15 @@ func mapResult(c *core.Contract, path string, err error) (envelope.Envelope, boo
 		return domainToEnvelope(err), true
 	}
 	return envelope.OK(map[string]any{
-		"task_id":          c.TaskID,
-		"state":            c.State,
-		"primary_executor": c.PrimaryExecutor,
-		"objective":        c.Objective,
-		"path":             path,
-		"blocking_reason":  c.Result.BlockingReason,
-		"evidence":         c.Execution.CompletionEvidence,
+		"task_id":           c.TaskID,
+		"state":             c.State,
+		"primary_executor":  c.PrimaryExecutor,
+		"objective":         c.Objective,
+		"path":              path,
+		"dry_run":           strings.HasPrefix(path, "dry-run"),
+		"blocking_reason":   c.Result.BlockingReason,
+		"evidence":          c.Execution.CompletionEvidence,
+		"choreography_rule": c.ChoreographyRule,
 	}), false
 }
 
@@ -271,6 +280,17 @@ func stringList(v any) []string {
 		return []string{t}
 	default:
 		return nil
+	}
+}
+
+func boolArg(v any) bool {
+	switch t := v.(type) {
+	case bool:
+		return t
+	case string:
+		return t == "true" || t == "1" || t == "yes"
+	default:
+		return false
 	}
 }
 

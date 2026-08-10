@@ -70,6 +70,12 @@ experimental:
   - id: evidence-graph
     name: Evidence Graph determinístico
     notes: H-18 — arah evidence graph; schemas→arestas
+  - id: conformance-suite
+    name: Conformance suite do harness
+    notes: H-20 partial — internal/conformance (dry-run, error codes, CLI≡MCP); fixtures amplas TBD
+  - id: json-command-envelope
+    name: Envelope JSON estável de CLI/MCP
+    notes: H-14 — ok/code/trace_id/remediation + dry-run mutações
   - id: session-telemetry
     name: Session telemetry rica
     notes: .cursor/arah-live diagnostics
@@ -96,9 +102,6 @@ planned:
   - id: run-timeline
     name: Timeline unificada por task/run
     notes: H-19 — correlacionadores amplos + OTel opcional (EventStore base já existe)
-  - id: conformance-suite
-    name: Conformance suite do harness
-    notes: H-20 — fixtures + paridade CLI≡MCP + migrações
   - id: arahd-daemon
     name: Daemon arahd
     notes: H-08 / P2 pós-0.5 — Watch + batch + WebSocket

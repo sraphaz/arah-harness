@@ -23,7 +23,7 @@ func TestTaskLifecycle(t *testing.T) {
 		Store:  fsstore.New(root),
 		Router: choreography.New(root),
 	}
-	c, path, err := svc.Create("implement foo", "backend", core.WorkStandard, core.IntentExecution)
+	c, path, err := svc.Create("implement foo", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,11 +37,11 @@ func TestTaskLifecycle(t *testing.T) {
 		t.Fatal("empty path")
 	}
 
-	if _, _, err := svc.Complete(c.TaskID, nil); err == nil {
+	if _, _, err := svc.Complete(c.TaskID, nil, core.MutateOptions{}); err == nil {
 		t.Fatal("expected evidence error")
 	}
 
-	c2, _, err := svc.Complete(c.TaskID, []string{"internal/core/domain.go updated"})
+	c2, _, err := svc.Complete(c.TaskID, []string{"internal/core/domain.go updated"}, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,11 +63,11 @@ func TestBlockPersists(t *testing.T) {
 	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
 	_ = os.WriteFile(filepath.Join(root, ".agents", "choreography.yaml"), []byte("version: 2\nrules: []\n"), 0o644)
 	svc := &core.TaskService{Store: fsstore.New(root), Router: choreography.New(root)}
-	c, _, err := svc.Create("blocked work", "backend", core.WorkStandard, core.IntentExecution)
+	c, _, err := svc.Create("blocked work", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	c2, path, err := svc.Block(c.TaskID, "missing credential X")
+	c2, path, err := svc.Block(c.TaskID, "missing credential X", core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}

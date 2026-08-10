@@ -45,8 +45,9 @@ No required input. Returns runtime version, surfaces, and command list.
 | `area` | string | no (default `backend`) |
 | `work_class` | string | no (`trivial\|standard\|architectural\|release`) |
 | `intent_type` | string | no (`execution` default) |
+| `dry_run` | boolean | no — plan without persist |
 
-Creates the contract, routes choreography, and starts `executing`.
+Creates the contract, routes choreography, and starts `executing` (unless `dry_run`).
 
 ## `arah_complete_task`
 
@@ -54,6 +55,7 @@ Creates the contract, routes choreography, and starts `executing`.
 |-------|------|----------|
 | `task_id` | string | yes |
 | `evidence` | string[] | yes (concrete) |
+| `dry_run` | boolean | no |
 
 ## `arah_block_task`
 
@@ -61,6 +63,7 @@ Creates the contract, routes choreography, and starts `executing`.
 |-------|------|----------|
 | `task_id` | string | yes |
 | `reason` | string | yes |
+| `dry_run` | boolean | no |
 
 ## `arah_get_timeline`
 

@@ -50,14 +50,14 @@ func TestSQLiteLifecycleAndMigration(t *testing.T) {
 		Events: store,
 		Router: choreography.New(root),
 	}
-	c, _, err := svc.Create("sqlite path", "backend", core.WorkStandard, core.IntentExecution)
+	c, _, err := svc.Create("sqlite path", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(root, ".arah", "local", "runtime.db")); err != nil {
 		t.Fatal("runtime.db missing")
 	}
-	c2, _, err := svc.Complete(c.TaskID, []string{"internal/adapters/sqlitestore/store.go updated"})
+	c2, _, err := svc.Complete(c.TaskID, []string{"internal/adapters/sqlitestore/store.go updated"}, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}

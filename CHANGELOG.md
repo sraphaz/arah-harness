@@ -13,7 +13,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
   - `internal/adapters/fsstore` — mirror/compatibilidade PS
   - `internal/envelope` — contrato JSON `ok/code/trace_id/remediation`
   - `internal/evidence` — Evidence Graph determinístico
-  - CLI: `arah task *`, `arah task timeline`, `arah evidence graph`, `arah mcp serve`
+  - `internal/conformance` — provas H-20 (dry-run, error codes, CLI≡MCP)
+  - CLI: `arah task *` (`--dry-run`), `arah task timeline`, `arah evidence graph`, `arah mcp serve`
   - Contrato MCP: [`docs/architecture/mcp-tool-contract.md`](docs/architecture/mcp-tool-contract.md)
   - Testes: `go test ./...`
 - **Direção 0.5 — Runtime Cohesion** (docs)
