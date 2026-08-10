@@ -55,13 +55,20 @@ type specDoc struct {
 // Build derives nodes and edges exclusively from Arah schemas and runtime state.
 func (b *Builder) Build() (*Graph, error) {
 	g := &Graph{Version: "1"}
-	idx := map[string]bool{}
+	idx := map[string]int{}
 	edgeIdx := map[string]bool{}
 	add := func(n Node) {
-		if idx[n.ID] {
+		if pos, ok := idx[n.ID]; ok {
+			existing := &g.Nodes[pos]
+			if existing.Type == "spec" && n.Type == "spec" && n.Label != "" {
+				stubLabel := strings.TrimPrefix(n.ID, "spec:")
+				if existing.Label == "" || existing.Label == stubLabel {
+					existing.Label = n.Label
+				}
+			}
 			return
 		}
-		idx[n.ID] = true
+		idx[n.ID] = len(g.Nodes)
 		g.Nodes = append(g.Nodes, n)
 	}
 	link := func(from, to, rel string) {

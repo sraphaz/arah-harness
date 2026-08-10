@@ -112,6 +112,32 @@ func TestEvidenceGraphDeterministicExport(t *testing.T) {
 	}
 }
 
+func TestEvidenceGraphReplacesStubSpecLabelWithTitle(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "a-demo.spec.yaml"), []byte(
+		"id: demo-spec\ntitle: Demo\ndepends_on:\n  - other-spec\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "z-other.spec.yaml"), []byte(
+		"id: other-spec\ntitle: Canonical Other\n"), 0o644)
+
+	g, err := (&evidence.Builder{RepoRoot: root}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, n := range g.Nodes {
+		if n.ID != "spec:other-spec" {
+			continue
+		}
+		if n.Label != "Canonical Other" {
+			t.Fatalf("expected spec title to replace stub label, got %q", n.Label)
+		}
+		return
+	}
+
+	t.Fatal("expected referenced spec node")
+}
+
 func TestEvidenceGraphRejectsFreeTextImplements(t *testing.T) {
 	root := t.TempDir()
 	writeDemoSpec(t, root)
