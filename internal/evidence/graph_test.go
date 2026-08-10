@@ -203,6 +203,36 @@ func TestEvidenceGraphGlobCoversAndWindowsPaths(t *testing.T) {
 	}
 }
 
+func TestEvidenceGraphMatchesDirectoryCoverWithoutProducedTrailingSlash(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "cli.spec.yaml"), []byte(
+		"id: cli\ntitle: CLI\ncovers:\n  - cmd/\n"), 0o644)
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	c := &core.Contract{
+		Version: "1.0", TaskID: "task-dir", Objective: "cli dir", State: core.StateDone,
+		PrimaryExecutor: "backend", WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		Result: core.Result{ChangedFiles: []string{"cmd"}},
+	}
+	if _, err := store.Save(c); err != nil {
+		t.Fatal(err)
+	}
+	g, err := (&evidence.Builder{RepoRoot: root, Store: store}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range g.Edges {
+		if e.Rel == "implements" && e.To == "spec:cli" {
+			return
+		}
+	}
+	t.Fatalf("expected implements edge for directory path without trailing slash, graph=%+v", g)
+}
+
 func TestEvidenceGraphIncludesAllTaskEvents(t *testing.T) {
 	root := t.TempDir()
 	store, err := sqlitestore.New(root)

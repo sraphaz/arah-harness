@@ -339,7 +339,7 @@ func pathMatchesCover(filePath, cover string) bool {
 		return true
 	}
 	if strings.HasSuffix(cover, "/") {
-		return strings.HasPrefix(filePath, cover)
+		return filePath+"/" == cover || strings.HasPrefix(filePath, cover)
 	}
 	return strings.HasPrefix(filePath, cover+"/")
 }
