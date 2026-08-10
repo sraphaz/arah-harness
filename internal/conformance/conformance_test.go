@@ -16,6 +16,7 @@ import (
 	"github.com/sraphaz/arah-harness/internal/adapters/sqlitestore"
 	"github.com/sraphaz/arah-harness/internal/core"
 	"github.com/sraphaz/arah-harness/internal/envelope"
+	"github.com/sraphaz/arah-harness/internal/evidence"
 	arahmcp "github.com/sraphaz/arah-harness/internal/mcp"
 )
 
@@ -188,5 +189,64 @@ func TestCompleteDryRunLeavesTaskExecuting(t *testing.T) {
 	}
 	if got.State != core.StateExecuting {
 		t.Fatalf("persisted state mutated: %s", got.State)
+	}
+}
+
+func TestCLIMCPParityOnEvidenceGraph(t *testing.T) {
+	root, svc := fixtureRepo(t)
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "demo.spec.yaml"), []byte(
+		"id: demo-spec\ntitle: Demo\ncovers:\n  - cmd/\ndepends_on:\n  - other-spec\n"), 0o644)
+	created, err := svc.Create("parity graph", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = svc.Complete(created.Contract.TaskID, []string{"cmd/arah/main.go updated"}, core.MutateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	bin := buildArahCLI(t)
+	cliOut, err := exec.Command(bin, "evidence", "graph", "--json", "--target", root).CombinedOutput()
+	if err != nil {
+		t.Fatalf("cli evidence graph: %v\n%s", err, cliOut)
+	}
+	var cliEnv envelope.Envelope
+	if err := json.Unmarshal(cliOut, &cliEnv); err != nil {
+		t.Fatalf("cli envelope: %v\n%s", err, cliOut)
+	}
+	if !cliEnv.OK {
+		t.Fatalf("cli not ok: %#v", cliEnv)
+	}
+	cliRaw, err := json.Marshal(cliEnv.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	eb := &evidence.Builder{RepoRoot: root, Store: svc.Store, Events: svc.Events}
+	in := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"arah_get_evidence_graph","arguments":{}}}` + "\n"
+	var out bytes.Buffer
+	srv := &arahmcp.Server{Tasks: svc, Evidence: eb, Version: "test", Reader: strings.NewReader(in), Writer: &out}
+	if err := srv.Run(); err != nil {
+		t.Fatal(err)
+	}
+	var resp map[string]any
+	if err := json.Unmarshal([]byte(strings.TrimSpace(out.String())), &resp); err != nil {
+		t.Fatal(err)
+	}
+	result := resp["result"].(map[string]any)
+	if result["isError"] == true {
+		t.Fatalf("mcp error: %#v", result)
+	}
+	text := result["content"].([]any)[0].(map[string]any)["text"].(string)
+	var mcpEnv envelope.Envelope
+	if err := json.Unmarshal([]byte(text), &mcpEnv); err != nil {
+		t.Fatal(err)
+	}
+	mcpRaw, err := json.Marshal(mcpEnv.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(cliRaw) != string(mcpRaw) {
+		t.Fatalf("evidence graph CLI≠MCP\ncli=%s\nmcp=%s", cliRaw, mcpRaw)
 	}
 }

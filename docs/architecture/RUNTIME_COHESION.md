@@ -21,7 +21,7 @@ Hoje:
 | `.agents/` e `kernel/.agents/` (e análogos) | Drift e testes de equivalência |
 | Estado quente só em arquivos | Concorrência frágil com CLI + MCP + extensão + futuro `arahd` |
 | Sem envelope de erro estável | Agentes parseiam texto; CI/MCP/CLI divergem |
-| Agent Graph ∪ Knowledge Graph | Falta o **Evidence Graph** (prova da entrega) |
+| Agent Graph ∪ Knowledge Graph | Evidence Graph (`arah evidence graph` / MCP) prova a entrega |
 
 **Norte:** transformar artefatos competentes em um **runtime de governança tipado,
 transacional, explicável e acessível por contratos estáveis**.
@@ -138,12 +138,14 @@ Todo comando aceita `--json` com envelope estável:
 
 Grafo **determinístico** derivado só de schemas Arah (sem LLM como fonte):
 
-**Entidades:** spec, task, run, agent, skill, gate, approval, PR, arquivo,
-capability, domínio.
+**MVP (H-18):** `spec`, `task`, `run`, `agent`, `path`/`arquivo`, `capability`,
+`evidence`, `blocker` — com relações `covers`, `depends_on`, `supersedes`,
+`assigned_to`, `consulted`, `blocked_by`, `produced`, `evidenced_by`, `implements`
+(interseção path↔covers; sem heurística de texto livre). Export ordenado estável;
+CLI ≡ MCP.
 
-**Relações:** `depends_on`, `covers`, `assigned_to`, `consulted`, `invokes`,
-`validated_by`, `blocked_by`, `approved_by`, `produced`, `evidenced_by`,
-`implements`, `supersedes`.
+**Entidades futuras:** skill, gate, approval, PR, domínio + `invokes` /
+`validated_by` / `approved_by` quando as portas existirem no core.
 
 | Grafo | Pergunta |
 |-------|----------|
