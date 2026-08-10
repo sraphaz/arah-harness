@@ -62,6 +62,19 @@ Creates the contract, routes choreography, and starts `executing`.
 | `task_id` | string | yes |
 | `reason` | string | yes |
 
+## `arah_get_timeline`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `task_id` | string | yes |
+
+Returns append-only `task_events` from SQLite (`task.created`, `task.started`, …).
+
+## `arah_get_evidence_graph`
+
+No required input. Deterministic graph from specs (`covers`), tasks
+(`assigned_to`, `evidenced_by`, `implements`, …). No LLM.
+
 ---
 
 ## Non-goals (v0 of this contract)

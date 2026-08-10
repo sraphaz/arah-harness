@@ -20,10 +20,10 @@
 | H-13 | `arah-core` tipado (Go) | **in progress** — domain + task CLI + MCP stdio |
 | H-14 | Contratos JSON + `plan→validate→apply` | **partial** — envelope JSON + invariantes; dry-run/diff TBD |
 | H-15 | Kernel gerado (fim da segunda fonte) | **backlog 0.5 P0** |
-| H-16 | StateStore SQLite + migração | **partial** — port + filesystem adapter |
-| H-17 | MCP serve (mesmos use cases da CLI) | **in progress** — `arah mcp serve` tools ECP |
-| H-18 | Evidence Graph determinístico | **backlog 0.5 P1** |
-| H-19 | Timeline unificada task/run | **backlog 0.5 P1** |
+| H-16 | StateStore SQLite + migração | **done** — `.arah/local/runtime.db` WAL + mirror YAML |
+| H-17 | MCP serve (mesmos use cases da CLI) | **in progress** — tools ECP + timeline + evidence graph |
+| H-18 | Evidence Graph determinístico | **in progress** — `arah evidence graph` + MCP tool |
+| H-19 | Timeline unificada task/run | **partial** — `task timeline` + EventStore; correlacionadores amplos TBD |
 | H-20 | Conformance suite + fixtures | **backlog 0.5 P1** |
 
 **Direção 0.5:** [ADR-002](../adr/002-runtime-cohesion-0.5.md) · [RUNTIME_COHESION.md](../architecture/RUNTIME_COHESION.md)
@@ -90,16 +90,18 @@ Ports no core; adapters `fsstore`, `choreography`, `mcp`. Inspirado em kern ADR-
 Fonte canônica → validação → pacote + hashes. Preferir `go:embed`. Eliminar edição
 manual de `kernel/.agents` / `kernel/.skills` / `kernel/scripts` como segunda fonte.
 
-### H-16 · StateStore — partial P0
-Port `StateStore` + adapter filesystem em `.arah/local/execution/`. SQLite WAL (H-16
-restante) e EventStore append-only ainda TBD.
+### H-16 · StateStore — done P0
+Hot state em `.arah/local/runtime.db` (SQLite WAL, `modernc.org/sqlite`).
+Migração automática a partir de YAML; mirror filesystem para PS. EventStore
+`task_events` append-only (timeline).
 
 ### H-17 · MCP primeira classe — in progress P1
 `arah mcp serve` + [mcp-tool-contract.md](../architecture/mcp-tool-contract.md).
-Tools: capabilities, get/create/complete/block task. Sem shell genérico.
+Tools: capabilities, get/create/complete/block task, timeline, evidence graph.
 
-### H-18 · Evidence Graph — backlog P1
-Grafo determinístico schemas→arestas (sem LLM como fonte). Completa Agent ∪ Knowledge.
+### H-18 · Evidence Graph — in progress P1
+Grafo determinístico schemas→arestas (`internal/evidence`). CLI
+`arah evidence graph`. Completa Agent ∪ Knowledge.
 
 ### H-19 · Timeline por Run — backlog P1
 Correlacionadores `task_id` / `run_id` / `trace_id` / …; timeline create→done|blocked.

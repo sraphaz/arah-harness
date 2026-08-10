@@ -1,26 +1,21 @@
 # ARAH portable CLI (Go) — arah-core
 
-ADR-001 + **0.5 Runtime Cohesion** foundation. CLI and MCP share the same
-`internal/core` use cases (engineering patterns inspired by
-[rafaelnicolett/kern](https://github.com/rafaelnicolett/kern) — hexagonal core,
-MCP as agent contract, local per-repo state — **not** its RAG/ontology product).
+ADR-001 + **0.5 Runtime Cohesion**. CLI and MCP share `internal/core` use cases
+(engineering patterns from [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern)).
 
 ```bash
-# from repo root
 go test ./...
 go build -o arah ./cmd/arah
 
 ./arah doctor -target .
-./arah sync-check -target .
-./arah version --json
-
 ./arah task create -objective "…" -area backend --json
-./arah task status -task-id task-… --json
-./arah task complete -task-id task-… -evidence "path updated; tests passed" --json
-./arah task block -task-id task-… -reason "missing credential X" --json
-
+./arah task timeline -task-id task-… --json
+./arah evidence graph --json
 ./arah mcp serve -target .
 ```
+
+Hot state: `.arah/local/runtime.db` (SQLite WAL) with YAML mirror under
+`.arah/local/execution/` for PowerShell compatibility.
 
 | Exit | Meaning |
 |------|---------|
@@ -29,6 +24,3 @@ go build -o arah ./cmd/arah
 | 2 | Drift (sync-check) |
 | 4 | Doctor unhealthy |
 | 10 | Usage |
-
-PowerShell (`cli/arah.ps1`) remains the full organism surface during strangler
-migration; writes for **Execution Control tasks** are available in Go now.

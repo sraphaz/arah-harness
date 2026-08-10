@@ -15,11 +15,12 @@ O passivo técnico do harness era versionar **todo** estado operacional (bus, le
 ```text
 .arah/
   local/                      # HOT — gitignored
+    runtime.db                # SQLite WAL (arah-core 0.5) — tasks + task_events
     bus/pending/<ULID>.json   # arquivo-por-evento (atômico)
     bus/archive/YYYY-MM.jsonl # compactado
     audit/pending/<ULID>.json
     audit/archive/YYYY-MM.jsonl
-    execution/                # Execution Control Protocol
+    execution/                # Execution Control — YAML mirror (PS + migração)
       active/<task-id>.yaml
       completed/
       blocked/
@@ -31,6 +32,10 @@ docs/_meta/runs/<run-id>/
   summary.json                # COLD evidence
 ```
 
+A partir de 0.5, o CLI Go / MCP usam **SQLite** como StateStore canônico
+(`internal/adapters/sqlitestore`), com **espelho YAML** em `execution/` para
+compatibilidade PowerShell durante o estrangulamento. Eventos de tarefa vão
+para `task_events` (timeline).
 ## Comandos
 
 ```powershell

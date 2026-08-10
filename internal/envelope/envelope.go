@@ -45,10 +45,12 @@ func NewTraceID() string {
 	return fmt.Sprintf("%d%s", time.Now().UnixNano(), hex.EncodeToString(b[:]))
 }
 
+// OK builds a successful envelope carrying arbitrary data.
 func OK(data any) Envelope {
 	return Envelope{OK: true, Code: CodeOK, TraceID: NewTraceID(), Data: data}
 }
 
+// Fail builds an error envelope with a stable machine code and optional remediation.
 func Fail(code, message string, details map[string]any, remediation ...string) Envelope {
 	return Envelope{
 		OK:          false,

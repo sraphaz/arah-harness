@@ -1,15 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/sraphaz/arah-harness/internal/adapters/choreography"
-	"github.com/sraphaz/arah-harness/internal/adapters/fsstore"
+	"github.com/sraphaz/arah-harness/internal/adapters/sqlitestore"
 	"github.com/sraphaz/arah-harness/internal/core"
 	"github.com/sraphaz/arah-harness/internal/envelope"
+	"github.com/sraphaz/arah-harness/internal/evidence"
 	arahmcp "github.com/sraphaz/arah-harness/internal/mcp"
 )
 
@@ -45,12 +47,18 @@ func main() {
 		fmt.Printf("arah (go) %s\n", Version)
 	case "task":
 		os.Exit(runTask(root, args, jsonOut))
+	case "evidence":
+		os.Exit(runEvidence(root, args, jsonOut))
 	case "mcp":
-		if len(args) == 0 || args[0] != "serve" {
+		sub := stripGlobalFlags(args)
+		if len(sub) == 0 || sub[0] != "serve" {
 			failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah mcp serve [-target path]", nil))
 		}
-		svc := newTaskService(root)
-		srv := &arahmcp.Server{Tasks: svc, Version: Version}
+		svc, err := newTaskService(root)
+		if err != nil {
+			failEnv(jsonOut, envelope.Fail(envelope.CodeStore, err.Error(), nil))
+		}
+		srv := &arahmcp.Server{Tasks: svc, Version: Version, Evidence: evidenceBuilder(root, svc)}
 		if err := srv.Run(); err != nil {
 			failEnv(true, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
 		}
@@ -58,29 +66,40 @@ func main() {
 		usage()
 	default:
 		msg := fmt.Sprintf("unknown command %q", cmd)
-		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, msg, nil, "arah doctor|sync-check|version|task|mcp"))
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, msg, nil, "arah doctor|sync-check|version|task|evidence|mcp"))
 	}
 }
 
-func newTaskService(root string) *core.TaskService {
-	return &core.TaskService{
-		Store:  fsstore.New(root),
-		Router: choreography.New(root),
+func newTaskService(root string) (*core.TaskService, error) {
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		return nil, err
 	}
+	return &core.TaskService{
+		Store:  store,
+		Events: store,
+		Router: choreography.New(root),
+	}, nil
+}
+
+func evidenceBuilder(root string, svc *core.TaskService) *evidence.Builder {
+	return &evidence.Builder{RepoRoot: root, Store: svc.Store, Events: svc.Events}
 }
 
 func runTask(root string, args []string, jsonOut bool) int {
 	if len(args) == 0 {
-		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block>", nil))
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline>", nil))
 	}
-	// strip global flags from subcommand position
 	subArgs := stripGlobalFlags(args)
 	if len(subArgs) == 0 {
-		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block>", nil))
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline>", nil))
 	}
 	action := subArgs[0]
 	rest := subArgs[1:]
-	svc := newTaskService(root)
+	svc, err := newTaskService(root)
+	if err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeStore, err.Error(), nil))
+	}
 
 	switch action {
 	case "create":
@@ -107,9 +126,44 @@ func runTask(root string, args []string, jsonOut bool) int {
 		reason := flagValue(rest, "-reason", "--reason", "")
 		c, path, err := svc.Block(id, reason)
 		return emitTask(jsonOut, c, path, err)
+	case "timeline":
+		id := flagValue(rest, "-task-id", "--task-id", "")
+		evs, err := svc.Timeline(id)
+		if err != nil {
+			return failEnv(jsonOut, domainEnv(err))
+		}
+		if jsonOut {
+			return envelope.WriteJSON(os.Stdout, envelope.OK(map[string]any{"task_id": id, "events": evs}))
+		}
+		fmt.Printf("timeline %s (%d events)\n", id, len(evs))
+		for _, e := range evs {
+			fmt.Printf("  %s  %s\n", e.At, e.Kind)
+		}
+		return 0
 	default:
-		return envelope.WriteJSON(os.Stdout, envelope.Fail(envelope.CodeUsage, "unknown task action: "+action, nil))
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "unknown task action: "+action, nil,
+			"arah task create|status|complete|block|timeline"))
 	}
+}
+
+func runEvidence(root string, args []string, jsonOut bool) int {
+	sub := stripGlobalFlags(args)
+	if len(sub) == 0 || sub[0] != "graph" {
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah evidence graph [--json]", nil))
+	}
+	svc, err := newTaskService(root)
+	if err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeStore, err.Error(), nil))
+	}
+	g, err := evidenceBuilder(root, svc).Build()
+	if err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
+	}
+	if jsonOut || true {
+		// evidence graph is always structured
+		return envelope.WriteJSON(os.Stdout, envelope.OK(g))
+	}
+	return 0
 }
 
 func emitTask(jsonOut bool, c *core.Contract, path string, err error) int {
@@ -226,6 +280,24 @@ func runSyncCheck(root string, jsonOut bool) int {
 		fmt.Printf("sync-check: drift — missing %s\n", strings.Join(missing, ", "))
 		return 2
 	}
+	raw, err := os.ReadFile(graph)
+	if err != nil {
+		if jsonOut {
+			_ = envelope.WriteJSON(os.Stdout, envelope.Fail("SYNC.DRIFT", "sync-check: drift — cannot read graph", map[string]any{"error": err.Error()}))
+			return 2
+		}
+		fmt.Printf("sync-check: drift — cannot read graph: %v\n", err)
+		return 2
+	}
+	var probe any
+	if err := json.Unmarshal(raw, &probe); err != nil {
+		if jsonOut {
+			_ = envelope.WriteJSON(os.Stdout, envelope.Fail("SYNC.DRIFT", "sync-check: drift — graph JSON invalid", nil))
+			return 2
+		}
+		fmt.Println("sync-check: drift — graph JSON invalid")
+		return 2
+	}
 	if jsonOut {
 		return envelope.WriteJSON(os.Stdout, envelope.OK(map[string]any{"drift": false}))
 	}
@@ -243,10 +315,12 @@ func usage() {
   arah task status -task-id ID [--json]
   arah task complete -task-id ID -evidence "…" [--json]
   arah task block -task-id ID -reason "…" [--json]
+  arah task timeline -task-id ID [--json]
+  arah evidence graph [--json]
   arah mcp serve [-target path]
 
+Hot state: .arah/local/runtime.db (SQLite WAL) + YAML mirror for PS.
 Exit codes: 0 ok · 1 error · 2 drift · 4 unhealthy · 10 usage
-CLI and MCP share arah-core use cases (inspired by rafaelnicolett/kern).
 `)
 }
 

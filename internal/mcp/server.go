@@ -11,13 +11,16 @@ import (
 
 	"github.com/sraphaz/arah-harness/internal/core"
 	"github.com/sraphaz/arah-harness/internal/envelope"
+	"github.com/sraphaz/arah-harness/internal/evidence"
 )
 
+// Server exposes arah-core TaskService (and optional Evidence builder) over MCP stdio.
 type Server struct {
-	Tasks   *core.TaskService
-	Version string
-	Reader  io.Reader
-	Writer  io.Writer
+	Tasks    *core.TaskService
+	Evidence *evidence.Builder
+	Version  string
+	Reader   io.Reader
+	Writer   io.Writer
 }
 
 type rpcRequest struct {
@@ -45,6 +48,7 @@ type toolCallParams struct {
 	Arguments map[string]any `json:"arguments"`
 }
 
+// Run serves MCP JSON-RPC requests line-delimited on Reader/Writer until EOF.
 func (s *Server) Run() error {
 	if s.Reader == nil {
 		s.Reader = os.Stdin
@@ -151,6 +155,17 @@ func toolDefs() []map[string]any {
 				"reason":  map[string]any{"type": "string"},
 			},
 		}),
+		tool("arah_get_timeline", "List append-only runtime events for a task", map[string]any{
+			"type":     "object",
+			"required": []string{"task_id"},
+			"properties": map[string]any{
+				"task_id": map[string]any{"type": "string"},
+			},
+		}),
+		tool("arah_get_evidence_graph", "Deterministic Evidence Graph from specs/tasks (no LLM)", map[string]any{
+			"type":       "object",
+			"properties": map[string]any{},
+		}),
 	}
 }
 
@@ -166,10 +181,11 @@ func (s *Server) callTool(name string, args map[string]any) (envelope.Envelope, 
 	switch name {
 	case "arah_get_capabilities":
 		return envelope.OK(map[string]any{
-			"runtime": "arah-core",
-			"version": s.Version,
-			"surfaces": []string{"cli", "mcp"},
-			"commands": []string{"doctor", "sync-check", "version", "task", "mcp"},
+			"runtime":     "arah-core",
+			"version":     s.Version,
+			"surfaces":    []string{"cli", "mcp"},
+			"commands":    []string{"doctor", "sync-check", "version", "task", "evidence", "mcp"},
+			"state_store": "sqlite-wal",
 			"inspired_by": "https://github.com/rafaelnicolett/kern",
 		}), false
 	case "arah_get_task":
@@ -193,6 +209,22 @@ func (s *Server) callTool(name string, args map[string]any) (envelope.Envelope, 
 		reason, _ := args["reason"].(string)
 		c, path, err := s.Tasks.Block(id, reason)
 		return mapResult(c, path, err)
+	case "arah_get_timeline":
+		id, _ := args["task_id"].(string)
+		evs, err := s.Tasks.Timeline(id)
+		if err != nil {
+			return domainToEnvelope(err), true
+		}
+		return envelope.OK(map[string]any{"task_id": id, "events": evs}), false
+	case "arah_get_evidence_graph":
+		if s.Evidence == nil {
+			return envelope.Fail(envelope.CodeInternal, "evidence builder not configured", nil), true
+		}
+		g, err := s.Evidence.Build()
+		if err != nil {
+			return envelope.Fail(envelope.CodeInternal, err.Error(), nil), true
+		}
+		return envelope.OK(g), false
 	default:
 		return envelope.Fail(envelope.CodeUsage, "unknown tool: "+name, nil), true
 	}

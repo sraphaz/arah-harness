@@ -72,16 +72,16 @@ acceptance:
     covered_by: null
 
   - id: AC-08
-    when: estado quente é acessado
-    then: ocorre apenas via StateStore/EventStore (filesystem só como adapter de migração)
-    status: pending
-    covered_by: null
+    when: estado quente é acessado pelo CLI Go
+    then: ocorre via StateStore SQLite (filesystem só como mirror/migração)
+    status: covered
+    covered_by: internal/adapters/sqlitestore/store.go
 
   - id: AC-09
     when: Evidence Graph é exportado
     then: arestas derivam só de schemas Arah, sem LLM como fonte de verdade
-    status: pending
-    covered_by: null
+    status: covered
+    covered_by: internal/evidence/graph.go
 
   - id: AC-10
     when: conformance suite roda contra fixtures

@@ -37,10 +37,12 @@ var areaPaths = map[string][]string{
 	"harness":      {"kernel/**", ".agents/**", "scripts/**", "schemas/**"},
 }
 
+// Resolver selects primary_executor from area shortcuts and .agents/choreography.yaml.
 type Resolver struct {
 	RepoRoot string
 }
 
+// New returns a choreography resolver for repoRoot.
 func New(repoRoot string) *Resolver {
 	return &Resolver{RepoRoot: repoRoot}
 }
@@ -64,6 +66,7 @@ type fileDoc struct {
 	Rules []fileRule `yaml:"rules"`
 }
 
+// Resolve returns the primary executor and participants for an area.
 func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error) {
 	area = strings.ToLower(strings.TrimSpace(area))
 	if preferred == "" {

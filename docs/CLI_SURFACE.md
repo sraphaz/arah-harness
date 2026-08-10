@@ -41,11 +41,12 @@ Módulo raiz `github.com/sraphaz/arah-harness` · binário [`cmd/arah`](../cmd/a
 | `arah doctor -target [--json]` | Checks mínimos de layout |
 | `arah sync-check -target [--json]` | Drift vs `.arah-version` / graph |
 | `arah version [--json]` | `0.5.0-dev` |
-| `arah task create\|status\|complete\|block` | Execution Control via `internal/core` |
+| `arah task create\|status\|complete\|block\|timeline` | Execution Control via `internal/core` + SQLite |
+| `arah evidence graph` | Evidence Graph determinístico (H-18) |
 | `arah mcp serve` | MCP stdio — ver [mcp-tool-contract.md](architecture/mcp-tool-contract.md) |
 
-CLI e MCP compartilham os mesmos use cases. PowerShell permanece canônico para
-organism/discover/evolve/regenerate até migração por estrangulamento.
+Hot state canônico: `.arah/local/runtime.db` (SQLite WAL). YAML em
+`.arah/local/execution/` permanece como mirror de compatibilidade.
 
 Inspiração de engenharia: [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern)
 (hexagonal + MCP; sem RAG/ontologia).
