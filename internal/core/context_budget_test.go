@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -31,6 +32,22 @@ func TestBuildTaskContextBudgets(t *testing.T) {
 	}
 	if !(min.EstimatedTokens < std.EstimatedTokens && std.EstimatedTokens < full.EstimatedTokens) {
 		t.Fatalf("token order min=%d std=%d full=%d", min.EstimatedTokens, std.EstimatedTokens, full.EstimatedTokens)
+	}
+}
+
+func TestRecentEventKindsUsesTail(t *testing.T) {
+	events := make([]Event, 0, 12)
+	for i := 0; i < 12; i++ {
+		events = append(events, Event{Kind: fmt.Sprintf("k%d", i)})
+	}
+	got := recentEventKinds(events, 8)
+	if len(got) != 8 || got[0] != "k4" || got[7] != "k11" {
+		t.Fatalf("got %v", got)
+	}
+	c := &Contract{TaskID: "t", State: StateExecuting, PrimaryExecutor: "backend", Scope: Scope{Area: "backend"}}
+	std := BuildTaskContext(c, events, BudgetStandard, "")
+	if std.RecentEventKinds[0] != "k4" || std.RecentEventKinds[len(std.RecentEventKinds)-1] != "k11" {
+		t.Fatalf("standard used head instead of tail: %v", std.RecentEventKinds)
 	}
 }
 

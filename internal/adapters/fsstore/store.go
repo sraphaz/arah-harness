@@ -138,3 +138,19 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	}
 	return out, nil
 }
+
+// Delete removes a contract YAML from all buckets and drops the task artifact directory.
+func (s *Store) Delete(taskID string) error {
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return fmt.Errorf("task_id required")
+	}
+	if err := s.EnsureLayout(); err != nil {
+		return err
+	}
+	for _, b := range []string{"active", "completed", "blocked"} {
+		_ = os.Remove(filepath.Join(s.root(), b, taskID+".yaml"))
+	}
+	_ = os.RemoveAll(filepath.Join(s.root(), taskID))
+	return nil
+}

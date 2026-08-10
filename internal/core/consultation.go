@@ -8,21 +8,19 @@ import (
 
 // ConsultationResult is the structured consultant output (no free chat).
 type ConsultationResult struct {
-	Version       string   `yaml:"version" json:"version"`
-	TaskID        string   `yaml:"task_id" json:"task_id"`
-	ConsultantID  string   `yaml:"consultant_id" json:"consultant_id"`
-	Summary       string   `yaml:"summary" json:"summary"`
+	Version         string   `yaml:"version" json:"version"`
+	TaskID          string   `yaml:"task_id" json:"task_id"`
+	ConsultantID    string   `yaml:"consultant_id" json:"consultant_id"`
+	Summary         string   `yaml:"summary" json:"summary"`
 	Recommendations []string `yaml:"recommendations" json:"recommendations"`
-	Blockers      []string `yaml:"blockers,omitempty" json:"blockers,omitempty"`
-	SubmittedAt   string   `yaml:"submitted_at" json:"submitted_at"`
-}
-
-// ConsultationWriter persists consultation YAML under the task directory.
-type ConsultationWriter interface {
-	WriteConsultation(taskID string, result *ConsultationResult) (path string, err error)
+	Blockers        []string `yaml:"blockers,omitempty" json:"blockers,omitempty"`
+	SubmittedAt     string   `yaml:"submitted_at" json:"submitted_at"`
 }
 
 // SubmitConsultation validates and stores a consultant opinion for the executor.
+// Order: bump counter + Save, then write YAML, then emit timeline event.
+// Any failure after the counter save compensates (decrement / remove file) so
+// retries cannot exceed max_consultations with orphan artifacts.
 func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, recommendations, blockers []string) (*ConsultationResult, string, error) {
 	taskID = strings.TrimSpace(taskID)
 	consultantID = strings.TrimSpace(consultantID)
@@ -58,7 +56,6 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 		}
 	}
 	if !allowed && consultantID != c.PrimaryExecutor {
-		// Allow listed consultants only; primary is not a consultant channel.
 		return nil, "", errf("EXECUTION.CONSULTANT_NOT_PARTICIPANT",
 			"consultant_id is not a participant on this contract",
 			map[string]any{"task_id": taskID, "consultant_id": consultantID})
@@ -80,17 +77,32 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 		Blockers:        append([]string{}, blockers...),
 		SubmittedAt:     time.Now().UTC().Format(time.RFC3339Nano),
 	}
-	path, err := s.Consultations.WriteConsultation(taskID, res)
-	if err != nil {
-		return nil, "", wrapStore(err)
-	}
+
+	// Reserve a consultation slot before writing the artifact.
 	c.Counters.Consultations++
 	if _, err := s.Store.Save(c); err != nil {
-		return res, path, wrapStore(err)
+		return nil, "", wrapStore(err)
 	}
-	_ = s.emitCorrelated(c, "consultation.submitted", map[string]any{
+
+	path, err := s.Consultations.WriteConsultation(taskID, res)
+	if err != nil {
+		s.rollbackConsultationSlot(c)
+		return nil, "", wrapStore(err)
+	}
+	if err := s.emitCorrelated(c, "consultation.submitted", map[string]any{
 		"consultant_id": consultantID,
 		"path":          path,
-	})
+	}); err != nil {
+		_ = s.Consultations.RemoveConsultation(path)
+		s.rollbackConsultationSlot(c)
+		return nil, "", errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": taskID, "kind": "consultation.submitted"})
+	}
 	return res, path, nil
+}
+
+func (s *TaskService) rollbackConsultationSlot(c *Contract) {
+	if c.Counters.Consultations > 0 {
+		c.Counters.Consultations--
+	}
+	_, _ = s.Store.Save(c)
 }

@@ -314,6 +314,33 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	return merged, nil
 }
 
+// Delete removes a task from SQLite, its events, and the filesystem mirror/artifacts.
+// Used to abort a partially persisted Create so retries do not leave zombie tasks.
+func (s *Store) Delete(taskID string) error {
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return fmt.Errorf("task_id required")
+	}
+	if err := s.EnsureLayout(); err != nil {
+		return err
+	}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	if _, err := tx.Exec(`DELETE FROM task_events WHERE task_id = ?`, taskID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM tasks WHERE task_id = ?`, taskID); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return s.fs.Delete(taskID)
+}
+
 // Append implements EventStore. Duplicate event_id is a no-op (idempotent retries).
 func (s *Store) Append(ev core.Event) error {
 	if err := s.EnsureLayout(); err != nil {

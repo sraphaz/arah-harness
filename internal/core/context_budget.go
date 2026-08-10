@@ -99,12 +99,7 @@ func BuildTaskContext(c *Contract, events []Event, budget ContextBudget, briefin
 		tc.Limits = &lim
 		tc.Evidence = append([]string{}, c.Execution.CompletionEvidence...)
 		tc.BlockingReason = c.Result.BlockingReason
-		for i, ev := range events {
-			if i >= maxEventsStandard {
-				break
-			}
-			tc.RecentEventKinds = append(tc.RecentEventKinds, ev.Kind)
-		}
+		tc.RecentEventKinds = recentEventKinds(events, maxEventsStandard)
 		if len(c.Scope.AllowedPaths) > maxPathsStandard {
 			tc.DisclosureNotes = append(tc.DisclosureNotes,
 				fmt.Sprintf("standard: allowed_paths capped at %d; use budget=full for all", maxPathsStandard))
@@ -146,6 +141,22 @@ func capStrings(in []string, n int) []string {
 		return append([]string{}, in...)
 	}
 	return append([]string{}, in[:n]...)
+}
+
+// recentEventKinds returns up to n kinds from the tail of an ascending event list.
+func recentEventKinds(events []Event, n int) []string {
+	if n <= 0 || len(events) == 0 {
+		return nil
+	}
+	start := 0
+	if len(events) > n {
+		start = len(events) - n
+	}
+	out := make([]string, 0, len(events)-start)
+	for _, ev := range events[start:] {
+		out = append(out, ev.Kind)
+	}
+	return out
 }
 
 func stringifyTaskContext(tc *TaskContext) string {

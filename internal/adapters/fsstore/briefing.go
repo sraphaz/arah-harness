@@ -62,6 +62,27 @@ func (s *Store) WriteConsultation(taskID string, result *core.ConsultationResult
 	return path, nil
 }
 
+// RemoveConsultation deletes a consultation YAML artifact (create/consultation rollback).
+func (s *Store) RemoveConsultation(path string) error {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return nil
+	}
+	// Only allow deletes under this store's execution root.
+	root, err := filepath.Abs(s.root())
+	if err != nil {
+		return err
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	if abs != root && !strings.HasPrefix(abs, root+string(filepath.Separator)) {
+		return fmt.Errorf("consultation path outside execution root")
+	}
+	return os.Remove(abs)
+}
+
 func sanitizeID(s string) string {
 	s = strings.TrimSpace(s)
 	s = strings.ReplaceAll(s, "/", "-")

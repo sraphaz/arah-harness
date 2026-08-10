@@ -157,7 +157,8 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 	}
 	if s.Briefings != nil {
 		if _, berr := s.Briefings.WriteBriefing(c); berr != nil {
-			return resultOf(c, path, before, after, opts, false), errf("STATE.BRIEFING_WRITE_FAILED", berr.Error(), map[string]any{"task_id": c.TaskID})
+			s.abortCreate(c.TaskID)
+			return nil, errf("STATE.BRIEFING_WRITE_FAILED", berr.Error(), map[string]any{"task_id": c.TaskID})
 		}
 	}
 	if err := s.emitCorrelated(c, "task.created", map[string]any{
@@ -165,12 +166,19 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 		"state":            string(c.State),
 		"area":             area,
 	}); err != nil {
-		return resultOf(c, path, before, after, opts, false), errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.created"})
+		s.abortCreate(c.TaskID)
+		return nil, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.created"})
 	}
 	if err := s.emitCorrelated(c, "task.started", map[string]any{"state": string(c.State)}); err != nil {
-		return resultOf(c, path, before, after, opts, false), errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.started"})
+		s.abortCreate(c.TaskID)
+		return nil, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.started"})
 	}
 	return resultOf(c, path, before, after, opts, false), nil
+}
+
+// abortCreate rolls back a partially persisted create so callers can retry safely.
+func (s *TaskService) abortCreate(taskID string) {
+	_ = s.Store.Delete(taskID)
 }
 
 // Context returns a budgeted progressive-disclosure view of a task.

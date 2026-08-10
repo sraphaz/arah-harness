@@ -8,6 +8,8 @@ type StateStore interface {
 	// Peek loads a contract without side effects (no freshness reconcile writes).
 	Peek(taskID string) (*Contract, string, error)
 	List(bucket string) ([]*Contract, error)
+	// Delete removes a non-terminal create that failed mid-flight (contract + side artifacts).
+	Delete(taskID string) error
 }
 
 // Event is an append-only runtime fact used for timelines and Evidence Graph input.
@@ -45,4 +47,11 @@ type TerminalApplier interface {
 // ChoreographyResolver selects primary_executor and participants for an area.
 type ChoreographyResolver interface {
 	Resolve(area, preferredExecutor string) (ResolvedRouting, error)
+}
+
+// ConsultationWriter persists consultation YAML under the task directory.
+type ConsultationWriter interface {
+	WriteConsultation(taskID string, result *ConsultationResult) (path string, err error)
+	// RemoveConsultation deletes a consultation artifact after a failed commit.
+	RemoveConsultation(path string) error
 }
