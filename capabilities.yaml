@@ -95,7 +95,7 @@ planned:
     notes: ADR-002 — concluir P0/P1 restantes; docs/architecture/RUNTIME_COHESION.md
   - id: generated-kernel-package
     name: Kernel como artefato gerado
-    notes: H-15 partial — arah kernel sync/verify + manifest; go:embed install TBD
+    notes: H-15 — sync/verify + go:embed zip + arah kernel install
   - id: run-timeline
     name: Timeline unificada por task/run
     notes: H-19 — correlacionadores amplos + OTel opcional (EventStore base já existe)
