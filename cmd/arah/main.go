@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -140,7 +141,8 @@ func runTask(root string, args []string, jsonOut bool) int {
 		}
 		return 0
 	default:
-		return envelope.WriteJSON(os.Stdout, envelope.Fail(envelope.CodeUsage, "unknown task action: "+action, nil))
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "unknown task action: "+action, nil,
+			"arah task create|status|complete|block|timeline"))
 	}
 }
 
@@ -276,6 +278,24 @@ func runSyncCheck(root string, jsonOut bool) int {
 			return 2
 		}
 		fmt.Printf("sync-check: drift — missing %s\n", strings.Join(missing, ", "))
+		return 2
+	}
+	raw, err := os.ReadFile(graph)
+	if err != nil {
+		if jsonOut {
+			_ = envelope.WriteJSON(os.Stdout, envelope.Fail("SYNC.DRIFT", "sync-check: drift — cannot read graph", map[string]any{"error": err.Error()}))
+			return 2
+		}
+		fmt.Printf("sync-check: drift — cannot read graph: %v\n", err)
+		return 2
+	}
+	var probe any
+	if err := json.Unmarshal(raw, &probe); err != nil {
+		if jsonOut {
+			_ = envelope.WriteJSON(os.Stdout, envelope.Fail("SYNC.DRIFT", "sync-check: drift — graph JSON invalid", nil))
+			return 2
+		}
+		fmt.Println("sync-check: drift — graph JSON invalid")
 		return 2
 	}
 	if jsonOut {

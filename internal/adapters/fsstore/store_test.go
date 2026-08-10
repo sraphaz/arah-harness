@@ -78,3 +78,41 @@ func TestBlockPersists(t *testing.T) {
 		t.Fatalf("expected blocked bucket path, got %s", path)
 	}
 }
+
+func TestSaveKeepsPriorBucketOnWriteFailure(t *testing.T) {
+	root := t.TempDir()
+	store := fsstore.New(root)
+	c := &core.Contract{
+		Version: "1.0", TaskID: "task-keep-active", Objective: "keep",
+		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		State: core.StateExecuting, PrimaryExecutor: "backend",
+	}
+	if _, err := store.Save(c); err != nil {
+		t.Fatal(err)
+	}
+	active := filepath.Join(root, ".arah", "local", "execution", "active", c.TaskID+".yaml")
+	if _, err := os.Stat(active); err != nil {
+		t.Fatal("active missing before failed save")
+	}
+
+	completed := filepath.Join(root, ".arah", "local", "execution", "completed")
+	if err := os.Chmod(completed, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chmod(completed, 0o755) }()
+
+	c.State = core.StateDone
+	if _, err := store.Save(c); err == nil {
+		t.Fatal("expected write failure into read-only completed bucket")
+	}
+	got, path, err := store.Get(c.TaskID)
+	if err != nil {
+		t.Fatalf("task lost after failed Save: %v", err)
+	}
+	if got.State != core.StateExecuting {
+		t.Fatalf("expected prior executing contract, got %s at %s", got.State, path)
+	}
+	if filepath.Base(filepath.Dir(path)) != "active" {
+		t.Fatalf("expected active bucket, got %s", path)
+	}
+}

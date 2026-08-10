@@ -49,12 +49,6 @@ func (s *Store) Save(c *core.Contract) (string, error) {
 		return "", err
 	}
 	bucket := s.bucket(c.State)
-	for _, b := range []string{"active", "completed", "blocked"} {
-		old := filepath.Join(s.root(), b, c.TaskID+".yaml")
-		if b != bucket {
-			_ = os.Remove(old)
-		}
-	}
 	dest := filepath.Join(s.root(), bucket, c.TaskID+".yaml")
 	data, err := yaml.Marshal(c)
 	if err != nil {
@@ -67,6 +61,13 @@ func (s *Store) Save(c *core.Contract) (string, error) {
 	if err := os.Rename(tmp, dest); err != nil {
 		_ = os.Remove(tmp)
 		return "", err
+	}
+	// Remove stale copies only after the new bucket file is durable.
+	for _, b := range []string{"active", "completed", "blocked"} {
+		if b == bucket {
+			continue
+		}
+		_ = os.Remove(filepath.Join(s.root(), b, c.TaskID+".yaml"))
 	}
 	consult := filepath.Join(s.root(), c.TaskID, "consultations")
 	_ = os.MkdirAll(consult, 0o755)
