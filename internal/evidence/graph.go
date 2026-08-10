@@ -32,9 +32,10 @@ type Edge struct {
 
 // Graph is a deterministic evidence graph export (no LLM).
 type Graph struct {
-	Version string `json:"version"`
-	Nodes   []Node `json:"nodes"`
-	Edges   []Edge `json:"edges"`
+	Version  string   `json:"version"`
+	Nodes    []Node   `json:"nodes"`
+	Edges    []Edge   `json:"edges"`
+	Warnings []string `json:"warnings,omitempty"`
 }
 
 // Builder assembles an Evidence Graph from specs, capabilities, and tasks.
@@ -50,7 +51,6 @@ type specDoc struct {
 	Covers     []string `yaml:"covers"`
 	DependsOn  []string `yaml:"depends_on"`
 	Supersedes []string `yaml:"supersedes"`
-	Status     string   `yaml:"status"`
 }
 
 // Build derives nodes and edges exclusively from Arah schemas and runtime state.
@@ -97,6 +97,10 @@ func (b *Builder) Build() (*Graph, error) {
 		}
 		var doc specDoc
 		if yaml.Unmarshal(raw, &doc) != nil || doc.ID == "" {
+			continue
+		}
+		if _, exists := docsByID[doc.ID]; exists {
+			g.Warnings = append(g.Warnings, "duplicate spec id "+doc.ID+" in "+name+"; keeping first")
 			continue
 		}
 		docsByID[doc.ID] = doc
@@ -191,11 +195,17 @@ func (b *Builder) Build() (*Graph, error) {
 					link(tid, eid, "evidenced_by")
 				}
 
-				produced := producedPaths(c)
+				produced := changedFilePaths(c)
 				for _, f := range produced {
 					pid := "path:" + f
 					add(Node{ID: pid, Type: "path", Label: f})
 					link(tid, pid, "produced")
+				}
+				referenced := evidencePathRefs(c)
+				for _, f := range referenced {
+					pid := "path:" + f
+					add(Node{ID: pid, Type: "path", Label: f})
+					link(tid, pid, "references")
 				}
 
 				if c.State == core.StateBlocked && c.Result.BlockingReason != nil {
@@ -204,9 +214,10 @@ func (b *Builder) Build() (*Graph, error) {
 					link(tid, bid, "blocked_by")
 				}
 
-				// implements: path-based intersection with spec covers (no free-text heuristic)
+				// implements: path overlap with covers using produced ∪ referenced paths
+				linked := append(append([]string{}, produced...), referenced...)
 				for specID, covers := range coversBySpec {
-					if pathsOverlap(produced, covers) {
+					if pathsOverlap(linked, covers) {
 						link(tid, "spec:"+specID, "implements")
 					}
 				}
@@ -253,23 +264,32 @@ func runNodeID(ev core.Event) string {
 	return "run:" + stableID(ev.TaskID+"|"+ev.Kind+"|"+ev.At)
 }
 
-func producedPaths(c *core.Contract) []string {
+func changedFilePaths(c *core.Contract) []string {
 	seen := map[string]bool{}
 	var out []string
-	add := func(p string) {
-		p = normalizeRepoPath(p)
+	for _, f := range c.Result.ChangedFiles {
+		p := normalizeRepoPath(f)
 		if p == "" || seen[p] {
-			return
+			continue
 		}
 		seen[p] = true
 		out = append(out, p)
 	}
-	for _, f := range c.Result.ChangedFiles {
-		add(f)
-	}
+	sort.Strings(out)
+	return out
+}
+
+func evidencePathRefs(c *core.Contract) []string {
+	seen := map[string]bool{}
+	var out []string
 	for _, ev := range c.Execution.CompletionEvidence {
 		for _, p := range pathCandidates(ev) {
-			add(p)
+			p = normalizeRepoPath(p)
+			if p == "" || seen[p] {
+				continue
+			}
+			seen[p] = true
+			out = append(out, p)
 		}
 	}
 	sort.Strings(out)
@@ -279,7 +299,7 @@ func producedPaths(c *core.Contract) []string {
 func pathCandidates(s string) []string {
 	var out []string
 	for _, tok := range strings.Fields(s) {
-		tok = strings.Trim(tok, ",:;()[]\"'")
+		tok = strings.Trim(tok, ",:;()[]{}<>\"'`.")
 		if tok == "" {
 			continue
 		}

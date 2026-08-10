@@ -140,7 +140,8 @@ Grafo **determinístico** derivado só de schemas Arah (sem LLM como fonte):
 
 **MVP (H-18):** `spec`, `task`, `run`, `agent`, `path`/`arquivo`, `capability`,
 `evidence`, `blocker` — com relações `covers`, `depends_on`, `supersedes`,
-`assigned_to`, `consulted`, `blocked_by`, `produced`, `evidenced_by`, `implements`
+`assigned_to`, `consulted`, `blocked_by`, `produced` (ChangedFiles),
+`references` (paths em completion evidence), `evidenced_by`, `implements`
 (interseção path↔covers; sem heurística de texto livre). Export ordenado estável;
 CLI ≡ MCP.
 

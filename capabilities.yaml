@@ -69,7 +69,7 @@ experimental:
     notes: H-16 — .arah/local/runtime.db WAL + YAML mirror; schema Up/Down (v2)
   - id: evidence-graph
     name: Evidence Graph determinístico
-    notes: H-18 done — export estável; depends_on/implements path-based; run; CLI↔MCP
+    notes: H-18 done — depends_on/supersedes (metadata); implements via path↔covers; produced vs references; run; CLI↔MCP
   - id: conformance-suite
     name: Conformance suite do harness
     notes: H-20 partial — internal/conformance (dry-run, error codes, create CLI↔MCP); fixtures amplas TBD

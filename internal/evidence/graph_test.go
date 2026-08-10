@@ -53,7 +53,7 @@ func TestEvidenceGraphFromTask(t *testing.T) {
 	hasSpec := false
 	hasAssigned := false
 	hasImplements := false
-	hasProduced := false
+	hasReferences := false
 	hasDepends := false
 	hasRun := false
 	for _, n := range g.Nodes {
@@ -70,14 +70,14 @@ func TestEvidenceGraphFromTask(t *testing.T) {
 			hasAssigned = true
 		case "implements":
 			hasImplements = true
-		case "produced":
-			hasProduced = true
+		case "references":
+			hasReferences = true
 		case "depends_on":
 			hasDepends = true
 		}
 	}
-	if !hasSpec || !hasAssigned || !hasImplements || !hasProduced || !hasDepends || !hasRun {
-		t.Fatalf("expected spec+assigned+implements+produced+depends_on+run, graph=%+v", g)
+	if !hasSpec || !hasAssigned || !hasImplements || !hasReferences || !hasDepends || !hasRun {
+		t.Fatalf("expected spec+assigned+implements+references+depends_on+run, graph=%+v", g)
 	}
 }
 
@@ -125,7 +125,8 @@ func TestEvidenceGraphRejectsFreeTextImplements(t *testing.T) {
 		Version: "1.0", TaskID: "task-x", Objective: "please implement demo-spec runtime-cohesion",
 		State: core.StateDone, PrimaryExecutor: "backend",
 		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
-		Execution: core.Execution{CompletionEvidence: []string{"ran tests only"}},
+		// Concrete path outside every covers entry; objective alone must not create implements.
+		Execution: core.Execution{CompletionEvidence: []string{"scripts/unrelated.ps1 updated"}},
 	}
 	if _, err := store.Save(c); err != nil {
 		t.Fatal(err)
@@ -146,7 +147,7 @@ func TestEvidenceGraphPreservesDependencySpecTitles(t *testing.T) {
 	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
 	// Filename order: demo.spec.yaml before other.spec.yaml — previously stole the title.
 	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "demo.spec.yaml"), []byte(
-		"id: demo-spec\ntitle: Demo\ncovers:\n  - cmd/\ndepends_on:\n  - other-spec\n"), 0o644)
+		"id: demo-spec\ntitle: Demo\ncovers:\n  - cmd/\ndepends_on:\n  - other-spec\nsupersedes:\n  - legacy-missing-spec\n"), 0o644)
 	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "other.spec.yaml"), []byte(
 		"id: other-spec\ntitle: Other Canonical Title\ncovers:\n  - docs/\n"), 0o644)
 
@@ -163,6 +164,21 @@ func TestEvidenceGraphPreservesDependencySpecTitles(t *testing.T) {
 	}
 	if label != "Other Canonical Title" {
 		t.Fatalf("expected YAML title on dependency node, got %q", label)
+	}
+	hasSupersedes := false
+	stubLabel := ""
+	for _, n := range g.Nodes {
+		if n.ID == "spec:legacy-missing-spec" {
+			stubLabel = n.Label
+		}
+	}
+	for _, e := range g.Edges {
+		if e.Rel == "supersedes" && e.From == "spec:demo-spec" && e.To == "spec:legacy-missing-spec" {
+			hasSupersedes = true
+		}
+	}
+	if !hasSupersedes || stubLabel != "legacy-missing-spec" {
+		t.Fatalf("expected supersedes stub, hasEdge=%v stubLabel=%q graph=%+v", hasSupersedes, stubLabel, g)
 	}
 }
 
@@ -189,17 +205,17 @@ func TestEvidenceGraphGlobCoversAndWindowsPaths(t *testing.T) {
 		t.Fatal(err)
 	}
 	hasImplements := false
-	hasProduced := false
+	hasReferences := false
 	for _, e := range g.Edges {
 		if e.Rel == "implements" && e.To == "spec:alertas" {
 			hasImplements = true
 		}
-		if e.Rel == "produced" && e.To == "path:apps/alertas/handler.go" {
-			hasProduced = true
+		if e.Rel == "references" && e.To == "path:apps/alertas/handler.go" {
+			hasReferences = true
 		}
 	}
-	if !hasImplements || !hasProduced {
-		t.Fatalf("expected glob+windows-path implements/produced, graph=%+v", g)
+	if !hasImplements || !hasReferences {
+		t.Fatalf("expected glob+windows-path implements/references, graph=%+v", g)
 	}
 }
 
