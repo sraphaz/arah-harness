@@ -77,6 +77,12 @@ acceptance:
     status: covered
     covered_by: internal/adapters/sqlitestore/store.go
 
+  - id: AC-08b
+    when: o schema do StateStore sobe de versão
+    then: upgrade e rollback versionados são testados
+    status: covered
+    covered_by: internal/adapters/sqlitestore/migrate.go
+
   - id: AC-09
     when: Evidence Graph é exportado
     then: arestas derivam só de schemas Arah, sem LLM como fonte de verdade
