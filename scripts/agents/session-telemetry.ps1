@@ -345,7 +345,7 @@ function Resolve-WorkspaceFileByName {
         $rel = $BaseName.Replace('\', '/').TrimStart('./')
         $full = Join-Path $Root ($rel -replace '/', [IO.Path]::DirectorySeparatorChar)
         if (Test-Path $full) { return $rel }
-        return $rel
+        return $null
     }
     foreach ($searchRoot in $SearchRoots) {
         if (-not (Test-Path $searchRoot)) { continue }
@@ -579,7 +579,7 @@ try {
                 $sid = Ensure-Session -SessionId $rawId -Source $source
             } else {
                 $active = Read-ActiveManifest
-                if ($active -and $active.active_session_id) {
+                if ($active -and $active.active_session_id -and $active.source -eq 'session-start') {
                     $sid = Sanitize-SessionId -Id [string]$active.active_session_id
                 } else {
                     $sid = Ensure-Session -SessionId ('focus-' + ($files[0] -replace '[^\w]', '').Substring(0, [Math]::Min(8, ($files[0] -replace '[^\w]', '').Length))) -Source $source
