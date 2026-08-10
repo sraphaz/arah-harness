@@ -16,7 +16,18 @@ func TestBuildTaskContextBudgets(t *testing.T) {
 		Participants:    Participants{Consultants: []string{"solutions-architect"}},
 		Limits:          Limits{1, 1, 1},
 	}
-	events := []Event{{Kind: "task.created"}, {Kind: "task.started"}}
+	events := []Event{
+		{Kind: "ev-1"},
+		{Kind: "ev-2"},
+		{Kind: "ev-3"},
+		{Kind: "ev-4"},
+		{Kind: "ev-5"},
+		{Kind: "ev-6"},
+		{Kind: "ev-7"},
+		{Kind: "ev-8"},
+		{Kind: "ev-9"},
+		{Kind: "ev-10"},
+	}
 	min := BuildTaskContext(c, events, BudgetMinimal, "")
 	if min.EstimatedTokens <= 0 || len(min.Objective) >= 400 {
 		t.Fatalf("minimal should truncate: %#v", min)
@@ -24,6 +35,10 @@ func TestBuildTaskContextBudgets(t *testing.T) {
 	std := BuildTaskContext(c, events, BudgetStandard, "")
 	if len(std.AllowedPaths) != maxPathsStandard {
 		t.Fatalf("standard paths=%d", len(std.AllowedPaths))
+	}
+	wantKinds := []string{"ev-3", "ev-4", "ev-5", "ev-6", "ev-7", "ev-8", "ev-9", "ev-10"}
+	if strings.Join(std.RecentEventKinds, ",") != strings.Join(wantKinds, ",") {
+		t.Fatalf("recent kinds=%v want=%v", std.RecentEventKinds, wantKinds)
 	}
 	full := BuildTaskContext(c, events, BudgetFull, RenderBriefing(c))
 	if full.Contract == nil || full.BriefingMarkdown == "" {

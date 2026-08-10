@@ -8,13 +8,13 @@ import (
 
 // ConsultationResult is the structured consultant output (no free chat).
 type ConsultationResult struct {
-	Version       string   `yaml:"version" json:"version"`
-	TaskID        string   `yaml:"task_id" json:"task_id"`
-	ConsultantID  string   `yaml:"consultant_id" json:"consultant_id"`
-	Summary       string   `yaml:"summary" json:"summary"`
+	Version         string   `yaml:"version" json:"version"`
+	TaskID          string   `yaml:"task_id" json:"task_id"`
+	ConsultantID    string   `yaml:"consultant_id" json:"consultant_id"`
+	Summary         string   `yaml:"summary" json:"summary"`
 	Recommendations []string `yaml:"recommendations" json:"recommendations"`
-	Blockers      []string `yaml:"blockers,omitempty" json:"blockers,omitempty"`
-	SubmittedAt   string   `yaml:"submitted_at" json:"submitted_at"`
+	Blockers        []string `yaml:"blockers,omitempty" json:"blockers,omitempty"`
+	SubmittedAt     string   `yaml:"submitted_at" json:"submitted_at"`
 }
 
 // ConsultationWriter persists consultation YAML under the task directory.
@@ -71,6 +71,7 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 	if s.Consultations == nil {
 		return nil, "", errf("STATE.CONSULTATION_STORE_UNAVAILABLE", "consultation writer not configured", nil)
 	}
+	before := *c
 	res := &ConsultationResult{
 		Version:         "1.0",
 		TaskID:          taskID,
@@ -86,11 +87,35 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 	}
 	c.Counters.Consultations++
 	if _, err := s.Store.Save(c); err != nil {
+		if rerr := removeFileIfExists(path); rerr != nil {
+			return res, path, errf("STATE.ROLLBACK_FAILED", rerr.Error(), map[string]any{"task_id": taskID, "cause": err.Error()})
+		}
 		return res, path, wrapStore(err)
 	}
-	_ = s.emitCorrelated(c, "consultation.submitted", map[string]any{
+	if err := s.emitCorrelated(c, "consultation.submitted", map[string]any{
 		"consultant_id": consultantID,
 		"path":          path,
-	})
+	}); err != nil {
+		if rerr := s.rollbackConsultation(&before, path); rerr != nil {
+			return res, path, errf("STATE.ROLLBACK_FAILED", rerr.Error(), map[string]any{"task_id": taskID, "kind": "consultation.submitted", "cause": err.Error()})
+		}
+		return res, path, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": taskID, "kind": "consultation.submitted"})
+	}
 	return res, path, nil
+}
+
+func (s *TaskService) rollbackConsultation(before *Contract, path string) error {
+	var errs []string
+	if err := removeFileIfExists(path); err != nil {
+		errs = append(errs, "remove consultation: "+err.Error())
+	}
+	if before != nil {
+		if _, err := s.Store.Save(before); err != nil {
+			errs = append(errs, "restore contract: "+err.Error())
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s", strings.Join(errs, "; "))
 }

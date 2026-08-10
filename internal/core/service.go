@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -155,8 +156,14 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 	if err != nil {
 		return nil, wrapStore(err)
 	}
+	briefingPath := ""
 	if s.Briefings != nil {
-		if _, berr := s.Briefings.WriteBriefing(c); berr != nil {
+		var berr error
+		briefingPath, berr = s.Briefings.WriteBriefing(c)
+		if berr != nil {
+			if rerr := s.rollbackCreate(c.TaskID, ""); rerr != nil {
+				return resultOf(c, path, before, after, opts, false), errf("STATE.ROLLBACK_FAILED", rerr.Error(), map[string]any{"task_id": c.TaskID, "cause": berr.Error()})
+			}
 			return resultOf(c, path, before, after, opts, false), errf("STATE.BRIEFING_WRITE_FAILED", berr.Error(), map[string]any{"task_id": c.TaskID})
 		}
 	}
@@ -165,9 +172,15 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 		"state":            string(c.State),
 		"area":             area,
 	}); err != nil {
+		if rerr := s.rollbackCreate(c.TaskID, briefingPath); rerr != nil {
+			return resultOf(c, path, before, after, opts, false), errf("STATE.ROLLBACK_FAILED", rerr.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.created", "cause": err.Error()})
+		}
 		return resultOf(c, path, before, after, opts, false), errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.created"})
 	}
 	if err := s.emitCorrelated(c, "task.started", map[string]any{"state": string(c.State)}); err != nil {
+		if rerr := s.rollbackCreate(c.TaskID, briefingPath); rerr != nil {
+			return resultOf(c, path, before, after, opts, false), errf("STATE.ROLLBACK_FAILED", rerr.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.started", "cause": err.Error()})
+		}
 		return resultOf(c, path, before, after, opts, false), errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.started"})
 	}
 	return resultOf(c, path, before, after, opts, false), nil
@@ -324,4 +337,39 @@ func wrapStore(err error) error {
 
 func sameConcrete(a, b any) bool {
 	return a != nil && b != nil && a == b
+}
+
+func (s *TaskService) rollbackCreate(taskID, briefingPath string) error {
+	var errs []string
+	if purger, ok := s.Events.(EventPurger); ok {
+		if err := purger.DeleteByTask(taskID); err != nil {
+			errs = append(errs, "purge events: "+err.Error())
+		}
+	}
+	if deleter, ok := s.Store.(StateDeleter); ok {
+		if err := deleter.Delete(taskID); err != nil {
+			errs = append(errs, "delete task: "+err.Error())
+		}
+	} else {
+		errs = append(errs, "delete task: unsupported")
+	}
+	if briefingPath != "" {
+		if err := removeFileIfExists(briefingPath); err != nil {
+			errs = append(errs, "remove briefing: "+err.Error())
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s", strings.Join(errs, "; "))
+}
+
+func removeFileIfExists(path string) error {
+	if strings.TrimSpace(path) == "" {
+		return nil
+	}
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
 }

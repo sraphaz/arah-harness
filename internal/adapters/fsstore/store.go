@@ -78,6 +78,25 @@ func (s *Store) Save(c *core.Contract) (string, error) {
 	return dest, nil
 }
 
+// Delete removes a task contract and task-scoped artifacts from the filesystem store.
+func (s *Store) Delete(taskID string) error {
+	if err := s.EnsureLayout(); err != nil {
+		return err
+	}
+	var firstErr error
+	for _, b := range []string{"active", "completed", "blocked"} {
+		p := filepath.Join(s.root(), b, taskID+".yaml")
+		if err := os.Remove(p); err != nil && !os.IsNotExist(err) && firstErr == nil {
+			firstErr = err
+		}
+	}
+	dir := filepath.Join(s.root(), taskID)
+	if err := os.RemoveAll(dir); err != nil && firstErr == nil {
+		firstErr = err
+	}
+	return firstErr
+}
+
 // Get loads a contract by scanning active, completed, then blocked buckets.
 func (s *Store) Get(taskID string) (*core.Contract, string, error) {
 	return s.Peek(taskID)

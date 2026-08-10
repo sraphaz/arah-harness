@@ -165,6 +165,31 @@ ON CONFLICT(task_id) DO UPDATE SET
 	return "sqlite:" + s.DBPath + "#" + c.TaskID, nil
 }
 
+// Delete removes a task and its timeline from SQLite, then prunes filesystem mirrors.
+func (s *Store) Delete(taskID string) error {
+	if err := s.EnsureLayout(); err != nil {
+		return err
+	}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	if _, err := tx.Exec(`DELETE FROM task_events WHERE task_id = ?`, taskID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM tasks WHERE task_id = ?`, taskID); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	if err := s.fs.Delete(taskID); err != nil {
+		_ = err
+	}
+	return nil
+}
+
 // Get returns a contract from SQLite, falling back to the filesystem mirror.
 // When both exist, the fresher copy wins and is written back into SQLite so
 // PowerShell-only updates (complete/block) are not shadowed by a stale row.
@@ -434,6 +459,15 @@ FROM task_events ORDER BY id DESC LIMIT ?`, limit)
 	}
 	defer rows.Close()
 	return scanEvents(rows)
+}
+
+// DeleteByTask removes all events for a task.
+func (s *Store) DeleteByTask(taskID string) error {
+	if err := s.EnsureLayout(); err != nil {
+		return err
+	}
+	_, err := s.db.Exec(`DELETE FROM task_events WHERE task_id = ?`, taskID)
+	return err
 }
 
 func scanEvents(rows *sql.Rows) ([]core.Event, error) {

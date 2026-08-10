@@ -10,6 +10,11 @@ type StateStore interface {
 	List(bucket string) ([]*Contract, error)
 }
 
+// StateDeleter removes a task from persistent state for create-time rollback.
+type StateDeleter interface {
+	Delete(taskID string) error
+}
+
 // Event is an append-only runtime fact used for timelines and Evidence Graph input.
 type Event struct {
 	ID            string         `json:"id"`
@@ -34,6 +39,12 @@ type EventStore interface {
 	Append(ev Event) error
 	ListByTask(taskID string) ([]Event, error)
 	ListRecent(limit int) ([]Event, error)
+}
+
+// EventPurger removes all events for a task when create rollback is required.
+// It is only safe for brand-new tasks that have no prior timeline.
+type EventPurger interface {
+	DeleteByTask(taskID string) error
 }
 
 // TerminalApplier persists a terminal contract and its mutation event atomically

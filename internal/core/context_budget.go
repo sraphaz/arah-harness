@@ -28,25 +28,25 @@ func ParseContextBudget(s string) ContextBudget {
 
 // TaskContext is a budgeted, model-facing view of a task (not the full dump).
 type TaskContext struct {
-	Budget            ContextBudget `json:"budget"`
-	TaskID            string        `json:"task_id"`
-	State             State         `json:"state"`
-	PrimaryExecutor   string        `json:"primary_executor"`
-	Objective         string        `json:"objective"`
-	ChoreographyRule  string        `json:"choreography_rule,omitempty"`
-	WorkClass         WorkClass     `json:"work_class,omitempty"`
-	Area              string        `json:"area,omitempty"`
-	AllowedPaths      []string      `json:"allowed_paths,omitempty"`
-	Consultants       []string      `json:"consultants,omitempty"`
-	Limits            *Limits       `json:"limits,omitempty"`
-	RecentEventKinds  []string      `json:"recent_event_kinds,omitempty"`
-	Evidence          []string      `json:"evidence,omitempty"`
-	BlockingReason    *string       `json:"blocking_reason,omitempty"`
-	BriefingMarkdown  string        `json:"briefing_markdown,omitempty"`
-	Contract          *Contract     `json:"contract,omitempty"`
-	Events            []Event       `json:"events,omitempty"`
-	EstimatedTokens   int           `json:"estimated_tokens"`
-	DisclosureNotes   []string      `json:"disclosure_notes"`
+	Budget           ContextBudget `json:"budget"`
+	TaskID           string        `json:"task_id"`
+	State            State         `json:"state"`
+	PrimaryExecutor  string        `json:"primary_executor"`
+	Objective        string        `json:"objective"`
+	ChoreographyRule string        `json:"choreography_rule,omitempty"`
+	WorkClass        WorkClass     `json:"work_class,omitempty"`
+	Area             string        `json:"area,omitempty"`
+	AllowedPaths     []string      `json:"allowed_paths,omitempty"`
+	Consultants      []string      `json:"consultants,omitempty"`
+	Limits           *Limits       `json:"limits,omitempty"`
+	RecentEventKinds []string      `json:"recent_event_kinds,omitempty"`
+	Evidence         []string      `json:"evidence,omitempty"`
+	BlockingReason   *string       `json:"blocking_reason,omitempty"`
+	BriefingMarkdown string        `json:"briefing_markdown,omitempty"`
+	Contract         *Contract     `json:"contract,omitempty"`
+	Events           []Event       `json:"events,omitempty"`
+	EstimatedTokens  int           `json:"estimated_tokens"`
+	DisclosureNotes  []string      `json:"disclosure_notes"`
 }
 
 // EstimateTokens approximates LLM tokens as chars/4 (deterministic proxy).
@@ -99,10 +99,11 @@ func BuildTaskContext(c *Contract, events []Event, budget ContextBudget, briefin
 		tc.Limits = &lim
 		tc.Evidence = append([]string{}, c.Execution.CompletionEvidence...)
 		tc.BlockingReason = c.Result.BlockingReason
-		for i, ev := range events {
-			if i >= maxEventsStandard {
-				break
-			}
+		start := 0
+		if len(events) > maxEventsStandard {
+			start = len(events) - maxEventsStandard
+		}
+		for _, ev := range events[start:] {
 			tc.RecentEventKinds = append(tc.RecentEventKinds, ev.Kind)
 		}
 		if len(c.Scope.AllowedPaths) > maxPathsStandard {
