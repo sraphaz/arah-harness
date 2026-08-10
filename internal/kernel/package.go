@@ -62,7 +62,37 @@ func harnessOnly(rel string) bool {
 	if strings.HasPrefix(rel, ".agents/skills/") {
 		return true
 	}
+	// Machine-local Live telemetry (sessions, events, diagnostics) — never distribute.
+	if rel == ".cursor/arah-live" || strings.HasPrefix(rel, ".cursor/arah-live/") {
+		return true
+	}
 	return false
+}
+
+func shortDigest(sum string) string {
+	sum = strings.TrimSpace(strings.ToLower(sum))
+	if len(sum) >= 12 {
+		return sum[:12]
+	}
+	if sum == "" {
+		return "(empty)"
+	}
+	return sum
+}
+
+func validSHA256Hex(sum string) bool {
+	if len(sum) != 64 {
+		return false
+	}
+	for i := 0; i < len(sum); i++ {
+		c := sum[i]
+		switch {
+		case c >= '0' && c <= '9', c >= 'a' && c <= 'f', c >= 'A' && c <= 'F':
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 // SourceEntry maps a root-relative source path to its kernel-relative destination.
@@ -83,14 +113,17 @@ func ListSources(repoRoot string) ([]SourceEntry, error) {
 			if err != nil {
 				return err
 			}
-			if d.IsDir() {
-				return nil
-			}
 			rel, err := filepath.Rel(repoRoot, path)
 			if err != nil {
 				return err
 			}
 			rel = filepath.ToSlash(rel)
+			if d.IsDir() {
+				if harnessOnly(rel) {
+					return filepath.SkipDir
+				}
+				return nil
+			}
 			if harnessOnly(rel) {
 				return nil
 			}
@@ -272,18 +305,25 @@ func Verify(repoRoot string) ([]Drift, error) {
 			continue
 		}
 		if srcSum != dstSum {
-			drifts = append(drifts, Drift{Path: e.Dest, Reason: "kernel differs from source", Want: srcSum[:12], Got: dstSum[:12]})
+			drifts = append(drifts, Drift{Path: e.Dest, Reason: "kernel differs from source", Want: shortDigest(srcSum), Got: shortDigest(dstSum)})
 		}
 		manSum, ok := m.Files[e.Dest]
 		if !ok {
 			drifts = append(drifts, Drift{Path: e.Dest, Reason: "missing from manifest"})
+		} else if !validSHA256Hex(manSum) {
+			drifts = append(drifts, Drift{Path: e.Dest, Reason: "manifest digest malformed", Got: shortDigest(manSum)})
 		} else if manSum != srcSum {
-			drifts = append(drifts, Drift{Path: e.Dest, Reason: "manifest stale vs source", Want: srcSum[:12], Got: manSum[:12]})
+			drifts = append(drifts, Drift{Path: e.Dest, Reason: "manifest stale vs source", Want: shortDigest(srcSum), Got: shortDigest(manSum)})
 		}
 	}
 	for path, sum := range m.Files {
 		if !seen[path] {
-			drifts = append(drifts, Drift{Path: path, Reason: "manifest entry not in allowlist", Got: sum[:12]})
+			got := shortDigest(sum)
+			reason := "manifest entry not in allowlist"
+			if !validSHA256Hex(sum) {
+				reason = "manifest entry not in allowlist (digest malformed)"
+			}
+			drifts = append(drifts, Drift{Path: path, Reason: reason, Got: got})
 		}
 	}
 	kernelRoot := filepath.Join(repoRoot, "kernel")

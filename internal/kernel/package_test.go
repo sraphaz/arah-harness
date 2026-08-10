@@ -3,6 +3,7 @@ package kernel_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/sraphaz/arah-harness/internal/kernel"
@@ -96,5 +97,91 @@ func TestListSourcesSkipsHarnessOnly(t *testing.T) {
 		if e.Source == ".agents/choreography.harness.yaml" || e.Source == "scripts/harness/doctor-harness.ps1" {
 			t.Fatalf("harness-only leaked: %s", e.Source)
 		}
+	}
+}
+
+func TestListSourcesSkipsArahLiveTelemetry(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root)
+	live := filepath.Join(root, ".cursor", "arah-live", "sessions", "chat.json")
+	if err := os.MkdirAll(filepath.Dir(live), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(live, []byte(`{"session":1}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := kernel.ListSources(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range entries {
+		if strings.HasPrefix(e.Source, ".cursor/arah-live") {
+			t.Fatalf("live telemetry leaked: %s", e.Source)
+		}
+	}
+	m, _, err := kernel.Sync(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := m.Files[".cursor/arah-live/sessions/chat.json"]; ok {
+		t.Fatal("arah-live must not enter kernel manifest")
+	}
+	if _, err := os.Stat(filepath.Join(root, "kernel", ".cursor", "arah-live")); !os.IsNotExist(err) {
+		t.Fatalf("expected arah-live absent under kernel, err=%v", err)
+	}
+}
+
+func TestVerifyMalformedManifestDigest(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root)
+	if _, _, err := kernel.Sync(root); err != nil {
+		t.Fatal(err)
+	}
+	manPath := filepath.Join(root, "kernel", "manifest.json")
+	raw, err := os.ReadFile(manPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Corrupt one digest to a short value that would panic on naive [:12].
+	corrupted := string(raw)
+	// Replace first 64-hex digest occurrence with "dead"
+	idx := -1
+	for i := 0; i+64 <= len(corrupted); i++ {
+		chunk := corrupted[i : i+64]
+		ok := true
+		for _, c := range chunk {
+			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			idx = i
+			break
+		}
+	}
+	if idx < 0 {
+		t.Fatal("no digest found in manifest")
+	}
+	corrupted = corrupted[:idx] + "dead" + corrupted[idx+64:]
+	if err := os.WriteFile(manPath, []byte(corrupted), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	drifts, err := kernel.Verify(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(drifts) == 0 {
+		t.Fatal("expected malformed digest drift without panic")
+	}
+	found := false
+	for _, d := range drifts {
+		if d.Reason == "manifest digest malformed" || d.Got == "dead" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected malformed digest reason, got %#v", drifts)
 	}
 }
