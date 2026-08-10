@@ -5,9 +5,11 @@ package conformance_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -119,51 +121,177 @@ func TestCLIMCPParityOnCreateDecision(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cli create: %v\n%s", err, cliOut)
 	}
-	var cliEnv envelope.Envelope
-	if err := json.Unmarshal(cliOut, &cliEnv); err != nil {
-		t.Fatalf("cli envelope: %v\n%s", err, cliOut)
-	}
+	cliEnv := mustEnvelope(t, cliOut)
 	if !cliEnv.OK {
 		t.Fatalf("cli not ok: %#v", cliEnv)
 	}
-	cliData, ok := cliEnv.Data.(map[string]any)
-	if !ok {
-		t.Fatalf("cli data type %T", cliEnv.Data)
-	}
+	cliData := mustDataMap(t, cliEnv)
 
-	in := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"arah_create_task","arguments":{"objective":"parity","area":"backend","dry_run":true}}}` + "\n"
-	var out bytes.Buffer
-	srv := &arahmcp.Server{Tasks: svc, Version: "test", Reader: strings.NewReader(in), Writer: &out}
-	if err := srv.Run(); err != nil {
-		t.Fatal(err)
+	mcpEnv, isErr := callMCPTool(t, svc, "arah_create_task", map[string]any{
+		"objective": "parity",
+		"area":      "backend",
+		"dry_run":   true,
+	})
+	if isErr {
+		t.Fatalf("mcp error: %#v", mcpEnv)
 	}
-	var resp map[string]any
-	if err := json.Unmarshal([]byte(strings.TrimSpace(out.String())), &resp); err != nil {
-		t.Fatal(err)
-	}
-	result := resp["result"].(map[string]any)
-	if result["isError"] == true {
-		t.Fatalf("mcp error: %#v", result)
-	}
-	text := result["content"].([]any)[0].(map[string]any)["text"].(string)
-	var mcpEnv envelope.Envelope
-	if err := json.Unmarshal([]byte(text), &mcpEnv); err != nil {
-		t.Fatal(err)
-	}
-	mcpData := mcpEnv.Data.(map[string]any)
+	mcpData := mustDataMap(t, mcpEnv)
 
-	if mcpData["primary_executor"] != cliData["primary_executor"] {
-		t.Fatalf("executor cli=%v mcp=%v", cliData["primary_executor"], mcpData["primary_executor"])
+	assertParityFields(t, cliData, mcpData, "primary_executor", "state", "dry_run")
+	if cliData["state"] != string(core.StateExecuting) {
+		t.Fatalf("expected executing plan, got %v", cliData["state"])
 	}
-	if mcpData["state"] != cliData["state"] {
-		t.Fatalf("state cli=%v mcp=%v", cliData["state"], mcpData["state"])
+}
+
+func TestCLIMCPParityOnCompleteDryRun(t *testing.T) {
+	root, svc := fixtureRepo(t)
+	bin := buildArahCLI(t)
+	created, err := svc.Create("complete parity", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := created.Contract.TaskID
+	ev := "path/file.go updated"
+
+	cliCmd := exec.Command(bin, "task", "complete",
+		"--task-id", id,
+		"--evidence", ev,
+		"--dry-run",
+		"--json",
+		"--target", root,
+	)
+	cliOut, err := cliCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("cli complete: %v\n%s", err, cliOut)
+	}
+	cliEnv := mustEnvelope(t, cliOut)
+	if !cliEnv.OK {
+		t.Fatalf("cli not ok: %#v", cliEnv)
+	}
+	cliData := mustDataMap(t, cliEnv)
+
+	mcpEnv, isErr := callMCPTool(t, svc, "arah_complete_task", map[string]any{
+		"task_id":  id,
+		"evidence": []any{ev},
+		"dry_run":  true,
+	})
+	if isErr {
+		t.Fatalf("mcp error: %#v", mcpEnv)
+	}
+	mcpData := mustDataMap(t, mcpEnv)
+
+	assertParityFields(t, cliData, mcpData, "state", "dry_run", "idempotent")
+	if cliData["state"] != string(core.StateDone) {
+		t.Fatalf("expected done plan, got %v", cliData["state"])
 	}
 	if cliData["dry_run"] != true || mcpData["dry_run"] != true {
 		t.Fatalf("dry_run cli=%v mcp=%v", cliData["dry_run"], mcpData["dry_run"])
 	}
-	if cliData["state"] != string(core.StateExecuting) {
-		t.Fatalf("expected executing plan, got %v", cliData["state"])
+	got, _, err := svc.Get(id)
+	if err != nil {
+		t.Fatal(err)
 	}
+	if got.State != core.StateExecuting {
+		t.Fatalf("persisted state mutated: %s", got.State)
+	}
+}
+
+func TestCLIMCPParityOnBlockDryRun(t *testing.T) {
+	root, svc := fixtureRepo(t)
+	bin := buildArahCLI(t)
+	created, err := svc.Create("block parity", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := created.Contract.TaskID
+	reason := "missing credential X"
+
+	cliCmd := exec.Command(bin, "task", "block",
+		"--task-id", id,
+		"--reason", reason,
+		"--dry-run",
+		"--json",
+		"--target", root,
+	)
+	cliOut, err := cliCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("cli block: %v\n%s", err, cliOut)
+	}
+	cliEnv := mustEnvelope(t, cliOut)
+	if !cliEnv.OK {
+		t.Fatalf("cli not ok: %#v", cliEnv)
+	}
+	cliData := mustDataMap(t, cliEnv)
+
+	mcpEnv, isErr := callMCPTool(t, svc, "arah_block_task", map[string]any{
+		"task_id": id,
+		"reason":  reason,
+		"dry_run": true,
+	})
+	if isErr {
+		t.Fatalf("mcp error: %#v", mcpEnv)
+	}
+	mcpData := mustDataMap(t, mcpEnv)
+
+	assertParityFields(t, cliData, mcpData, "state", "dry_run", "idempotent")
+	if cliData["state"] != string(core.StateBlocked) {
+		t.Fatalf("expected blocked plan, got %v", cliData["state"])
+	}
+	got, _, err := svc.Get(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.State != core.StateExecuting {
+		t.Fatalf("persisted state mutated: %s", got.State)
+	}
+}
+
+func TestCLIMCPParityOnStableErrorCodes(t *testing.T) {
+	root, svc := fixtureRepo(t)
+	bin := buildArahCLI(t)
+	created, err := svc.Create("need evidence", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := created.Contract.TaskID
+
+	cliCompleteOut, cliCompleteErr := exec.Command(bin, "task", "complete",
+		"--task-id", id,
+		"--evidence", "",
+		"--json",
+		"--target", root,
+	).CombinedOutput()
+	if cliCompleteErr == nil {
+		t.Fatalf("cli complete expected non-zero exit\n%s", cliCompleteOut)
+	}
+	cliComplete := mustEnvelope(t, cliCompleteOut)
+	mcpComplete, mcpCompleteErr := callMCPTool(t, svc, "arah_complete_task", map[string]any{
+		"task_id":  id,
+		"evidence": []any{},
+	})
+	if !mcpCompleteErr {
+		t.Fatal("expected MCP isError for empty evidence")
+	}
+	assertErrorEnvelopeParity(t, cliComplete, mcpComplete, "EXECUTION.COMPLETION_EVIDENCE_REQUIRED")
+
+	cliBlockOut, cliBlockErr := exec.Command(bin, "task", "block",
+		"--task-id", id,
+		"--reason", "",
+		"--json",
+		"--target", root,
+	).CombinedOutput()
+	if cliBlockErr == nil {
+		t.Fatalf("cli block expected non-zero exit\n%s", cliBlockOut)
+	}
+	cliBlock := mustEnvelope(t, cliBlockOut)
+	mcpBlock, mcpBlockErr := callMCPTool(t, svc, "arah_block_task", map[string]any{
+		"task_id": id,
+		"reason":  "",
+	})
+	if !mcpBlockErr {
+		t.Fatal("expected MCP isError for empty reason")
+	}
+	assertErrorEnvelopeParity(t, cliBlock, mcpBlock, "EXECUTION.BLOCKING_REASON_REQUIRED")
 }
 
 func TestCompleteDryRunLeavesTaskExecuting(t *testing.T) {
@@ -188,5 +316,92 @@ func TestCompleteDryRunLeavesTaskExecuting(t *testing.T) {
 	}
 	if got.State != core.StateExecuting {
 		t.Fatalf("persisted state mutated: %s", got.State)
+	}
+}
+
+func callMCPTool(t *testing.T, svc *core.TaskService, name string, args map[string]any) (envelope.Envelope, bool) {
+	t.Helper()
+	params := map[string]any{"name": name, "arguments": args}
+	rawParams, err := json.Marshal(params)
+	if err != nil {
+		t.Fatal(err)
+	}
+	in := fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":%s}`+"\n", rawParams)
+	var out bytes.Buffer
+	srv := &arahmcp.Server{Tasks: svc, Version: "test", Reader: strings.NewReader(in), Writer: &out}
+	if err := srv.Run(); err != nil {
+		t.Fatal(err)
+	}
+	var resp map[string]any
+	if err := json.Unmarshal([]byte(strings.TrimSpace(out.String())), &resp); err != nil {
+		t.Fatalf("rpc decode: %v\n%s", err, out.String())
+	}
+	result, ok := resp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing result: %#v", resp)
+	}
+	isErr, _ := result["isError"].(bool)
+	text := result["content"].([]any)[0].(map[string]any)["text"].(string)
+	var env envelope.Envelope
+	if err := json.Unmarshal([]byte(text), &env); err != nil {
+		t.Fatalf("envelope: %v\n%s", err, text)
+	}
+	return env, isErr
+}
+
+func mustEnvelope(t *testing.T, raw []byte) envelope.Envelope {
+	t.Helper()
+	var env envelope.Envelope
+	if err := json.Unmarshal(raw, &env); err != nil {
+		t.Fatalf("envelope: %v\n%s", err, raw)
+	}
+	return env
+}
+
+func mustDataMap(t *testing.T, env envelope.Envelope) map[string]any {
+	t.Helper()
+	data, ok := env.Data.(map[string]any)
+	if !ok {
+		t.Fatalf("data type %T", env.Data)
+	}
+	return data
+}
+
+func assertParityFields(t *testing.T, cli, mcp map[string]any, fields ...string) {
+	t.Helper()
+	for _, f := range fields {
+		cv, cok := cli[f]
+		mv, mok := mcp[f]
+		if !cok || !mok {
+			t.Fatalf("%s missing: cli_ok=%v mcp_ok=%v", f, cok, mok)
+		}
+		if reflect.TypeOf(cv) != reflect.TypeOf(mv) {
+			t.Fatalf("%s type cli=%T mcp=%T values cli=%v mcp=%v", f, cv, mv, cv, mv)
+		}
+		if !reflect.DeepEqual(cv, mv) {
+			t.Fatalf("%s cli=%v mcp=%v", f, cv, mv)
+		}
+	}
+}
+
+func assertErrorEnvelopeParity(t *testing.T, cli, mcp envelope.Envelope, wantCode string) {
+	t.Helper()
+	if cli.OK || mcp.OK {
+		t.Fatalf("expected failure envelopes ok cli=%v mcp=%v", cli.OK, mcp.OK)
+	}
+	if cli.Code != wantCode || mcp.Code != wantCode {
+		t.Fatalf("code want=%s cli=%s mcp=%s", wantCode, cli.Code, mcp.Code)
+	}
+	if cli.Code != mcp.Code {
+		t.Fatalf("code mismatch cli=%s mcp=%s", cli.Code, mcp.Code)
+	}
+	if cli.Message != mcp.Message {
+		t.Fatalf("message mismatch cli=%q mcp=%q", cli.Message, mcp.Message)
+	}
+	if !reflect.DeepEqual(cli.Details, mcp.Details) {
+		t.Fatalf("details mismatch cli=%#v mcp=%#v", cli.Details, mcp.Details)
+	}
+	if !reflect.DeepEqual(cli.Remediation, mcp.Remediation) {
+		t.Fatalf("remediation mismatch cli=%#v mcp=%#v", cli.Remediation, mcp.Remediation)
 	}
 }

@@ -63,7 +63,7 @@ experimental:
     notes: H-14 — ok/code/trace_id/remediation + dry-run + diff + idempotent
   - id: mcp-harness-surface
     name: MCP serve do harness
-    notes: H-17 — arah mcp serve; task + timeline + evidence; dry_run nas mutações
+    notes: H-17 done — contrato v0; paridade CLI↔MCP create/complete/block dry-run + error codes
   - id: state-store-sqlite
     name: StateStore local (SQLite WAL)
     notes: H-16 — .arah/local/runtime.db WAL + YAML mirror; schema Up/Down (v2)
@@ -72,7 +72,7 @@ experimental:
     notes: H-18 — arah evidence graph; schemas→arestas
   - id: conformance-suite
     name: Conformance suite do harness
-    notes: H-20 partial — internal/conformance (dry-run, error codes, create CLI↔MCP); fixtures amplas TBD
+    notes: H-20 — dry-run + error codes + CLI≡MCP create/complete/block; fixtures monorepo TBD
   - id: session-telemetry
     name: Session telemetry rica
     notes: .cursor/arah-live diagnostics
