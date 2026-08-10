@@ -2,6 +2,7 @@ package evidence_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -162,6 +163,80 @@ func TestEvidenceGraphPreservesDependencySpecTitles(t *testing.T) {
 	}
 	if label != "Other Canonical Title" {
 		t.Fatalf("expected YAML title on dependency node, got %q", label)
+	}
+}
+
+func TestEvidenceGraphGlobCoversAndWindowsPaths(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "alertas.spec.yaml"), []byte(
+		"id: alertas\ntitle: Alertas\ncovers:\n  - apps/alertas/**\n"), 0o644)
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	c := &core.Contract{
+		Version: "1.0", TaskID: "task-win", Objective: "alerts", State: core.StateDone,
+		PrimaryExecutor: "backend", WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		Execution: core.Execution{CompletionEvidence: []string{`apps\alertas\handler.go updated`}},
+	}
+	if _, err := store.Save(c); err != nil {
+		t.Fatal(err)
+	}
+	g, err := (&evidence.Builder{RepoRoot: root, Store: store}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	hasImplements := false
+	hasProduced := false
+	for _, e := range g.Edges {
+		if e.Rel == "implements" && e.To == "spec:alertas" {
+			hasImplements = true
+		}
+		if e.Rel == "produced" && e.To == "path:apps/alertas/handler.go" {
+			hasProduced = true
+		}
+	}
+	if !hasImplements || !hasProduced {
+		t.Fatalf("expected glob+windows-path implements/produced, graph=%+v", g)
+	}
+}
+
+func TestEvidenceGraphIncludesAllTaskEvents(t *testing.T) {
+	root := t.TempDir()
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	svc := &core.TaskService{Store: store, Events: store, Router: choreography.New(root)}
+	created, err := svc.Create("many events", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := created.Contract.TaskID
+	for i := 0; i < 20; i++ {
+		if err := store.Append(core.Event{
+			ID: fmt.Sprintf("extra-%d", i), TaskID: id, Kind: "task.note",
+			At: fmt.Sprintf("2026-08-10T00:00:%02dZ", i), TraceID: fmt.Sprintf("trace-%d", i),
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g, err := (&evidence.Builder{RepoRoot: root, Store: store, Events: store}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	runs := 0
+	for _, n := range g.Nodes {
+		if n.Type == "run" {
+			runs++
+		}
+	}
+	// create emits multiple events sharing traces + 20 unique trace-* runs
+	if runs < 20 {
+		t.Fatalf("expected run nodes for retained events, got %d", runs)
 	}
 }
 

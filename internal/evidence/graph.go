@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"os"
+	pathpkg "path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -209,25 +210,22 @@ func (b *Builder) Build() (*Graph, error) {
 						link(tid, "spec:"+specID, "implements")
 					}
 				}
-			}
-		}
-	}
 
-	// Runtime events → run nodes linked to tasks
-	if b.Events != nil {
-		evs, err := b.Events.ListRecent(500)
-		if err == nil {
-			for _, ev := range evs {
-				if ev.TaskID == "" {
-					continue
+				// All retained events for this task (unbounded) → run nodes
+				if b.Events != nil {
+					evs, err := b.Events.ListByTask(c.TaskID)
+					if err == nil {
+						for _, ev := range evs {
+							rid := runNodeID(ev)
+							label := ev.Kind
+							if ev.TraceID != "" {
+								label = ev.TraceID
+							}
+							add(Node{ID: rid, Type: "run", Label: label})
+							link(tid, rid, "evidenced_by")
+						}
+					}
 				}
-				rid := runNodeID(ev)
-				label := ev.Kind
-				if ev.TraceID != "" {
-					label = ev.TraceID
-				}
-				add(Node{ID: rid, Type: "run", Label: label})
-				link("task:"+ev.TaskID, rid, "evidenced_by")
 			}
 		}
 	}
@@ -259,7 +257,7 @@ func producedPaths(c *core.Contract) []string {
 	seen := map[string]bool{}
 	var out []string
 	add := func(p string) {
-		p = strings.TrimSpace(p)
+		p = normalizeRepoPath(p)
 		if p == "" || seen[p] {
 			return
 		}
@@ -285,7 +283,7 @@ func pathCandidates(s string) []string {
 		if tok == "" {
 			continue
 		}
-		if strings.Contains(tok, "/") || looksLikeFile(tok) {
+		if strings.ContainsAny(tok, `/\`) || looksLikeFile(tok) {
 			out = append(out, tok)
 		}
 	}
@@ -293,7 +291,7 @@ func pathCandidates(s string) []string {
 }
 
 func looksLikeFile(s string) bool {
-	lower := strings.ToLower(s)
+	lower := strings.ToLower(normalizeRepoPath(s))
 	for _, ext := range []string{".go", ".yaml", ".yml", ".md", ".json", ".ps1", ".ts", ".tsx"} {
 		if strings.HasSuffix(lower, ext) {
 			return true
@@ -313,23 +311,76 @@ func pathsOverlap(produced, covers []string) bool {
 	return false
 }
 
-func pathMatchesCover(path, cover string) bool {
-	path = filepath.ToSlash(strings.TrimSpace(path))
-	cover = filepath.ToSlash(strings.TrimSpace(cover))
-	if path == "" || cover == "" {
+func normalizeRepoPath(p string) string {
+	p = strings.TrimSpace(p)
+	if p == "" {
+		return ""
+	}
+	keepSlash := strings.HasSuffix(p, "/") || strings.HasSuffix(p, `\`)
+	p = strings.ReplaceAll(p, `\`, "/")
+	p = pathpkg.Clean("/" + p)[1:]
+	if keepSlash && p != "" && !strings.HasSuffix(p, "/") {
+		p += "/"
+	}
+	return p
+}
+
+func pathMatchesCover(filePath, cover string) bool {
+	filePath = normalizeRepoPath(filePath)
+	cover = normalizeRepoPath(cover)
+	if filePath == "" || cover == "" {
 		return false
 	}
-	if path == cover {
+	if strings.ContainsAny(cover, "*?[") {
+		ok, err := matchPathGlob(cover, filePath)
+		return err == nil && ok
+	}
+	if filePath == cover {
 		return true
 	}
 	if strings.HasSuffix(cover, "/") {
-		return strings.HasPrefix(path, cover) || path+"/" == cover
+		return strings.HasPrefix(filePath, cover)
 	}
-	// directory cover without trailing slash
-	if strings.HasPrefix(path, cover+"/") {
-		return true
+	return strings.HasPrefix(filePath, cover+"/")
+}
+
+// matchPathGlob matches slash-separated globs including ** (any path segments).
+func matchPathGlob(pattern, name string) (bool, error) {
+	return matchGlobSegs(strings.Split(pattern, "/"), strings.Split(name, "/"))
+}
+
+func matchGlobSegs(pat, name []string) (bool, error) {
+	for len(pat) > 0 {
+		if pat[0] == "**" {
+			pat = pat[1:]
+			if len(pat) == 0 {
+				return true, nil
+			}
+			for i := 0; i <= len(name); i++ {
+				ok, err := matchGlobSegs(pat, name[i:])
+				if err != nil {
+					return false, err
+				}
+				if ok {
+					return true, nil
+				}
+			}
+			return false, nil
+		}
+		if len(name) == 0 {
+			return false, nil
+		}
+		ok, err := pathpkg.Match(pat[0], name[0])
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+		pat = pat[1:]
+		name = name[1:]
 	}
-	return false
+	return len(name) == 0, nil
 }
 
 // stableID returns a collision-resistant id fragment for free-form strings.

@@ -11,6 +11,7 @@ fields:
   owner:       {type: string, required: true}          # humano responsável
   covers:      {type: list<glob>, required: true}      # paths de código cobertos pela spec
   depends_on:  {type: list<string>}                    # outras specs
+  supersedes:  {type: list<string>}                    # specs que esta substitui
   source:      {type: string}                          # origem (ex.: sky-forge package artifact)
   acceptance:  {type: list<string>}                    # como validar que o código honra a spec
   updated_at:  {type: date, required: true}
@@ -19,7 +20,7 @@ fields:
 validations_expected:
   - "status=active exige covers não vazio"
   - "PR que altera path coberto por spec active exige mudança na spec OU label spec-reviewed"
-  - "superseded exige apontar sucessora em depends_on/notes"
+  - "superseded exige sucessora em depends_on/notes OU a sucessora listar supersedes"
 
 example: |
   ---

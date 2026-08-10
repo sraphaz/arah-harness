@@ -6,7 +6,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ### Added
 
-- **H-18 Evidence Graph MVP** — export ordenado estável; `depends_on`/`supersedes`; `implements` path↔covers; nós `run` do EventStore; paridade CLI↔MCP
+- **H-18 Evidence Graph MVP** — export ordenado estável; `depends_on`/`supersedes` (schema); covers com glob `**`; paths Windows normalizados; runs via `ListByTask` (sem teto 500); paridade CLI↔MCP
 - **H-16 StateStore schema migrations** — Up/Down versionados (`schema_meta`); v2 `idx_events_kind`; testes upgrade/rollback
 - **H-15 kernel gerado (fase 1)** — `internal/kernel` + CLI `arah kernel sync|verify`
   - Fonte canônica na raiz → pacote `kernel/` + `kernel/manifest.json` (SHA-256)
