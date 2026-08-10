@@ -344,3 +344,52 @@ func TestIdempotentCompleteReconcilesMissingEvent(t *testing.T) {
 	}
 }
 
+func TestReserveAndReleaseConsultationSlot(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, ".agents", "choreography.yaml"), []byte("version: 2\nrules: []\n"), 0o644)
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	svc := &core.TaskService{Store: store, Events: store, Router: choreography.New(root)}
+	created, err := svc.Create("slot", "backend", core.WorkArchitectural, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := created.Contract.TaskID
+	max := created.Contract.Limits.MaxConsultations
+
+	c1, err := store.ReserveConsultationSlot(id, max)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c1.Counters.Consultations != 1 {
+		t.Fatalf("after reserve: %d", c1.Counters.Consultations)
+	}
+
+	// Peer process bumps counter + mutates objective while first holds a stale snapshot.
+	peer, _, err := store.Get(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	peer.Counters.Consultations = 2
+	peer.Objective = "peer-updated"
+	if _, err := store.Save(peer); err != nil {
+		t.Fatal(err)
+	}
+
+	released, err := store.ReleaseConsultationSlot(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if released.Counters.Consultations != 1 {
+		t.Fatalf("release must decrement fresh counter 2→1, got %d", released.Counters.Consultations)
+	}
+	if released.Objective != "peer-updated" {
+		t.Fatalf("release must not clobber peer fields; objective=%s", released.Objective)
+	}
+}
+

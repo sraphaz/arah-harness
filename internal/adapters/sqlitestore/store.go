@@ -315,8 +315,10 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	return merged, nil
 }
 
-// Delete removes filesystem mirror/artifacts first, then SQLite rows.
-// FS-first avoids Get falling back to a leftover YAML mirror after the DB row is gone.
+// Delete removes filesystem mirrors/artifacts and SQLite rows.
+// Filesystem is cleared first; if the DB transaction fails afterward, the
+// contract snapshot is restored to the mirror so Get/List do not leave a
+// SQLite-only zombie without YAML (and abort paths stay consistent).
 func (s *Store) Delete(taskID string) error {
 	taskID = strings.TrimSpace(taskID)
 	if taskID == "" {
@@ -325,21 +327,55 @@ func (s *Store) Delete(taskID string) error {
 	if err := s.EnsureLayout(); err != nil {
 		return err
 	}
+
+	var snapshot *core.Contract
+	var yamlBody string
+	err := s.db.QueryRow(`SELECT contract_yaml FROM tasks WHERE task_id = ?`, taskID).Scan(&yamlBody)
+	switch {
+	case err == nil:
+		var c core.Contract
+		if uerr := yaml.Unmarshal([]byte(yamlBody), &c); uerr != nil {
+			return uerr
+		}
+		snapshot = &c
+	case err == sql.ErrNoRows:
+		if fsC, _, fsErr := s.fs.Get(taskID); fsErr == nil {
+			snapshot = fsC
+		}
+	default:
+		return err
+	}
+
 	if err := s.fs.Delete(taskID); err != nil {
 		return err
 	}
+
 	tx, err := s.db.Begin()
 	if err != nil {
+		s.restoreFSMirror(snapshot)
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
 	if _, err := tx.Exec(`DELETE FROM task_events WHERE task_id = ?`, taskID); err != nil {
+		s.restoreFSMirror(snapshot)
 		return err
 	}
 	if _, err := tx.Exec(`DELETE FROM tasks WHERE task_id = ?`, taskID); err != nil {
+		s.restoreFSMirror(snapshot)
 		return err
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		s.restoreFSMirror(snapshot)
+		return err
+	}
+	return nil
+}
+
+func (s *Store) restoreFSMirror(c *core.Contract) {
+	if c == nil {
+		return
+	}
+	_, _ = s.fs.Save(c)
 }
 
 // ReserveConsultationSlot atomically increments Counters.Consultations under a write lock.
@@ -399,6 +435,75 @@ func (s *Store) ReserveConsultationSlot(taskID string, max int) (*core.Contract,
 		}
 	}
 	c.Counters.Consultations++
+	raw, err := yaml.Marshal(&c)
+	if err != nil {
+		return nil, err
+	}
+	bucket := bucketOf(c.State)
+	_, err = conn.ExecContext(ctx, `
+UPDATE tasks SET
+  state=?, bucket=?, primary_executor=?, objective=?, work_class=?, intent_type=?,
+  choreography_rule=?, contract_yaml=?, updated_at=?
+WHERE task_id=?`,
+		string(c.State), bucket, c.PrimaryExecutor, c.Objective, string(c.WorkClass), string(c.IntentType),
+		c.ChoreographyRule, string(raw), time.Now().UTC().Format(time.RFC3339Nano), c.TaskID)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := conn.ExecContext(ctx, `COMMIT`); err != nil {
+		return nil, err
+	}
+	committed = true
+	_, _ = s.fs.Save(&c) // best-effort mirror
+	return &c, nil
+}
+
+// ReleaseConsultationSlot decrements Counters.Consultations under BEGIN IMMEDIATE.
+// Used to undo ReserveConsultationSlot when WriteConsultation / event emit fails.
+func (s *Store) ReleaseConsultationSlot(taskID string) (*core.Contract, error) {
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return nil, fmt.Errorf("task_id required")
+	}
+	if err := s.EnsureLayout(); err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	conn, err := s.db.Conn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	if _, err := conn.ExecContext(ctx, `BEGIN IMMEDIATE`); err != nil {
+		return nil, err
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_, _ = conn.ExecContext(ctx, `ROLLBACK`)
+		}
+	}()
+
+	var yamlBody string
+	err = conn.QueryRowContext(ctx, `SELECT contract_yaml FROM tasks WHERE task_id=?`, taskID).Scan(&yamlBody)
+	if err == sql.ErrNoRows {
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.TASK_NOT_FOUND",
+			Message: "task not found: " + taskID,
+			Details: map[string]any{"task_id": taskID},
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	var c core.Contract
+	if err := yaml.Unmarshal([]byte(yamlBody), &c); err != nil {
+		return nil, err
+	}
+	if c.Counters.Consultations > 0 {
+		c.Counters.Consultations--
+	}
 	raw, err := yaml.Marshal(&c)
 	if err != nil {
 		return nil, err

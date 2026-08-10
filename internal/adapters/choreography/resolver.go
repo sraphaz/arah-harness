@@ -77,13 +77,23 @@ func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error)
 	raw, err := os.ReadFile(path)
 	var doc fileDoc
 	if err == nil {
-		_ = yaml.Unmarshal(raw, &doc)
+		if uerr := yaml.Unmarshal(raw, &doc); uerr != nil {
+			return core.ResolvedRouting{}, uerr
+		}
 	}
 
 	// Path-shaped inputs (e.g. apps/web/index.ts) match choreography paths first.
 	if looksLikeRepoPath(pathKey) && len(doc.Rules) > 0 {
 		if matched := matchRuleByPath(doc.Rules, pathKey); matched != nil {
-			return routingFromRule(matched, preferred), nil
+			out := routingFromRule(matched, preferred)
+			if out.PrimaryExecutor == "" {
+				return out, &core.DomainError{
+					Code:    "EXECUTION.EXACTLY_ONE_PRIMARY_EXECUTOR_REQUIRED",
+					Message: "no eligible primary_executor",
+					Details: map[string]any{"area": area, "choreography_rule": matched.ID},
+				}
+			}
+			return out, nil
 		}
 	}
 
@@ -141,8 +151,10 @@ func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error)
 	return out, nil
 }
 
+// looksLikeRepoPath detects file/dir paths. Only slash separators — a lone "."
+// must not treat dotted area labels (e.g. api.v2) as repo paths.
 func looksLikeRepoPath(s string) bool {
-	return strings.Contains(s, "/") || strings.Contains(s, `\`) || strings.Contains(s, ".")
+	return strings.Contains(s, "/") || strings.Contains(s, `\`)
 }
 
 func matchRuleByPath(rules []fileRule, filePath string) *fileRule {

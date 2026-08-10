@@ -102,7 +102,7 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 
 	path, err := s.Consultations.WriteConsultation(taskID, res)
 	if err != nil {
-		s.rollbackConsultationSlot(c)
+		_ = s.rollbackConsultationSlot(c)
 		return nil, "", wrapStore(err)
 	}
 	if err := s.emitCorrelated(c, "consultation.submitted", map[string]any{
@@ -111,17 +111,22 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 		"id":            res.ID,
 	}); err != nil {
 		_ = s.Consultations.RemoveConsultation(path)
-		s.rollbackConsultationSlot(c)
+		_ = s.rollbackConsultationSlot(c)
 		return nil, "", errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": taskID, "kind": "consultation.submitted"})
 	}
 	return res, path, nil
 }
 
-func (s *TaskService) rollbackConsultationSlot(c *Contract) {
+func (s *TaskService) rollbackConsultationSlot(c *Contract) error {
+	if r, ok := s.Store.(ConsultationReserver); ok {
+		_, err := r.ReleaseConsultationSlot(c.TaskID)
+		return err
+	}
 	if c.Counters.Consultations > 0 {
 		c.Counters.Consultations--
 	}
-	_, _ = s.Store.Save(c)
+	_, err := s.Store.Save(c)
+	return err
 }
 
 func newConsultationID() string {

@@ -12,10 +12,13 @@ type StateStore interface {
 	Delete(taskID string) error
 }
 
-// ConsultationReserver atomically reserves a consultation slot under MaxConsultations.
+// ConsultationReserver atomically reserves/releases consultation slots under MaxConsultations.
 // Implemented by stores that can serialize across processes (e.g. SQLite BEGIN IMMEDIATE).
 type ConsultationReserver interface {
 	ReserveConsultationSlot(taskID string, max int) (*Contract, error)
+	// ReleaseConsultationSlot decrements the counter with a fresh read under write lock
+	// so concurrent CLI/MCP updates are not clobbered by a stale Save.
+	ReleaseConsultationSlot(taskID string) (*Contract, error)
 }
 
 // Event is an append-only runtime fact used for timelines and Evidence Graph input.
