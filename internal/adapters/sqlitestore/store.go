@@ -208,6 +208,15 @@ ON CONFLICT(task_id) DO UPDATE SET
 // When both exist, the fresher copy wins and is written back into SQLite so
 // PowerShell-only updates (complete/block) are not shadowed by a stale row.
 func (s *Store) Get(taskID string) (*core.Contract, string, error) {
+	return s.get(taskID, true)
+}
+
+// Peek loads a contract without writing reconcile updates back to SQLite.
+func (s *Store) Peek(taskID string) (*core.Contract, string, error) {
+	return s.get(taskID, false)
+}
+
+func (s *Store) get(taskID string, reconcile bool) (*core.Contract, string, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return nil, "", err
 	}
@@ -230,8 +239,11 @@ func (s *Store) Get(taskID string) (*core.Contract, string, error) {
 	chosen := preferFresher(&dbContract, fsContract)
 	ref := "sqlite:" + s.DBPath + "#" + taskID
 	if chosen == fsContract {
-		if _, err := s.saveDB(chosen); err != nil {
-			// Still return the fresher FS view even if reconcile write fails.
+		if reconcile {
+			if _, err := s.saveDB(chosen); err != nil {
+				return chosen, fsPath, nil
+			}
+		} else {
 			return chosen, fsPath, nil
 		}
 	}

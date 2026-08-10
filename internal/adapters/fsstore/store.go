@@ -80,6 +80,11 @@ func (s *Store) Save(c *core.Contract) (string, error) {
 
 // Get loads a contract by scanning active, completed, then blocked buckets.
 func (s *Store) Get(taskID string) (*core.Contract, string, error) {
+	return s.Peek(taskID)
+}
+
+// Peek is identical to Get for the filesystem adapter (no reconcile side effects).
+func (s *Store) Peek(taskID string) (*core.Contract, string, error) {
 	if err := s.EnsureLayout(); err != nil {
 		return nil, "", err
 	}

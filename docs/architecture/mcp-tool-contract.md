@@ -45,8 +45,11 @@ No required input. Returns runtime version, surfaces, and command list.
 | `area` | string | no (default `backend`) |
 | `work_class` | string | no (`trivial\|standard\|architectural\|release`) |
 | `intent_type` | string | no (`execution` default) |
+| `dry_run` | boolean | no — plan without persist / emit |
 
-Creates the contract, routes choreography, and starts `executing`.
+Creates the contract, routes choreography, and starts `executing` in the returned plan.
+With `dry_run=true`, `TaskService.Create` still returns that executing plan but skips
+persistence and event emission (path `dry-run`). Non-dry-run behaviour is unchanged.
 
 ## `arah_complete_task`
 
@@ -54,6 +57,7 @@ Creates the contract, routes choreography, and starts `executing`.
 |-------|------|----------|
 | `task_id` | string | yes |
 | `evidence` | string[] | yes (concrete) |
+| `dry_run` | boolean | no |
 
 ## `arah_block_task`
 
@@ -61,6 +65,7 @@ Creates the contract, routes choreography, and starts `executing`.
 |-------|------|----------|
 | `task_id` | string | yes |
 | `reason` | string | yes |
+| `dry_run` | boolean | no |
 
 ## `arah_get_timeline`
 

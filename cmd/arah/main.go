@@ -90,6 +90,7 @@ func runTask(root string, args []string, jsonOut bool) int {
 	if len(args) == 0 {
 		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline>", nil))
 	}
+	dryRun := boolFlag(args, "--dry-run", "-dry-run")
 	subArgs := stripGlobalFlags(args)
 	if len(subArgs) == 0 {
 		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline>", nil))
@@ -107,25 +108,28 @@ func runTask(root string, args []string, jsonOut bool) int {
 		area := flagValue(rest, "-area", "--area", "backend")
 		wc := flagValue(rest, "-class", "--class", "standard")
 		intent := flagValue(rest, "-intent", "--intent", "execution")
-		c, path, err := svc.Create(obj, area, core.WorkClass(wc), core.IntentType(intent))
-		return emitTask(jsonOut, c, path, err)
+		opts := core.MutateOptions{DryRun: dryRun}
+		c, path, err := svc.Create(obj, area, core.WorkClass(wc), core.IntentType(intent), opts)
+		return emitTask(jsonOut, c, path, err, opts.DryRun)
 	case "status":
 		id := flagValue(rest, "-task-id", "--task-id", "")
 		if id == "" && len(rest) > 0 && !strings.HasPrefix(rest[0], "-") {
 			id = rest[0]
 		}
 		c, path, err := svc.Get(id)
-		return emitTask(jsonOut, c, path, err)
+		return emitTask(jsonOut, c, path, err, false)
 	case "complete":
 		id := flagValue(rest, "-task-id", "--task-id", "")
 		ev := flagValue(rest, "-evidence", "--evidence", "")
-		c, path, err := svc.Complete(id, []string{ev})
-		return emitTask(jsonOut, c, path, err)
+		opts := core.MutateOptions{DryRun: dryRun}
+		c, path, err := svc.Complete(id, []string{ev}, opts)
+		return emitTask(jsonOut, c, path, err, opts.DryRun)
 	case "block":
 		id := flagValue(rest, "-task-id", "--task-id", "")
 		reason := flagValue(rest, "-reason", "--reason", "")
-		c, path, err := svc.Block(id, reason)
-		return emitTask(jsonOut, c, path, err)
+		opts := core.MutateOptions{DryRun: dryRun}
+		c, path, err := svc.Block(id, reason, opts)
+		return emitTask(jsonOut, c, path, err, opts.DryRun)
 	case "timeline":
 		id := flagValue(rest, "-task-id", "--task-id", "")
 		evs, err := svc.Timeline(id)
@@ -166,26 +170,31 @@ func runEvidence(root string, args []string, jsonOut bool) int {
 	return 0
 }
 
-func emitTask(jsonOut bool, c *core.Contract, path string, err error) int {
+func emitTask(jsonOut bool, c *core.Contract, path string, err error, dryRun bool) int {
 	if err != nil {
 		return failEnv(jsonOut, domainEnv(err))
 	}
 	data := map[string]any{
-		"task_id":          c.TaskID,
-		"state":            c.State,
-		"primary_executor": c.PrimaryExecutor,
-		"objective":        c.Objective,
-		"work_class":       c.WorkClass,
-		"intent_type":      c.IntentType,
-		"path":             path,
+		"task_id":           c.TaskID,
+		"state":             c.State,
+		"primary_executor":  c.PrimaryExecutor,
+		"objective":         c.Objective,
+		"work_class":        c.WorkClass,
+		"intent_type":       c.IntentType,
+		"path":              path,
+		"dry_run":           dryRun || strings.HasPrefix(path, "dry-run"),
 		"choreography_rule": c.ChoreographyRule,
-		"evidence":         c.Execution.CompletionEvidence,
-		"blocking_reason":  c.Result.BlockingReason,
+		"evidence":          c.Execution.CompletionEvidence,
+		"blocking_reason":   c.Result.BlockingReason,
 	}
 	if jsonOut {
 		return envelope.WriteJSON(os.Stdout, envelope.OK(data))
 	}
-	fmt.Printf("task %s: %s\n", c.TaskID, c.State)
+	if dryRun || strings.HasPrefix(path, "dry-run") {
+		fmt.Printf("task %s: %s (dry-run)\n", c.TaskID, c.State)
+	} else {
+		fmt.Printf("task %s: %s\n", c.TaskID, c.State)
+	}
 	fmt.Printf("  executor: %s\n", c.PrimaryExecutor)
 	fmt.Printf("  objective: %s\n", c.Objective)
 	fmt.Printf("  path: %s\n", path)
@@ -311,10 +320,10 @@ func usage() {
   arah doctor [-target path] [--json]
   arah sync-check [-target path] [--json]
   arah version [--json]
-  arah task create -objective "…" [-area backend] [-class standard] [--json]
+  arah task create -objective "…" [-area backend] [-class standard] [--dry-run] [--json]
   arah task status -task-id ID [--json]
-  arah task complete -task-id ID -evidence "…" [--json]
-  arah task block -task-id ID -reason "…" [--json]
+  arah task complete -task-id ID -evidence "…" [--dry-run] [--json]
+  arah task block -task-id ID -reason "…" [--dry-run] [--json]
   arah task timeline -task-id ID [--json]
   arah evidence graph [--json]
   arah mcp serve [-target path]
@@ -328,6 +337,27 @@ func hasFlag(args []string, name string) bool {
 	for _, a := range args {
 		if a == name {
 			return true
+		}
+	}
+	return false
+}
+
+// boolFlag accepts bare flags (--dry-run) and equals forms (--dry-run=true|false|1|0|yes|no).
+func boolFlag(args []string, names ...string) bool {
+	for _, a := range args {
+		for _, name := range names {
+			if a == name {
+				return true
+			}
+			prefix := name + "="
+			if strings.HasPrefix(a, prefix) {
+				switch strings.ToLower(strings.TrimSpace(strings.TrimPrefix(a, prefix))) {
+				case "true", "1", "yes", "y", "on", "":
+					return true
+				default:
+					return false
+				}
+			}
 		}
 	}
 	return false
@@ -384,6 +414,10 @@ func stripGlobalFlags(args []string) []string {
 			continue
 		default:
 			if strings.HasPrefix(a, "-target=") || strings.HasPrefix(a, "--target=") {
+				continue
+			}
+			if a == "--dry-run" || a == "-dry-run" ||
+				strings.HasPrefix(a, "--dry-run=") || strings.HasPrefix(a, "-dry-run=") {
 				continue
 			}
 			out = append(out, a)
