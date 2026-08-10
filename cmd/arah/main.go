@@ -90,7 +90,7 @@ func runTask(root string, args []string, jsonOut bool) int {
 	if len(args) == 0 {
 		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline>", nil))
 	}
-	dryRun := hasFlag(args, "--dry-run") || hasFlag(args, "-dry-run")
+	dryRun := boolFlag(args, "--dry-run", "-dry-run")
 	subArgs := stripGlobalFlags(args)
 	if len(subArgs) == 0 {
 		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline>", nil))
