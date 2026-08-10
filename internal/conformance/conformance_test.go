@@ -352,8 +352,16 @@ func mustDataMap(t *testing.T, env envelope.Envelope) map[string]any {
 func assertParityFields(t *testing.T, cli, mcp map[string]any, fields ...string) {
 	t.Helper()
 	for _, f := range fields {
-		if fmt.Sprint(cli[f]) != fmt.Sprint(mcp[f]) {
-			t.Fatalf("%s cli=%v mcp=%v", f, cli[f], mcp[f])
+		cv, cok := cli[f]
+		mv, mok := mcp[f]
+		if !cok || !mok {
+			t.Fatalf("%s missing: cli_ok=%v mcp_ok=%v", f, cok, mok)
+		}
+		if reflect.TypeOf(cv) != reflect.TypeOf(mv) {
+			t.Fatalf("%s type cli=%T mcp=%T values cli=%v mcp=%v", f, cv, mv, cv, mv)
+		}
+		if !reflect.DeepEqual(cv, mv) {
+			t.Fatalf("%s cli=%v mcp=%v", f, cv, mv)
 		}
 	}
 }
