@@ -26,6 +26,60 @@ $SessionsDir = Join-Path $LiveDir 'sessions'
 $ActiveFile = Join-Path $LiveDir 'active.json'
 $LegacyStateFile = Join-Path $LiveDir 'state.json'
 $EventsFile = Join-Path $LiveDir 'events.jsonl'
+$DiagnosticsFile = Join-Path $LiveDir 'diagnostics.jsonl'
+
+function Get-SessionDiagnosticsPath {
+    param([string]$SessionId)
+    $safe = Sanitize-SessionId -Id $SessionId
+    if (-not $safe) { return $null }
+    return Join-Path $SessionsDir "$safe.diagnostics.jsonl"
+}
+
+function Add-Diagnostic {
+    param(
+        [ValidateSet('info', 'warn', 'error')]
+        [string]$Level = 'info',
+        [string]$Component = 'telemetry',
+        [string]$Message,
+        [hashtable]$Detail = @{},
+        [string]$SessionId = $null
+    )
+    Ensure-LiveDir
+    if (-not $SessionId) {
+        $SessionId = $Detail['conversation_id']
+    }
+    if (-not $SessionId) {
+        $active = Read-ActiveManifest
+        if ($active) {
+            $SessionId = [string]$active.conversation_id
+            if (-not $SessionId) { $SessionId = [string]$active.active_session_id }
+        }
+    }
+    $entry = [ordered]@{
+        ts        = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+        level     = $Level
+        component = $Component
+        message   = $Message
+        detail    = $Detail
+    }
+    if ($SessionId) {
+        $entry['conversation_id'] = $SessionId
+    }
+    $line = ($entry | ConvertTo-Json -Depth 5 -Compress) + "`n"
+    [System.IO.File]::AppendAllText(
+        $DiagnosticsFile,
+        $line,
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    $sessionDiag = Get-SessionDiagnosticsPath -SessionId $SessionId
+    if ($sessionDiag) {
+        [System.IO.File]::AppendAllText(
+            $sessionDiag,
+            $line,
+            [System.Text.UTF8Encoding]::new($false)
+        )
+    }
+}
 
 function Ensure-LiveDir {
     if (-not (Test-Path $LiveDir)) {
@@ -55,6 +109,8 @@ function Get-DefaultState {
         active_skills      = @()
         matched_rules      = @()
         recent_events      = @()
+        chat_name          = $null
+        chat_subtitle      = $null
     }
 }
 
@@ -259,6 +315,76 @@ function Get-ChangedFilesFromGit {
     return @($files | Select-Object -Unique)
 }
 
+function Get-SearchRootsFromHook {
+    param($Hook)
+    $roots = @()
+    $raw = Get-HookField $Hook @('tracked_repos', 'trackedRepos')
+    if ($raw) {
+        $items = if ($raw -is [array]) { $raw } else { @($raw -split ',') }
+        foreach ($item in $items) {
+            $p = [string]$item
+            if ([string]::IsNullOrWhiteSpace($p)) { continue }
+            $resolved = $p.Replace('\', '/')
+            if (-not [System.IO.Path]::IsPathRooted($resolved)) {
+                $resolved = Join-Path $Root $resolved
+            }
+            if (Test-Path $resolved) { $roots += $resolved }
+        }
+    }
+    $roots += $Root
+    return @($roots | Select-Object -Unique)
+}
+
+function Resolve-WorkspaceFileByName {
+    param(
+        [string]$BaseName,
+        [string[]]$SearchRoots
+    )
+    if ([string]::IsNullOrWhiteSpace($BaseName)) { return $null }
+    if ($BaseName -match '[/\\]') {
+        $rel = $BaseName.Replace('\', '/').TrimStart('./')
+        $full = Join-Path $Root ($rel -replace '/', [IO.Path]::DirectorySeparatorChar)
+        if (Test-Path -LiteralPath $full) { return $rel }
+        return $null
+    }
+    foreach ($searchRoot in $SearchRoots) {
+        if (-not (Test-Path $searchRoot)) { continue }
+        $hits = Get-ChildItem -Path $searchRoot -Recurse -Filter $BaseName -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -notmatch '[\\/]node_modules[\\/]' } |
+            Select-Object -First 1
+        if ($hits) {
+            $full = $hits.FullName
+            foreach ($root in $SearchRoots) {
+                $normRoot = (Resolve-Path $root -ErrorAction SilentlyContinue).Path
+                if ($normRoot -and $full.StartsWith($normRoot, [StringComparison]::OrdinalIgnoreCase)) {
+                    return $full.Substring($normRoot.Length).TrimStart('\', '/').Replace('\', '/')
+                }
+            }
+            if ($full.StartsWith($Root, [StringComparison]::OrdinalIgnoreCase)) {
+                return $full.Substring($Root.Length).TrimStart('\', '/').Replace('\', '/')
+            }
+        }
+    }
+    return $BaseName
+}
+
+function Get-FilesFromChatSubtitle {
+    param(
+        [string]$Subtitle,
+        [string[]]$SearchRoots
+    )
+    if ([string]::IsNullOrWhiteSpace($Subtitle)) { return @() }
+    if ($Subtitle -notmatch '^(Edited|Modified|Read)\s+(.+)$') { return @() }
+    $rest = $Matches[2]
+    $names = @($rest -split ',\s*' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    $resolved = @()
+    foreach ($name in $names) {
+        $path = Resolve-WorkspaceFileByName -BaseName $name -SearchRoots $SearchRoots
+        if ($path) { $resolved += $path }
+    }
+    return @($resolved | Select-Object -Unique)
+}
+
 function Get-FileFromHook {
     param($Hook)
     $direct = Get-HookField $Hook @('file_path', 'path', 'file', 'filePath')
@@ -391,15 +517,55 @@ try {
         }
         'conversation-focus' {
             $rawId = Get-HookField $hook @('conversation_id', 'session_id', 'id')
-            if (-not $rawId) { break }
+            if (-not $rawId) {
+                Add-Diagnostic -Level 'warn' -Component 'conversation-focus' -Message 'sem conversation_id no hook'
+                break
+            }
             $safe = Sanitize-SessionId -Id $rawId
             $sessionPath = Get-SessionFilePath -SessionId $safe
+            $created = $false
             if (-not (Test-Path $sessionPath)) {
                 $safe = Ensure-Session -SessionId $rawId -Source 'conversation-focus'
+                $created = $true
             } else {
                 Write-ActiveManifest -SessionId $safe -Source 'conversation-focus' -ConversationId $rawId
             }
             Add-Event -SessionId $safe -Kind 'conversation.focus' -Payload @{ conversation_id = $rawId }
+            $state = Read-SessionState -SessionId $safe
+            $chatName = Get-HookField $hook @('chat_name', 'name')
+            $chatSubtitle = Get-HookField $hook @('chat_subtitle', 'subtitle')
+            if ($chatName) { $state['chat_name'] = $chatName }
+            if ($chatSubtitle) { $state['chat_subtitle'] = $chatSubtitle }
+            $state['context_source'] = 'conversation-focus'
+            Write-SessionState $state
+            $agentCount = @($state['active_agents']).Count + @($state['active_domains']).Count
+            $files = @($state['context_files'])
+            if ($files.Count -eq 0 -and $chatSubtitle) {
+                $searchRoots = Get-SearchRootsFromHook -Hook $hook
+                $files = Get-FilesFromChatSubtitle -Subtitle $chatSubtitle -SearchRoots $searchRoots
+                if ($files.Count -gt 0) {
+                    $state['context_files'] = [string[]]$files
+                    Write-SessionState $state
+                }
+            }
+            if ($agentCount -eq 0 -and $files.Count -gt 0) {
+                Apply-ChoreographyForSession -SessionId $safe -Files $files -ContextSource 'conversation-focus'
+                $state = Read-SessionState -SessionId $safe
+                $agentCount = @($state['active_agents']).Count + @($state['active_domains']).Count
+            }
+            if ($agentCount -eq 0) {
+                Add-Diagnostic -Level 'warn' -Component 'conversation-focus' -Message 'sessao sem coreografia' -SessionId $rawId -Detail @{
+                    conversation_id = $rawId
+                    created         = $created
+                    hint            = 'aguarde agente editar arquivos ou envie prompt neste chat'
+                }
+            } else {
+                Add-Diagnostic -Level 'info' -Component 'conversation-focus' -Message 'aba ativa' -SessionId $rawId -Detail @{
+                    conversation_id = $rawId
+                    agents          = @($state['active_agents'])
+                    rules           = @($state['matched_rules'])
+                }
+            }
         }
         'context-resolve' {
             $rawId = Get-HookField $hook @('conversation_id', 'session_id')
@@ -495,7 +661,9 @@ try {
         }
     }
 } catch {
-    # Fail-open
+    Add-Diagnostic -Level 'error' -Component 'telemetry' -Message $_.Exception.Message -Detail @{
+        action = $Action
+    }
 }
 
 exit 0

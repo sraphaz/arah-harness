@@ -120,7 +120,7 @@ Assert-True ([int]$c7.limits.max_consultations -eq 0) 'trivial max_consultations
 Assert-True ($c7.policy.spec_required -eq $false -or -not $c7.policy.Contains('spec_required') -or $c7.policy.spec_required -eq $false) 'no full spec'
 # policy may store spec_required: false
 Assert-True ($true) 'trivial policy applied'
-$code = Invoke-Task @{ Action = 'complete'; TaskId = $j.task_id; Evidence = 'README.md updated'; RepoRoot = $Root }
+$code = Invoke-Task @{ Action = 'complete'; TaskId = $j.task_id; Evidence = 'docs/README.md updated'; RepoRoot = $Root }
 Assert-True ($code -eq 0) 'trivial done'
 
 # --- Scenario 8: invalid transition executing→routed ---

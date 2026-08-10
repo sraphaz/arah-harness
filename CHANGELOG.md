@@ -6,6 +6,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ### Added
 
+- **H-15 kernel gerado (fase 1)** — `internal/kernel` + CLI `arah kernel sync|verify`
+  - Fonte canônica na raiz → pacote `kernel/` + `kernel/manifest.json` (SHA-256)
+  - CI `kernel-integrity` executa verify; CONTRIBUTING proíbe edição manual de `kernel/`
 - **arah-core (0.5 foundation)** — runtime Go hexagonal inspirado em
   [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern) (engenharia, não RAG)
   - `internal/core` — Execution Control tipado (transitions, evidence, TaskService)

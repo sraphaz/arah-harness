@@ -6,12 +6,20 @@ on:
     paths:
       - "live/**"
       - "cmd/arah/**"
+      - "internal/**"
+      - "go.mod"
+      - "go.sum"
+      - "kernel/manifest.json"
       - ".github/workflows/go.yml"
   pull_request:
     branches: [main]
     paths:
       - "live/**"
       - "cmd/arah/**"
+      - "internal/**"
+      - "go.mod"
+      - "go.sum"
+      - "kernel/manifest.json"
       - ".github/workflows/go.yml"
 
 permissions:
@@ -40,10 +48,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - name: Build + smoke phase-1 CLI
-        working-directory: cmd/arah
+      - name: Test arah-core + portable CLI
         run: |
-          go build -o /tmp/arah .
+          go test ./...
+          go build -o /tmp/arah ./cmd/arah
           /tmp/arah version
-          /tmp/arah doctor -target ../..
-          /tmp/arah sync-check -target ../.. || true
+          /tmp/arah doctor -target .
+          /tmp/arah kernel verify -target .
+          /tmp/arah sync-check -target . || true

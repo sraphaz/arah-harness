@@ -22,12 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate kernel manifests (syntax)
-        shell: pwsh
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Validate kernel package (H-15)
         run: |
-          $k = Join-Path $PWD 'kernel'
-          $agents = (Get-ChildItem $k/.agents -Recurse -Filter '*.agent.yaml').Count
-          $skills = (Get-ChildItem $k/.skills -Filter '*.skill.yaml').Count
-          if ($agents -lt 10) { throw "expected >= 10 agent manifests, got $agents" }
-          if ($skills -lt 15) { throw "expected >= 15 skills, got $skills" }
-          Write-Host "kernel OK: $agents agents, $skills skills"
+          go build -o /tmp/arah ./cmd/arah
+          /tmp/arah kernel verify -target .
+          agents=$(find kernel/.agents -name '*.agent.yaml' | wc -l)
+          skills=$(find kernel/.skills -name '*.skill.yaml' | wc -l)
+          test "$agents" -ge 10
+          test "$skills" -ge 15
+          echo "kernel OK: $agents agents, $skills skills (verify green)"

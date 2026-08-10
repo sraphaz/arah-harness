@@ -12,10 +12,14 @@ go build -o arah ./cmd/arah
 ./arah task timeline -task-id task-… --json
 ./arah evidence graph --json
 ./arah mcp serve -target .
+./arah kernel sync -target .
+./arah kernel verify -target .
 ```
 
 Hot state: `.arah/local/runtime.db` (SQLite WAL) with YAML mirror under
 `.arah/local/execution/` for PowerShell compatibility.
+
+Kernel package (H-15): edit root sources, then `kernel sync`. Do not hand-edit `kernel/`.
 
 | Exit | Meaning |
 |------|---------|
