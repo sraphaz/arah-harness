@@ -6,7 +6,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"os"
+	pathpkg "path"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -30,9 +32,10 @@ type Edge struct {
 
 // Graph is a deterministic evidence graph export (no LLM).
 type Graph struct {
-	Version string `json:"version"`
-	Nodes   []Node `json:"nodes"`
-	Edges   []Edge `json:"edges"`
+	Version  string   `json:"version"`
+	Nodes    []Node   `json:"nodes"`
+	Edges    []Edge   `json:"edges"`
+	Warnings []string `json:"warnings,omitempty"`
 }
 
 // Builder assembles an Evidence Graph from specs, capabilities, and tasks.
@@ -42,10 +45,19 @@ type Builder struct {
 	Events   core.EventStore
 }
 
+type specDoc struct {
+	ID         string   `yaml:"id"`
+	Title      string   `yaml:"title"`
+	Covers     []string `yaml:"covers"`
+	DependsOn  []string `yaml:"depends_on"`
+	Supersedes []string `yaml:"supersedes"`
+}
+
 // Build derives nodes and edges exclusively from Arah schemas and runtime state.
 func (b *Builder) Build() (*Graph, error) {
 	g := &Graph{Version: "1"}
 	idx := map[string]bool{}
+	edgeIdx := map[string]bool{}
 	add := func(n Node) {
 		if idx[n.ID] {
 			return
@@ -54,12 +66,23 @@ func (b *Builder) Build() (*Graph, error) {
 		g.Nodes = append(g.Nodes, n)
 	}
 	link := func(from, to, rel string) {
+		if from == "" || to == "" || rel == "" {
+			return
+		}
+		key := from + "\x00" + to + "\x00" + rel
+		if edgeIdx[key] {
+			return
+		}
+		edgeIdx[key] = true
 		g.Edges = append(g.Edges, Edge{From: from, To: to, Rel: rel})
 	}
 
-	// Specs → covers paths
+	coversBySpec := map[string][]string{}
+
+	// Specs: load all first so depends_on/supersedes stubs cannot steal the real title.
 	specDir := filepath.Join(b.RepoRoot, "docs", "specs")
 	entries, _ := os.ReadDir(specDir)
+	docsByID := map[string]specDoc{}
 	for _, e := range entries {
 		name := e.Name()
 		if e.IsDir() || !(strings.HasSuffix(name, ".spec.yaml") || strings.HasSuffix(name, ".yaml")) {
@@ -72,21 +95,58 @@ func (b *Builder) Build() (*Graph, error) {
 		if err != nil {
 			continue
 		}
-		var doc struct {
-			ID      string   `yaml:"id"`
-			Title   string   `yaml:"title"`
-			Covers  []string `yaml:"covers"`
-			Status  string   `yaml:"status"`
-		}
+		var doc specDoc
 		if yaml.Unmarshal(raw, &doc) != nil || doc.ID == "" {
 			continue
 		}
+		if _, exists := docsByID[doc.ID]; exists {
+			g.Warnings = append(g.Warnings, "duplicate spec id "+doc.ID+" in "+name+"; keeping first")
+			continue
+		}
+		docsByID[doc.ID] = doc
+	}
+	specIDs := make([]string, 0, len(docsByID))
+	for id := range docsByID {
+		specIDs = append(specIDs, id)
+	}
+	sort.Strings(specIDs)
+	for _, id := range specIDs {
+		doc := docsByID[id]
 		sid := "spec:" + doc.ID
-		add(Node{ID: sid, Type: "spec", Label: doc.Title})
+		label := doc.Title
+		if label == "" {
+			label = doc.ID
+		}
+		add(Node{ID: sid, Type: "spec", Label: label})
+		coversBySpec[doc.ID] = append([]string(nil), doc.Covers...)
 		for _, c := range doc.Covers {
 			pid := "path:" + c
 			add(Node{ID: pid, Type: "path", Label: c})
 			link(sid, pid, "covers")
+		}
+	}
+	for _, id := range specIDs {
+		doc := docsByID[id]
+		sid := "spec:" + doc.ID
+		for _, dep := range doc.DependsOn {
+			if dep == "" {
+				continue
+			}
+			did := "spec:" + dep
+			if _, ok := docsByID[dep]; !ok {
+				add(Node{ID: did, Type: "spec", Label: dep})
+			}
+			link(sid, did, "depends_on")
+		}
+		for _, old := range doc.Supersedes {
+			if old == "" {
+				continue
+			}
+			oid := "spec:" + old
+			if _, ok := docsByID[old]; !ok {
+				add(Node{ID: oid, Type: "spec", Label: old})
+			}
+			link(sid, oid, "supersedes")
 		}
 	}
 
@@ -110,57 +170,237 @@ func (b *Builder) Build() (*Graph, error) {
 		}
 	}
 
-	if b.Store == nil {
-		return g, nil
+	if b.Store != nil {
+		for _, bucket := range []string{"active", "completed", "blocked"} {
+			list, err := b.Store.List(bucket)
+			if err != nil {
+				continue
+			}
+			for _, c := range list {
+				tid := "task:" + c.TaskID
+				add(Node{ID: tid, Type: "task", Label: c.Objective})
+				if c.PrimaryExecutor != "" {
+					aid := "agent:" + c.PrimaryExecutor
+					add(Node{ID: aid, Type: "agent", Label: c.PrimaryExecutor})
+					link(tid, aid, "assigned_to")
+				}
+				for _, cons := range c.Participants.Consultants {
+					aid := "agent:" + cons
+					add(Node{ID: aid, Type: "agent", Label: cons})
+					link(tid, aid, "consulted")
+				}
+				for _, ev := range c.Execution.CompletionEvidence {
+					eid := "evidence:" + stableID(ev)
+					add(Node{ID: eid, Type: "evidence", Label: ev})
+					link(tid, eid, "evidenced_by")
+				}
+
+				produced := changedFilePaths(c)
+				for _, f := range produced {
+					pid := "path:" + f
+					add(Node{ID: pid, Type: "path", Label: f})
+					link(tid, pid, "produced")
+				}
+				referenced := evidencePathRefs(c)
+				for _, f := range referenced {
+					pid := "path:" + f
+					add(Node{ID: pid, Type: "path", Label: f})
+					link(tid, pid, "references")
+				}
+
+				if c.State == core.StateBlocked && c.Result.BlockingReason != nil {
+					bid := "block:" + stableID(*c.Result.BlockingReason)
+					add(Node{ID: bid, Type: "blocker", Label: *c.Result.BlockingReason})
+					link(tid, bid, "blocked_by")
+				}
+
+				// implements: path overlap with covers using produced ∪ referenced paths
+				linked := append(append([]string{}, produced...), referenced...)
+				for specID, covers := range coversBySpec {
+					if pathsOverlap(linked, covers) {
+						link(tid, "spec:"+specID, "implements")
+					}
+				}
+
+				// All retained events for this task (unbounded) → run nodes
+				if b.Events != nil {
+					evs, err := b.Events.ListByTask(c.TaskID)
+					if err == nil {
+						for _, ev := range evs {
+							rid := runNodeID(ev)
+							label := ev.Kind
+							if ev.TraceID != "" {
+								label = ev.TraceID
+							}
+							add(Node{ID: rid, Type: "run", Label: label})
+							link(tid, rid, "evidenced_by")
+						}
+					}
+				}
+			}
+		}
 	}
-	for _, bucket := range []string{"active", "completed", "blocked"} {
-		list, err := b.Store.List(bucket)
-		if err != nil {
+
+	sort.Slice(g.Nodes, func(i, j int) bool { return g.Nodes[i].ID < g.Nodes[j].ID })
+	sort.Slice(g.Edges, func(i, j int) bool {
+		if g.Edges[i].From != g.Edges[j].From {
+			return g.Edges[i].From < g.Edges[j].From
+		}
+		if g.Edges[i].To != g.Edges[j].To {
+			return g.Edges[i].To < g.Edges[j].To
+		}
+		return g.Edges[i].Rel < g.Edges[j].Rel
+	})
+	return g, nil
+}
+
+func runNodeID(ev core.Event) string {
+	if strings.TrimSpace(ev.TraceID) != "" {
+		return "run:" + ev.TraceID
+	}
+	if strings.TrimSpace(ev.ID) != "" {
+		return "run:" + ev.ID
+	}
+	return "run:" + stableID(ev.TaskID+"|"+ev.Kind+"|"+ev.At)
+}
+
+func changedFilePaths(c *core.Contract) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, f := range c.Result.ChangedFiles {
+		p := normalizeRepoPath(f)
+		if p == "" || seen[p] {
 			continue
 		}
-		for _, c := range list {
-			tid := "task:" + c.TaskID
-			add(Node{ID: tid, Type: "task", Label: c.Objective})
-			if c.PrimaryExecutor != "" {
-				aid := "agent:" + c.PrimaryExecutor
-				add(Node{ID: aid, Type: "agent", Label: c.PrimaryExecutor})
-				link(tid, aid, "assigned_to")
+		seen[p] = true
+		out = append(out, p)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func evidencePathRefs(c *core.Contract) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, ev := range c.Execution.CompletionEvidence {
+		for _, p := range pathCandidates(ev) {
+			p = normalizeRepoPath(p)
+			if p == "" || seen[p] {
+				continue
 			}
-			for _, cons := range c.Participants.Consultants {
-				aid := "agent:" + cons
-				add(Node{ID: aid, Type: "agent", Label: cons})
-				link(tid, aid, "consulted")
-			}
-			for _, ev := range c.Execution.CompletionEvidence {
-				eid := "evidence:" + stableID(ev)
-				add(Node{ID: eid, Type: "evidence", Label: ev})
-				link(tid, eid, "evidenced_by")
-			}
-			for _, f := range c.Result.ChangedFiles {
-				pid := "path:" + f
-				add(Node{ID: pid, Type: "path", Label: f})
-				link(tid, pid, "produced")
-			}
-			if c.State == core.StateBlocked && c.Result.BlockingReason != nil {
-				bid := "block:" + stableID(*c.Result.BlockingReason)
-				add(Node{ID: bid, Type: "blocker", Label: *c.Result.BlockingReason})
-				link(tid, bid, "blocked_by")
-			}
-			// Heuristic: task implements specs whose covers overlap changed files / evidence
-			for _, n := range g.Nodes {
-				if n.Type != "spec" {
-					continue
-				}
-				// link if objective or evidence mentions spec id
-				specID := strings.TrimPrefix(n.ID, "spec:")
-				blob := strings.ToLower(c.Objective + " " + strings.Join(c.Execution.CompletionEvidence, " "))
-				if strings.Contains(blob, strings.ToLower(specID)) || strings.Contains(blob, "runtime-cohesion") && specID == "arah-runtime-cohesion" {
-					link(tid, n.ID, "implements")
-				}
+			seen[p] = true
+			out = append(out, p)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+func pathCandidates(s string) []string {
+	var out []string
+	for _, tok := range strings.Fields(s) {
+		tok = strings.Trim(tok, ",:;()[]{}<>\"'`.")
+		if tok == "" {
+			continue
+		}
+		if strings.ContainsAny(tok, `/\`) || looksLikeFile(tok) {
+			out = append(out, tok)
+		}
+	}
+	return out
+}
+
+func looksLikeFile(s string) bool {
+	lower := strings.ToLower(normalizeRepoPath(s))
+	for _, ext := range []string{".go", ".yaml", ".yml", ".md", ".json", ".ps1", ".ts", ".tsx"} {
+		if strings.HasSuffix(lower, ext) {
+			return true
+		}
+	}
+	return false
+}
+
+func pathsOverlap(produced, covers []string) bool {
+	for _, p := range produced {
+		for _, c := range covers {
+			if pathMatchesCover(p, c) {
+				return true
 			}
 		}
 	}
-	return g, nil
+	return false
+}
+
+func normalizeRepoPath(p string) string {
+	p = strings.TrimSpace(p)
+	if p == "" {
+		return ""
+	}
+	keepSlash := strings.HasSuffix(p, "/") || strings.HasSuffix(p, `\`)
+	p = strings.ReplaceAll(p, `\`, "/")
+	p = pathpkg.Clean("/" + p)[1:]
+	if keepSlash && p != "" && !strings.HasSuffix(p, "/") {
+		p += "/"
+	}
+	return p
+}
+
+func pathMatchesCover(filePath, cover string) bool {
+	filePath = normalizeRepoPath(filePath)
+	cover = normalizeRepoPath(cover)
+	if filePath == "" || cover == "" {
+		return false
+	}
+	if strings.ContainsAny(cover, "*?[") {
+		ok, err := matchPathGlob(cover, filePath)
+		return err == nil && ok
+	}
+	if filePath == cover {
+		return true
+	}
+	if strings.HasSuffix(cover, "/") {
+		return strings.HasPrefix(filePath, cover)
+	}
+	return strings.HasPrefix(filePath, cover+"/")
+}
+
+// matchPathGlob matches slash-separated globs including ** (any path segments).
+func matchPathGlob(pattern, name string) (bool, error) {
+	return matchGlobSegs(strings.Split(pattern, "/"), strings.Split(name, "/"))
+}
+
+func matchGlobSegs(pat, name []string) (bool, error) {
+	for len(pat) > 0 {
+		if pat[0] == "**" {
+			pat = pat[1:]
+			if len(pat) == 0 {
+				return true, nil
+			}
+			for i := 0; i <= len(name); i++ {
+				ok, err := matchGlobSegs(pat, name[i:])
+				if err != nil {
+					return false, err
+				}
+				if ok {
+					return true, nil
+				}
+			}
+			return false, nil
+		}
+		if len(name) == 0 {
+			return false, nil
+		}
+		ok, err := pathpkg.Match(pat[0], name[0])
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+		pat = pat[1:]
+		name = name[1:]
+	}
+	return len(name) == 0, nil
 }
 
 // stableID returns a collision-resistant id fragment for free-form strings.

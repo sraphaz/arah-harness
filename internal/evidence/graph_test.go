@@ -1,6 +1,8 @@
 package evidence_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,13 +14,20 @@ import (
 	"github.com/sraphaz/arah-harness/internal/evidence"
 )
 
+func writeDemoSpec(t *testing.T, root string) {
+	t.Helper()
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "demo.spec.yaml"), []byte(
+		"id: demo-spec\ntitle: Demo\ncovers:\n  - internal/core/\ndepends_on:\n  - base-spec\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "base.spec.yaml"), []byte(
+		"id: base-spec\ntitle: Base\ncovers:\n  - docs/\n"), 0o644)
+}
+
 func TestEvidenceGraphFromTask(t *testing.T) {
 	root := t.TempDir()
 	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
 	_ = os.WriteFile(filepath.Join(root, ".agents", "choreography.yaml"), []byte("version: 2\nrules: []\n"), 0o644)
-	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
-	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "demo.spec.yaml"), []byte(
-		"id: demo-spec\ntitle: Demo\ncovers:\n  - internal/core/\n"), 0o644)
+	writeDemoSpec(t, root)
 
 	store, err := sqlitestore.New(root)
 	if err != nil {
@@ -26,7 +35,7 @@ func TestEvidenceGraphFromTask(t *testing.T) {
 	}
 	defer store.Close()
 	svc := &core.TaskService{Store: store, Events: store, Router: choreography.New(root)}
-	created, err := svc.Create("implement demo-spec", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	created, err := svc.Create("ship core change", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,18 +52,207 @@ func TestEvidenceGraphFromTask(t *testing.T) {
 	}
 	hasSpec := false
 	hasAssigned := false
+	hasImplements := false
+	hasReferences := false
+	hasDepends := false
+	hasRun := false
 	for _, n := range g.Nodes {
 		if n.Type == "spec" {
 			hasSpec = true
 		}
-	}
-	for _, e := range g.Edges {
-		if e.Rel == "assigned_to" {
-			hasAssigned = true
+		if n.Type == "run" {
+			hasRun = true
 		}
 	}
-	if !hasSpec || !hasAssigned {
-		t.Fatalf("expected spec+assigned_to, graph=%+v", g)
+	for _, e := range g.Edges {
+		switch e.Rel {
+		case "assigned_to":
+			hasAssigned = true
+		case "implements":
+			hasImplements = true
+		case "references":
+			hasReferences = true
+		case "depends_on":
+			hasDepends = true
+		}
+	}
+	if !hasSpec || !hasAssigned || !hasImplements || !hasReferences || !hasDepends || !hasRun {
+		t.Fatalf("expected spec+assigned+implements+references+depends_on+run, graph=%+v", g)
+	}
+}
+
+func TestEvidenceGraphDeterministicExport(t *testing.T) {
+	root := t.TempDir()
+	writeDemoSpec(t, root)
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	svc := &core.TaskService{Store: store, Events: store, Router: choreography.New(root)}
+	created, err := svc.Create("stable", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = svc.Complete(created.Contract.TaskID, []string{"docs/ROADMAP.md touched"}, core.MutateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	b := &evidence.Builder{RepoRoot: root, Store: store, Events: store}
+	a, err := b.Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := b.Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ra, _ := json.Marshal(a)
+	rc, _ := json.Marshal(c)
+	if string(ra) != string(rc) {
+		t.Fatalf("evidence graph export not stable\nA=%s\nB=%s", ra, rc)
+	}
+}
+
+func TestEvidenceGraphRejectsFreeTextImplements(t *testing.T) {
+	root := t.TempDir()
+	writeDemoSpec(t, root)
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	c := &core.Contract{
+		Version: "1.0", TaskID: "task-x", Objective: "please implement demo-spec runtime-cohesion",
+		State: core.StateDone, PrimaryExecutor: "backend",
+		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		// Concrete path outside every covers entry; objective alone must not create implements.
+		Execution: core.Execution{CompletionEvidence: []string{"scripts/unrelated.ps1 updated"}},
+	}
+	if _, err := store.Save(c); err != nil {
+		t.Fatal(err)
+	}
+	g, err := (&evidence.Builder{RepoRoot: root, Store: store}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range g.Edges {
+		if e.Rel == "implements" {
+			t.Fatalf("free-text objective must not create implements: %+v", e)
+		}
+	}
+}
+
+func TestEvidenceGraphPreservesDependencySpecTitles(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	// Filename order: demo.spec.yaml before other.spec.yaml — previously stole the title.
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "demo.spec.yaml"), []byte(
+		"id: demo-spec\ntitle: Demo\ncovers:\n  - cmd/\ndepends_on:\n  - other-spec\nsupersedes:\n  - legacy-missing-spec\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "other.spec.yaml"), []byte(
+		"id: other-spec\ntitle: Other Canonical Title\ncovers:\n  - docs/\n"), 0o644)
+
+	g, err := (&evidence.Builder{RepoRoot: root}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var label string
+	for _, n := range g.Nodes {
+		if n.ID == "spec:other-spec" {
+			label = n.Label
+			break
+		}
+	}
+	if label != "Other Canonical Title" {
+		t.Fatalf("expected YAML title on dependency node, got %q", label)
+	}
+	hasSupersedes := false
+	stubLabel := ""
+	for _, n := range g.Nodes {
+		if n.ID == "spec:legacy-missing-spec" {
+			stubLabel = n.Label
+		}
+	}
+	for _, e := range g.Edges {
+		if e.Rel == "supersedes" && e.From == "spec:demo-spec" && e.To == "spec:legacy-missing-spec" {
+			hasSupersedes = true
+		}
+	}
+	if !hasSupersedes || stubLabel != "legacy-missing-spec" {
+		t.Fatalf("expected supersedes stub, hasEdge=%v stubLabel=%q graph=%+v", hasSupersedes, stubLabel, g)
+	}
+}
+
+func TestEvidenceGraphGlobCoversAndWindowsPaths(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "alertas.spec.yaml"), []byte(
+		"id: alertas\ntitle: Alertas\ncovers:\n  - apps/alertas/**\n"), 0o644)
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	c := &core.Contract{
+		Version: "1.0", TaskID: "task-win", Objective: "alerts", State: core.StateDone,
+		PrimaryExecutor: "backend", WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		Execution: core.Execution{CompletionEvidence: []string{`apps\alertas\handler.go updated`}},
+	}
+	if _, err := store.Save(c); err != nil {
+		t.Fatal(err)
+	}
+	g, err := (&evidence.Builder{RepoRoot: root, Store: store}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	hasImplements := false
+	hasReferences := false
+	for _, e := range g.Edges {
+		if e.Rel == "implements" && e.To == "spec:alertas" {
+			hasImplements = true
+		}
+		if e.Rel == "references" && e.To == "path:apps/alertas/handler.go" {
+			hasReferences = true
+		}
+	}
+	if !hasImplements || !hasReferences {
+		t.Fatalf("expected glob+windows-path implements/references, graph=%+v", g)
+	}
+}
+
+func TestEvidenceGraphIncludesAllTaskEvents(t *testing.T) {
+	root := t.TempDir()
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	svc := &core.TaskService{Store: store, Events: store, Router: choreography.New(root)}
+	created, err := svc.Create("many events", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := created.Contract.TaskID
+	for i := 0; i < 20; i++ {
+		if err := store.Append(core.Event{
+			ID: fmt.Sprintf("extra-%d", i), TaskID: id, Kind: "task.note",
+			At: fmt.Sprintf("2026-08-10T00:00:%02dZ", i), TraceID: fmt.Sprintf("trace-%d", i),
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g, err := (&evidence.Builder{RepoRoot: root, Store: store, Events: store}).Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	runs := 0
+	for _, n := range g.Nodes {
+		if n.Type == "run" {
+			runs++
+		}
+	}
+	// create emits multiple events sharing traces + 20 unique trace-* runs
+	if runs < 20 {
+		t.Fatalf("expected run nodes for retained events, got %d", runs)
 	}
 }
 

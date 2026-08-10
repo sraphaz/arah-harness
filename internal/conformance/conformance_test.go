@@ -16,6 +16,7 @@ import (
 	"github.com/sraphaz/arah-harness/internal/adapters/sqlitestore"
 	"github.com/sraphaz/arah-harness/internal/core"
 	"github.com/sraphaz/arah-harness/internal/envelope"
+	"github.com/sraphaz/arah-harness/internal/evidence"
 	arahmcp "github.com/sraphaz/arah-harness/internal/mcp"
 )
 
@@ -188,5 +189,114 @@ func TestCompleteDryRunLeavesTaskExecuting(t *testing.T) {
 	}
 	if got.State != core.StateExecuting {
 		t.Fatalf("persisted state mutated: %s", got.State)
+	}
+}
+
+func TestCLIMCPParityOnEvidenceGraph(t *testing.T) {
+	root, svc := fixtureRepo(t)
+	_ = os.MkdirAll(filepath.Join(root, "docs", "specs"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "docs", "specs", "demo.spec.yaml"), []byte(
+		"id: demo-spec\ntitle: Demo\ncovers:\n  - cmd/\ndepends_on:\n  - other-spec\n"), 0o644)
+	created, err := svc.Create("parity graph", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = svc.Complete(created.Contract.TaskID, []string{"cmd/arah/main.go updated"}, core.MutateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Release the fixture DB before the CLI subprocess opens it.
+	store, ok := svc.Store.(*sqlitestore.Store)
+	if !ok {
+		t.Fatal("expected sqlitestore.Store")
+	}
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	bin := buildArahCLI(t)
+	cliOut, err := exec.Command(bin, "evidence", "graph", "--json", "--target", root).CombinedOutput()
+	if err != nil {
+		t.Fatalf("cli evidence graph: %v\n%s", err, cliOut)
+	}
+	var cliEnv envelope.Envelope
+	if err := json.Unmarshal(cliOut, &cliEnv); err != nil {
+		t.Fatalf("cli envelope: %v\n%s", err, cliOut)
+	}
+	if !cliEnv.OK {
+		t.Fatalf("cli not ok: %#v", cliEnv)
+	}
+	assertEvidenceGraphPayload(t, cliEnv.Data)
+	cliRaw, err := json.Marshal(cliEnv.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	store2, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = store2.Close() })
+	svc2 := &core.TaskService{Store: store2, Events: store2, Router: svc.Router}
+	eb := &evidence.Builder{RepoRoot: root, Store: store2, Events: store2}
+	in := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"arah_get_evidence_graph","arguments":{}}}` + "\n"
+	var out bytes.Buffer
+	srv := &arahmcp.Server{Tasks: svc2, Evidence: eb, Version: "test", Reader: strings.NewReader(in), Writer: &out}
+	if err := srv.Run(); err != nil {
+		t.Fatal(err)
+	}
+	text := mcpResultText(t, out.Bytes())
+	var mcpEnv envelope.Envelope
+	if err := json.Unmarshal([]byte(text), &mcpEnv); err != nil {
+		t.Fatal(err)
+	}
+	assertEvidenceGraphPayload(t, mcpEnv.Data)
+	mcpRaw, err := json.Marshal(mcpEnv.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(cliRaw) != string(mcpRaw) {
+		t.Fatalf("evidence graph CLI≠MCP\ncli=%s\nmcp=%s", cliRaw, mcpRaw)
+	}
+}
+
+func mcpResultText(t *testing.T, raw []byte) string {
+	t.Helper()
+	var resp map[string]any
+	if err := json.Unmarshal([]byte(strings.TrimSpace(string(raw))), &resp); err != nil {
+		t.Fatalf("rpc decode: %v\n%s", err, raw)
+	}
+	result, ok := resp["result"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing result: %#v", resp)
+	}
+	if result["isError"] == true {
+		t.Fatalf("mcp error: %#v", result)
+	}
+	content, ok := result["content"].([]any)
+	if !ok || len(content) == 0 {
+		t.Fatalf("missing content: %#v", result)
+	}
+	item, ok := content[0].(map[string]any)
+	if !ok {
+		t.Fatalf("bad content item: %#v", content[0])
+	}
+	text, ok := item["text"].(string)
+	if !ok || text == "" {
+		t.Fatalf("missing text: %#v", item)
+	}
+	return text
+}
+
+func assertEvidenceGraphPayload(t *testing.T, data any) {
+	t.Helper()
+	m, ok := data.(map[string]any)
+	if !ok || m == nil {
+		t.Fatalf("expected graph object, got %T %#v", data, data)
+	}
+	nodes, _ := m["nodes"].([]any)
+	edges, _ := m["edges"].([]any)
+	if len(nodes) == 0 || len(edges) == 0 {
+		t.Fatalf("expected non-empty evidence graph, nodes=%d edges=%d", len(nodes), len(edges))
 	}
 }

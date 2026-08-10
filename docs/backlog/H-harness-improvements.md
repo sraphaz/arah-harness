@@ -22,7 +22,7 @@
 | H-15 | Kernel gerado (fim da segunda fonte) | **partial** — sync/verify + go:embed zip + `arah kernel install` |
 | H-16 | StateStore SQLite + migração | **done** — `.arah/local/runtime.db` WAL + mirror YAML; schema Up/Down testados (v2) |
 | H-17 | MCP serve (mesmos use cases da CLI) | **in progress** — tools ECP + timeline + evidence; `dry_run` nas mutações |
-| H-18 | Evidence Graph determinístico | **in progress** — `arah evidence graph` + MCP tool |
+| H-18 | Evidence Graph determinístico | **done** — specs/tasks/events; depends_on/supersedes; implements path↔covers; run; CLI↔MCP |
 | H-19 | Timeline unificada task/run | **partial** — `task timeline` + EventStore; correlacionadores amplos TBD |
 | H-20 | Conformance suite + fixtures | **partial** — `internal/conformance` create dry-run CLI↔MCP, error codes |
 
@@ -107,9 +107,14 @@ Schema versionado (`schema_meta`) com Up/Down testados — v2 adiciona
 Tools: capabilities, get/create/complete/block task, timeline, evidence graph.
 `dry_run` é opção das tools de mutação de task — não é tool MCP à parte.
 
-### H-18 · Evidence Graph — in progress P1
-Grafo determinístico schemas→arestas (`internal/evidence`). CLI
-`arah evidence graph`. IDs estáveis via SHA-256.
+### H-18 · Evidence Graph — done P1
+Grafo determinístico (`internal/evidence`) a partir de specs, capabilities, tasks,
+completion evidence, `ChangedFiles` (`produced`), paths citados na evidence
+(`references`) e eventos do EventStore. CLI `arah evidence graph` + MCP
+`arah_get_evidence_graph`. IDs estáveis com prefixo de tipo (`spec:`, `task:`, …);
+só conteúdo free-form (evidence/blocker) usa SHA-256 truncado. Nodes/edges
+ordenados; `depends_on`/`supersedes` são relações de metadata entre specs;
+`implements` é overlap path↔`covers` (glob); paridade CLI↔MCP no conformance.
 
 ### H-19 · Timeline por Run — partial P1
 `arah task timeline` + EventStore. Correlacionadores amplos / OTel ainda TBD.
