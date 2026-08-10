@@ -19,9 +19,18 @@ manifests, templates e regras. O CLI Go (H-07) cobre só leitura
 arquivo-por-evento, adequado hoje, mas frágil para CLI + MCP + extensão +
 futuro daemon concorrentes.
 
-Avaliou-se absorver idéias de um kernel externo (RAG, ontologia aprendida).
-Isso **não** resolve a coesão do harness: acoplaria produto alheio sem
-consolidar invariantes locais.
+Avaliou-se absorver o produto
+[rafaelnicolett/kern](https://github.com/rafaelnicolett/kern) (RAG local +
+ontologia incremental via MCP). **Não** copiamos RAG nem ontologia aprendida.
+Absorvemos decisões de engenharia documentadas nos ADRs do kern:
+
+| Kern | Arah Harness |
+|------|--------------|
+| ADR-0001 Hexagonal | `internal/core` + adapters (`fsstore`, `choreography`, `mcp`) |
+| ADR-0007 MCP primary contract | `arah mcp serve` + `docs/architecture/mcp-tool-contract.md` |
+| ADR-0004 SQLite local / per-project | StateStore port; filesystem agora, SQLite (H-16) em seguida |
+| Envelope de erro tipado | Implementado de forma **mais estrita** que o kern (JSON `code`/`trace_id`) |
+| Binário local coeso | CLI Go canônica para Execution Control |
 
 ## Options
 

@@ -6,7 +6,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ### Added
 
-- **Direção 0.5 — Runtime Cohesion** (docs; implementação em H-13…H-20)
+- **arah-core (0.5 foundation)** — runtime Go hexagonal inspirado em
+  [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern) (engenharia, não RAG)
+  - `internal/core` — Execution Control tipado (transitions, evidence, TaskService)
+  - `internal/adapters/fsstore` + `choreography` — StateStore filesystem
+  - `internal/envelope` — contrato JSON `ok/code/trace_id/remediation`
+  - CLI: `arah task create|status|complete|block` e `arah mcp serve`
+  - Contrato MCP: [`docs/architecture/mcp-tool-contract.md`](docs/architecture/mcp-tool-contract.md)
+  - Testes: `go test ./...`
+- **Direção 0.5 — Runtime Cohesion** (docs)
   - ADR-002: [`docs/adr/002-runtime-cohesion-0.5.md`](docs/adr/002-runtime-cohesion-0.5.md)
   - Arquitetura: [`docs/architecture/RUNTIME_COHESION.md`](docs/architecture/RUNTIME_COHESION.md)
   - Spec draft: `arah-runtime-cohesion`

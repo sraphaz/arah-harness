@@ -1,16 +1,20 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sraphaz/arah-harness/internal/adapters/choreography"
+	"github.com/sraphaz/arah-harness/internal/adapters/fsstore"
+	"github.com/sraphaz/arah-harness/internal/core"
+	"github.com/sraphaz/arah-harness/internal/envelope"
+	arahmcp "github.com/sraphaz/arah-harness/internal/mcp"
 )
 
-// Portable CLI phase 1 (H-07): read/validate commands with exit-code parity.
-// PowerShell remains the full surface; this binary covers doctor + sync-check.
+// Version tracks runtime cohesion work (0.5 foundation on 0.4.4 tree).
+const Version = "0.5.0-dev"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -18,43 +22,148 @@ func main() {
 		os.Exit(10)
 	}
 	cmd := os.Args[1]
-	fs := flag.NewFlagSet(cmd, flag.ExitOnError)
-	target := fs.String("target", ".", "repository path")
-	_ = fs.Parse(os.Args[2:])
-
-	root, err := filepath.Abs(*target)
+	args := os.Args[2:]
+	jsonOut := hasFlag(args, "--json")
+	target := flagValue(args, "-target", "--target", ".")
+	root, err := filepath.Abs(target)
 	if err != nil {
-		fail(1, err.Error())
+		failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
 	}
 
 	switch cmd {
 	case "doctor":
-		os.Exit(runDoctor(root))
+		os.Exit(runDoctor(root, jsonOut))
 	case "sync-check":
-		os.Exit(runSyncCheck(root))
+		os.Exit(runSyncCheck(root, jsonOut))
 	case "version":
-		fmt.Println("arah (go) 0.3.1-phase1")
+		if jsonOut {
+			os.Exit(envelope.WriteJSON(os.Stdout, envelope.OK(map[string]any{
+				"version": Version,
+				"runtime": "arah-core",
+			})))
+		}
+		fmt.Printf("arah (go) %s\n", Version)
+	case "task":
+		os.Exit(runTask(root, args, jsonOut))
+	case "mcp":
+		if len(args) == 0 || args[0] != "serve" {
+			failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah mcp serve [-target path]", nil))
+		}
+		svc := newTaskService(root)
+		srv := &arahmcp.Server{Tasks: svc, Version: Version}
+		if err := srv.Run(); err != nil {
+			failEnv(true, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
+		}
 	case "help", "-h", "--help":
 		usage()
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command %q (phase1: doctor|sync-check|version)\n", cmd)
-		os.Exit(10)
+		msg := fmt.Sprintf("unknown command %q", cmd)
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, msg, nil, "arah doctor|sync-check|version|task|mcp"))
 	}
 }
 
-func usage() {
-	fmt.Print(`ARAH portable CLI (Go) — phase 1
-
-  arah doctor [-target path]
-  arah sync-check [-target path]
-  arah version
-
-Exit codes: 0 ok · 1 error · 2 drift · 4 unhealthy · 10 usage
-PowerShell CLI remains canonical for write/organism flows.
-`)
+func newTaskService(root string) *core.TaskService {
+	return &core.TaskService{
+		Store:  fsstore.New(root),
+		Router: choreography.New(root),
+	}
 }
 
-func runDoctor(root string) int {
+func runTask(root string, args []string, jsonOut bool) int {
+	if len(args) == 0 {
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block>", nil))
+	}
+	// strip global flags from subcommand position
+	subArgs := stripGlobalFlags(args)
+	if len(subArgs) == 0 {
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block>", nil))
+	}
+	action := subArgs[0]
+	rest := subArgs[1:]
+	svc := newTaskService(root)
+
+	switch action {
+	case "create":
+		obj := flagValue(rest, "-objective", "--objective", "")
+		area := flagValue(rest, "-area", "--area", "backend")
+		wc := flagValue(rest, "-class", "--class", "standard")
+		intent := flagValue(rest, "-intent", "--intent", "execution")
+		c, path, err := svc.Create(obj, area, core.WorkClass(wc), core.IntentType(intent))
+		return emitTask(jsonOut, c, path, err)
+	case "status":
+		id := flagValue(rest, "-task-id", "--task-id", "")
+		if id == "" && len(rest) > 0 && !strings.HasPrefix(rest[0], "-") {
+			id = rest[0]
+		}
+		c, path, err := svc.Get(id)
+		return emitTask(jsonOut, c, path, err)
+	case "complete":
+		id := flagValue(rest, "-task-id", "--task-id", "")
+		ev := flagValue(rest, "-evidence", "--evidence", "")
+		c, path, err := svc.Complete(id, []string{ev})
+		return emitTask(jsonOut, c, path, err)
+	case "block":
+		id := flagValue(rest, "-task-id", "--task-id", "")
+		reason := flagValue(rest, "-reason", "--reason", "")
+		c, path, err := svc.Block(id, reason)
+		return emitTask(jsonOut, c, path, err)
+	default:
+		return envelope.WriteJSON(os.Stdout, envelope.Fail(envelope.CodeUsage, "unknown task action: "+action, nil))
+	}
+}
+
+func emitTask(jsonOut bool, c *core.Contract, path string, err error) int {
+	if err != nil {
+		return failEnv(jsonOut, domainEnv(err))
+	}
+	data := map[string]any{
+		"task_id":          c.TaskID,
+		"state":            c.State,
+		"primary_executor": c.PrimaryExecutor,
+		"objective":        c.Objective,
+		"work_class":       c.WorkClass,
+		"intent_type":      c.IntentType,
+		"path":             path,
+		"choreography_rule": c.ChoreographyRule,
+		"evidence":         c.Execution.CompletionEvidence,
+		"blocking_reason":  c.Result.BlockingReason,
+	}
+	if jsonOut {
+		return envelope.WriteJSON(os.Stdout, envelope.OK(data))
+	}
+	fmt.Printf("task %s: %s\n", c.TaskID, c.State)
+	fmt.Printf("  executor: %s\n", c.PrimaryExecutor)
+	fmt.Printf("  objective: %s\n", c.Objective)
+	fmt.Printf("  path: %s\n", path)
+	if c.Result.BlockingReason != nil {
+		fmt.Printf("  blocked: %s\n", *c.Result.BlockingReason)
+	}
+	return 0
+}
+
+func domainEnv(err error) envelope.Envelope {
+	if de, ok := err.(*core.DomainError); ok {
+		return envelope.Fail(de.Code, de.Message, de.Details, de.Remediation...)
+	}
+	return envelope.Fail(envelope.CodeInternal, err.Error(), nil)
+}
+
+func failEnv(jsonOut bool, env envelope.Envelope) int {
+	if jsonOut {
+		code := envelope.WriteJSON(os.Stdout, env)
+		os.Exit(code)
+	}
+	if !env.OK {
+		fmt.Fprintf(os.Stderr, "%s: %s\n", env.Code, env.Message)
+		if env.Code == envelope.CodeUsage {
+			os.Exit(10)
+		}
+		os.Exit(1)
+	}
+	return 0
+}
+
+func runDoctor(root string, jsonOut bool) int {
 	checks := []struct {
 		rel  string
 		name string
@@ -65,11 +174,26 @@ func runDoctor(root string) int {
 		{".skills", ".skills"},
 		{filepath.Join("scripts", "agents", "validate-manifests.ps1"), "validate-manifests.ps1"},
 	}
+	missing := []string{}
+	for _, c := range checks {
+		if _, err := os.Stat(filepath.Join(root, c.rel)); err != nil {
+			missing = append(missing, c.name)
+		}
+	}
+	if jsonOut {
+		ok := len(missing) == 0
+		env := envelope.OK(map[string]any{"root": root, "missing": missing, "healthy": ok})
+		if !ok {
+			env = envelope.Fail("DOCTOR.UNHEALTHY", "doctor: unhealthy", map[string]any{"missing": missing})
+			_ = envelope.WriteJSON(os.Stdout, env)
+			return 4
+		}
+		return envelope.WriteJSON(os.Stdout, env)
+	}
 	fmt.Printf("ARAH doctor (go) — %s\n", root)
 	bad := 0
 	for _, c := range checks {
-		p := filepath.Join(root, c.rel)
-		if _, err := os.Stat(p); err != nil {
+		if _, err := os.Stat(filepath.Join(root, c.rel)); err != nil {
 			fmt.Printf("  [missing] %s\n", c.name)
 			bad++
 		} else {
@@ -84,7 +208,7 @@ func runDoctor(root string) int {
 	return 0
 }
 
-func runSyncCheck(root string) int {
+func runSyncCheck(root string, jsonOut bool) int {
 	graph := filepath.Join(root, "docs", "_meta", "agent-graph.generated.json")
 	ver := filepath.Join(root, ".arah-version")
 	missing := []string{}
@@ -95,24 +219,101 @@ func runSyncCheck(root string) int {
 		missing = append(missing, ".arah-version")
 	}
 	if len(missing) > 0 {
+		if jsonOut {
+			_ = envelope.WriteJSON(os.Stdout, envelope.Fail("SYNC.DRIFT", "sync-check: drift", map[string]any{"missing": missing}))
+			return 2
+		}
 		fmt.Printf("sync-check: drift — missing %s\n", strings.Join(missing, ", "))
 		return 2
 	}
-	// Optional: parse graph JSON for sanity
-	b, err := os.ReadFile(graph)
-	if err != nil {
-		fail(1, err.Error())
-	}
-	var probe any
-	if err := json.Unmarshal(b, &probe); err != nil {
-		fmt.Println("sync-check: drift — graph JSON invalid")
-		return 2
+	if jsonOut {
+		return envelope.WriteJSON(os.Stdout, envelope.OK(map[string]any{"drift": false}))
 	}
 	fmt.Println("sync-check: OK")
 	return 0
 }
 
-func fail(code int, msg string) {
-	fmt.Fprintln(os.Stderr, msg)
-	os.Exit(code)
+func usage() {
+	fmt.Print(`ARAH portable CLI (Go) — arah-core 0.5 foundation
+
+  arah doctor [-target path] [--json]
+  arah sync-check [-target path] [--json]
+  arah version [--json]
+  arah task create -objective "…" [-area backend] [-class standard] [--json]
+  arah task status -task-id ID [--json]
+  arah task complete -task-id ID -evidence "…" [--json]
+  arah task block -task-id ID -reason "…" [--json]
+  arah mcp serve [-target path]
+
+Exit codes: 0 ok · 1 error · 2 drift · 4 unhealthy · 10 usage
+CLI and MCP share arah-core use cases (inspired by rafaelnicolett/kern).
+`)
+}
+
+func hasFlag(args []string, name string) bool {
+	for _, a := range args {
+		if a == name {
+			return true
+		}
+	}
+	return false
+}
+
+func flagValue(args []string, names ...string) string {
+	def := ""
+	if len(names) > 0 {
+		// last optional default if passed as final non-dash? we use separate def param pattern
+	}
+	// signature: flagValue(args, "-a", "--a", default)
+	lookup := map[string]bool{}
+	n := len(names)
+	if n >= 1 {
+		def = names[n-1]
+		if strings.HasPrefix(def, "-") {
+			def = ""
+		} else {
+			names = names[:n-1]
+		}
+	}
+	for _, name := range names {
+		lookup[name] = true
+	}
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if lookup[a] && i+1 < len(args) {
+			return args[i+1]
+		}
+		for name := range lookup {
+			prefix := name + "="
+			if strings.HasPrefix(a, prefix) {
+				return strings.TrimPrefix(a, prefix)
+			}
+		}
+	}
+	return def
+}
+
+func stripGlobalFlags(args []string) []string {
+	out := make([]string, 0, len(args))
+	skip := false
+	for i := 0; i < len(args); i++ {
+		if skip {
+			skip = false
+			continue
+		}
+		a := args[i]
+		switch a {
+		case "--json":
+			continue
+		case "-target", "--target":
+			skip = true
+			continue
+		default:
+			if strings.HasPrefix(a, "-target=") || strings.HasPrefix(a, "--target=") {
+				continue
+			}
+			out = append(out, a)
+		}
+	}
+	return out
 }

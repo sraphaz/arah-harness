@@ -28,20 +28,20 @@ transacional, explicável e acessível por contratos estáveis**.
 
 ---
 
-## 2. O que *não* absorver de kernels externos
+## 2. O que absorver de [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern)
 
-Não copiar RAG genérico nem ontologia aprendida por LLM.
+**Não** copiar RAG genérico nem ontologia aprendida por LLM (produto kern).
 
-Absorver apenas decisões de engenharia:
+Absorver decisões de engenharia (ADRs kern 0001/0004/0007):
 
-| Princípio | Aplicação no Arah Harness |
-|-----------|---------------------------|
-| Hexagonal | Domínio / casos de uso / portas / adapters |
-| Binário local coeso | CLI Go como runtime canônico |
-| MCP como contrato | Interface estável para agentes |
-| Estado isolado por projeto | Runtime local por repositório |
-| Resposta com evidência | Explicar roteamento, policy e conclusão |
-| ADRs e benchmarks honestos | Contratos alinhados ao código real |
+| Princípio (kern) | Aplicação no Arah Harness |
+|------------------|---------------------------|
+| Hexagonal | Domínio / casos de uso / portas / adapters (`internal/core`) |
+| Binário local coeso | CLI Go como runtime canônico de Execution Control |
+| MCP como contrato | `arah mcp serve` — interface estável para agentes |
+| Estado isolado por projeto | `.arah/local/` por repositório |
+| Resposta com evidência | Envelope JSON + códigos `BOUNDED.CODE` (mais rígido que kern) |
+| ADRs honestos | Contratos alinhados ao código real |
 
 ---
 
