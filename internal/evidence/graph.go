@@ -151,16 +151,77 @@ func (b *Builder) Build() (*Graph, error) {
 				if n.Type != "spec" {
 					continue
 				}
-				// link if objective or evidence mentions spec id
 				specID := strings.TrimPrefix(n.ID, "spec:")
 				blob := strings.ToLower(c.Objective + " " + strings.Join(c.Execution.CompletionEvidence, " "))
-				if strings.Contains(blob, strings.ToLower(specID)) || strings.Contains(blob, "runtime-cohesion") && specID == "arah-runtime-cohesion" {
+				if strings.Contains(blob, strings.ToLower(specID)) || (strings.Contains(blob, "runtime-cohesion") && specID == "arah-runtime-cohesion") {
 					link(tid, n.ID, "implements")
 				}
 			}
 		}
 	}
+
+	// Runtime events → validated_by edges (deterministic; EventStore when present)
+	if b.Events != nil {
+		recent, err := b.Events.ListRecent(200)
+		if err == nil {
+			for _, ev := range recent {
+				if ev.TaskID == "" {
+					continue
+				}
+				tid := "task:" + ev.TaskID
+				if !idx[tid] {
+					continue
+				}
+				eid := "event:" + ev.ID
+				label := ev.Kind
+				if ev.CorrelationID != "" {
+					label = ev.Kind + " @" + ev.CorrelationID
+				}
+				add(Node{ID: eid, Type: "event", Label: label})
+				link(tid, eid, "validated_by")
+				if ev.AgentID != "" {
+					aid := "agent:" + ev.AgentID
+					add(Node{ID: aid, Type: "agent", Label: ev.AgentID})
+					link(eid, aid, "invokes")
+				}
+			}
+		}
+	}
 	return g, nil
+}
+
+// Explain returns a human-readable slice of the graph for one task (H-18 evidence explain).
+func (b *Builder) Explain(taskID string) (map[string]any, error) {
+	g, err := b.Build()
+	if err != nil {
+		return nil, err
+	}
+	tid := "task:" + taskID
+	nodes := map[string]Node{}
+	for _, n := range g.Nodes {
+		nodes[n.ID] = n
+	}
+	var edges []Edge
+	related := map[string]bool{tid: true}
+	for _, e := range g.Edges {
+		if e.From == tid || e.To == tid {
+			edges = append(edges, e)
+			related[e.From] = true
+			related[e.To] = true
+		}
+	}
+	var outNodes []Node
+	for id := range related {
+		if n, ok := nodes[id]; ok {
+			outNodes = append(outNodes, n)
+		}
+	}
+	return map[string]any{
+		"task_id": taskID,
+		"nodes":   outNodes,
+		"edges":   edges,
+		"version": g.Version,
+	}, nil
 }
 
 // stableID returns a collision-resistant id fragment for free-form strings.

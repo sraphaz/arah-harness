@@ -166,6 +166,39 @@ func toolDefs() []map[string]any {
 				"task_id": map[string]any{"type": "string"},
 			},
 		}),
+		tool("arah_get_task_context", "Progressive-disclosure task context with token budget (minimal|standard|full)", map[string]any{
+			"type":     "object",
+			"required": []string{"task_id"},
+			"properties": map[string]any{
+				"task_id": map[string]any{"type": "string"},
+				"budget":  map[string]any{"type": "string", "description": "minimal|standard|full"},
+			},
+		}),
+		tool("arah_explain_route", "Explain choreography routing for an area (model-callable harness API)", map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"area":      map[string]any{"type": "string"},
+				"preferred": map[string]any{"type": "string"},
+			},
+		}),
+		tool("arah_get_evidence", "Explain Evidence Graph slice for one task", map[string]any{
+			"type":     "object",
+			"required": []string{"task_id"},
+			"properties": map[string]any{
+				"task_id": map[string]any{"type": "string"},
+			},
+		}),
+		tool("arah_submit_consultation", "Submit structured consultant opinion (YAML artifact)", map[string]any{
+			"type":     "object",
+			"required": []string{"task_id", "consultant_id", "summary"},
+			"properties": map[string]any{
+				"task_id":         map[string]any{"type": "string"},
+				"consultant_id":   map[string]any{"type": "string"},
+				"summary":         map[string]any{"type": "string"},
+				"recommendations": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+				"blockers":        map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+			},
+		}),
 		tool("arah_get_evidence_graph", "Deterministic Evidence Graph from specs/tasks (no LLM)", map[string]any{
 			"type":       "object",
 			"properties": map[string]any{},
@@ -188,9 +221,13 @@ func (s *Server) callTool(name string, args map[string]any) (envelope.Envelope, 
 			"runtime":     "arah-core",
 			"version":     s.Version,
 			"surfaces":    []string{"cli", "mcp"},
-			"commands":    []string{"doctor", "sync-check", "version", "task", "evidence", "mcp"},
+			"commands":    []string{"doctor", "sync-check", "version", "task", "evidence", "economy", "mcp", "kernel"},
 			"state_store": "sqlite-wal",
-			"inspired_by": "https://github.com/rafaelnicolett/kern",
+			"context_budget": []string{"minimal", "standard", "full"},
+			"inspired_by": []string{
+				"https://github.com/rafaelnicolett/kern",
+				"https://github.com/NVIDIA-NeMo/labs-OO-Agents",
+			},
 		}), false
 	case "arah_get_task":
 		id, _ := args["task_id"].(string)
@@ -223,6 +260,41 @@ func (s *Server) callTool(name string, args map[string]any) (envelope.Envelope, 
 			return domainToEnvelope(err), true
 		}
 		return envelope.OK(map[string]any{"task_id": id, "events": evs}), false
+	case "arah_get_task_context":
+		id, _ := args["task_id"].(string)
+		budget, _ := args["budget"].(string)
+		tc, err := s.Tasks.Context(id, core.ParseContextBudget(budget))
+		if err != nil {
+			return domainToEnvelope(err), true
+		}
+		return envelope.OK(tc), false
+	case "arah_explain_route":
+		area, _ := args["area"].(string)
+		preferred, _ := args["preferred"].(string)
+		data, err := s.Tasks.ExplainRoute(area, preferred)
+		if err != nil {
+			return domainToEnvelope(err), true
+		}
+		return envelope.OK(data), false
+	case "arah_get_evidence":
+		id, _ := args["task_id"].(string)
+		if s.Evidence == nil {
+			return envelope.Fail(envelope.CodeInternal, "evidence builder not configured", nil), true
+		}
+		data, err := s.Evidence.Explain(id)
+		if err != nil {
+			return envelope.Fail(envelope.CodeInternal, err.Error(), nil), true
+		}
+		return envelope.OK(data), false
+	case "arah_submit_consultation":
+		id, _ := args["task_id"].(string)
+		cid, _ := args["consultant_id"].(string)
+		summary, _ := args["summary"].(string)
+		res, path, err := s.Tasks.SubmitConsultation(id, cid, summary, stringList(args["recommendations"]), stringList(args["blockers"]))
+		if err != nil {
+			return domainToEnvelope(err), true
+		}
+		return envelope.OK(map[string]any{"consultation": res, "path": path}), false
 	case "arah_get_evidence_graph":
 		if s.Evidence == nil {
 			return envelope.Fail(envelope.CodeInternal, "evidence builder not configured", nil), true

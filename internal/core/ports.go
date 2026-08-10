@@ -12,12 +12,21 @@ type StateStore interface {
 
 // Event is an append-only runtime fact used for timelines and Evidence Graph input.
 type Event struct {
-	ID      string         `json:"id"`
-	TaskID  string         `json:"task_id,omitempty"`
-	Kind    string         `json:"kind"`
-	At      string         `json:"at"`
-	Payload map[string]any `json:"payload,omitempty"`
-	TraceID string         `json:"trace_id,omitempty"`
+	ID            string         `json:"id"`
+	TaskID        string         `json:"task_id,omitempty"`
+	Kind          string         `json:"kind"`
+	At            string         `json:"at"`
+	Payload       map[string]any `json:"payload,omitempty"`
+	TraceID       string         `json:"trace_id,omitempty"`
+	RunID         string         `json:"run_id,omitempty"`
+	CorrelationID string         `json:"correlation_id,omitempty"`
+	AgentID       string         `json:"agent_id,omitempty"`
+	SessionID     string         `json:"session_id,omitempty"`
+}
+
+// BriefingWriter persists the deterministic executor briefing artifact (H-13).
+type BriefingWriter interface {
+	WriteBriefing(c *Contract) (path string, err error)
 }
 
 // EventStore is the append-only outbound port for runtime events.

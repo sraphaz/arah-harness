@@ -332,8 +332,10 @@ func (s *Store) Append(ev core.Event) error {
 		payload = []byte("{}")
 	}
 	_, err := s.db.Exec(`
-INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json)
-VALUES(?,?,?,?,?,?)`, ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload))
+INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json, run_id, correlation_id, agent_id, session_id)
+VALUES(?,?,?,?,?,?,?,?,?,?)`,
+		ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload),
+		nullStr(ev.RunID), nullStr(ev.CorrelationID), nullStr(ev.AgentID), nullStr(ev.SessionID))
 	return err
 }
 
@@ -384,8 +386,10 @@ ON CONFLICT(task_id) DO UPDATE SET
 		return "", err
 	}
 	_, err = tx.Exec(`
-INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json)
-VALUES(?,?,?,?,?,?)`, ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload))
+INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json, run_id, correlation_id, agent_id, session_id)
+VALUES(?,?,?,?,?,?,?,?,?,?)`,
+		ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload),
+		nullStr(ev.RunID), nullStr(ev.CorrelationID), nullStr(ev.AgentID), nullStr(ev.SessionID))
 	if err != nil {
 		return "", err
 	}
@@ -404,7 +408,8 @@ func (s *Store) ListByTask(taskID string) ([]core.Event, error) {
 		return nil, err
 	}
 	rows, err := s.db.Query(`
-SELECT event_id, task_id, kind, at, COALESCE(trace_id,''), payload_json
+SELECT event_id, task_id, kind, at, COALESCE(trace_id,''), payload_json,
+  COALESCE(run_id,''), COALESCE(correlation_id,''), COALESCE(agent_id,''), COALESCE(session_id,'')
 FROM task_events WHERE task_id = ? ORDER BY id ASC`, taskID)
 	if err != nil {
 		return nil, err
@@ -421,7 +426,8 @@ func (s *Store) ListRecent(limit int) ([]core.Event, error) {
 		limit = 50
 	}
 	rows, err := s.db.Query(`
-SELECT event_id, task_id, kind, at, COALESCE(trace_id,''), payload_json
+SELECT event_id, task_id, kind, at, COALESCE(trace_id,''), payload_json,
+  COALESCE(run_id,''), COALESCE(correlation_id,''), COALESCE(agent_id,''), COALESCE(session_id,'')
 FROM task_events ORDER BY id DESC LIMIT ?`, limit)
 	if err != nil {
 		return nil, err
@@ -436,7 +442,8 @@ func scanEvents(rows *sql.Rows) ([]core.Event, error) {
 		var ev core.Event
 		var taskID sql.NullString
 		var payload string
-		if err := rows.Scan(&ev.ID, &taskID, &ev.Kind, &ev.At, &ev.TraceID, &payload); err != nil {
+		if err := rows.Scan(&ev.ID, &taskID, &ev.Kind, &ev.At, &ev.TraceID, &payload,
+			&ev.RunID, &ev.CorrelationID, &ev.AgentID, &ev.SessionID); err != nil {
 			return nil, err
 		}
 		if taskID.Valid {

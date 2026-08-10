@@ -13,9 +13,11 @@ import (
 // TaskService is the application use-case layer over StateStore + choreography.
 // CLI and MCP must call the same methods so decisions stay identical.
 type TaskService struct {
-	Store  StateStore
-	Events EventStore // optional; timeline when set
-	Router ChoreographyResolver
+	Store         StateStore
+	Events        EventStore // optional; timeline when set
+	Router        ChoreographyResolver
+	Briefings     BriefingWriter     // optional; writes BRIEFING.md on create
+	Consultations ConsultationWriter // optional; structured consultant opinions
 }
 
 // MutateOptions controls plan → validate → apply behaviour (H-14).
@@ -31,27 +33,45 @@ func newEventID() string {
 }
 
 func (s *TaskService) emit(taskID, kind string, payload map[string]any) error {
+	return s.emitCorrelated(&Contract{TaskID: taskID}, kind, payload)
+}
+
+func (s *TaskService) emitCorrelated(c *Contract, kind string, payload map[string]any) error {
 	if s.Events == nil {
 		return nil
 	}
-	return s.Events.Append(Event{
-		ID:      newEventID(),
-		TaskID:  taskID,
-		Kind:    kind,
-		At:      time.Now().UTC().Format(time.RFC3339Nano),
-		TraceID: envelope.NewTraceID(),
-		Payload: payload,
-	})
+	ev := Event{
+		ID:            newEventID(),
+		TaskID:        c.TaskID,
+		Kind:          kind,
+		At:            time.Now().UTC().Format(time.RFC3339Nano),
+		TraceID:       envelope.NewTraceID(),
+		Payload:       payload,
+		RunID:         runIDFor(c),
+		CorrelationID: c.TaskID,
+		AgentID:       c.PrimaryExecutor,
+	}
+	return s.Events.Append(ev)
+}
+
+func runIDFor(c *Contract) string {
+	if c == nil || c.TaskID == "" {
+		return ""
+	}
+	// Stable run id derived from task id (one run per execution contract in 0.5).
+	return "run-" + strings.TrimPrefix(c.TaskID, "task-")
 }
 
 func (s *TaskService) mutationEvent(taskID, kind, fingerprint string, payload map[string]any) Event {
 	return Event{
-		ID:      mutationEventID(taskID, kind, fingerprint),
-		TaskID:  taskID,
-		Kind:    kind,
-		At:      time.Now().UTC().Format(time.RFC3339Nano),
-		TraceID: envelope.NewTraceID(),
-		Payload: payload,
+		ID:            mutationEventID(taskID, kind, fingerprint),
+		TaskID:        taskID,
+		Kind:          kind,
+		At:            time.Now().UTC().Format(time.RFC3339Nano),
+		TraceID:       envelope.NewTraceID(),
+		Payload:       payload,
+		RunID:         "run-" + strings.TrimPrefix(taskID, "task-"),
+		CorrelationID: taskID,
 	}
 }
 
@@ -135,17 +155,60 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 	if err != nil {
 		return nil, wrapStore(err)
 	}
-	if err := s.emit(c.TaskID, "task.created", map[string]any{
+	if s.Briefings != nil {
+		if _, berr := s.Briefings.WriteBriefing(c); berr != nil {
+			return resultOf(c, path, before, after, opts, false), errf("STATE.BRIEFING_WRITE_FAILED", berr.Error(), map[string]any{"task_id": c.TaskID})
+		}
+	}
+	if err := s.emitCorrelated(c, "task.created", map[string]any{
 		"primary_executor": c.PrimaryExecutor,
 		"state":            string(c.State),
 		"area":             area,
 	}); err != nil {
 		return resultOf(c, path, before, after, opts, false), errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.created"})
 	}
-	if err := s.emit(c.TaskID, "task.started", map[string]any{"state": string(c.State)}); err != nil {
+	if err := s.emitCorrelated(c, "task.started", map[string]any{"state": string(c.State)}); err != nil {
 		return resultOf(c, path, before, after, opts, false), errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.started"})
 	}
 	return resultOf(c, path, before, after, opts, false), nil
+}
+
+// Context returns a budgeted progressive-disclosure view of a task.
+func (s *TaskService) Context(taskID string, budget ContextBudget) (*TaskContext, error) {
+	c, _, err := s.Store.Get(taskID)
+	if err != nil {
+		return nil, err
+	}
+	var events []Event
+	if s.Events != nil {
+		events, _ = s.Events.ListByTask(taskID)
+	}
+	briefing := ""
+	if budget == BudgetFull {
+		briefing = RenderBriefing(c)
+	}
+	return BuildTaskContext(c, events, budget, briefing), nil
+}
+
+// ExplainRoute returns the choreography decision for an area (model-callable harness API).
+func (s *TaskService) ExplainRoute(area, preferred string) (map[string]any, error) {
+	if area == "" {
+		area = "backend"
+	}
+	r, err := s.Router.Resolve(area, preferred)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{
+		"area":              area,
+		"preferred":         preferred,
+		"primary_executor":  r.PrimaryExecutor,
+		"choreography_rule": r.ChoreographyRule,
+		"consultants":       r.Consultants,
+		"reviewers":         r.Reviewers,
+		"subordinates":      r.Subordinates,
+		"allowed_paths":     r.AllowedPaths,
+	}, nil
 }
 
 // Get loads a contract by task_id from the StateStore.
@@ -173,6 +236,7 @@ func (s *TaskService) Complete(taskID string, evidence []string, opts MutateOpti
 	fp := evidenceFingerprint(evidence)
 	payload := map[string]any{"evidence": evidence, "state": string(StateDone)}
 	ev := s.mutationEvent(taskID, "task.completed", fp, payload)
+	ev.AgentID = c.PrimaryExecutor
 	if c.State == StateDone && evidenceSameSet(c, evidence) {
 		outPath := path
 		if opts.DryRun {
@@ -217,6 +281,7 @@ func (s *TaskService) Block(taskID, reason string, opts MutateOptions) (*Mutatio
 	before := snapContract(c)
 	payload := map[string]any{"reason": reason, "state": string(StateBlocked)}
 	ev := s.mutationEvent(taskID, "task.blocked", reason, payload)
+	ev.AgentID = c.PrimaryExecutor
 	if c.State == StateBlocked && c.Result.BlockingReason != nil && *c.Result.BlockingReason == reason && reason != "" {
 		outPath := path
 		if opts.DryRun {

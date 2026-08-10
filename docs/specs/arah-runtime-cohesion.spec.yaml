@@ -92,8 +92,8 @@ acceptance:
   - id: AC-10
     when: conformance suite roda contra fixtures
     then: install/update/migração/transições/error codes passam de forma reproduzível
-    status: pending
-    covered_by: null
+    status: covered
+    covered_by: internal/conformance/conformance_test.go
 
 harness:
   commands:
