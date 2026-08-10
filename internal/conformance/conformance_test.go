@@ -58,7 +58,11 @@ func moduleRoot(t *testing.T) string {
 
 func buildArahCLI(t *testing.T) string {
 	t.Helper()
-	bin := filepath.Join(t.TempDir(), "arah")
+	name := "arah"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	bin := filepath.Join(t.TempDir(), name)
 	cmd := exec.Command("go", "build", "-o", bin, "./cmd/arah")
 	cmd.Dir = moduleRoot(t)
 	out, err := cmd.CombinedOutput()
