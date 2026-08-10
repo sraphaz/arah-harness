@@ -195,27 +195,27 @@ func (s *Server) callTool(name string, args map[string]any) (envelope.Envelope, 
 	case "arah_get_task":
 		id, _ := args["task_id"].(string)
 		c, path, err := s.Tasks.Get(id)
-		return mapResult(c, path, err)
+		return mapResult(c, path, err, "", false, false)
 	case "arah_create_task":
 		obj, _ := args["objective"].(string)
 		area, _ := args["area"].(string)
 		wc, _ := args["work_class"].(string)
 		it, _ := args["intent_type"].(string)
 		opts := core.MutateOptions{DryRun: boolArg(args["dry_run"])}
-		c, path, err := s.Tasks.Create(obj, area, core.WorkClass(wc), core.IntentType(it), opts)
-		return mapResult(c, path, err)
+		res, err := s.Tasks.Create(obj, area, core.WorkClass(wc), core.IntentType(it), opts)
+		return mapMutation(res, err)
 	case "arah_complete_task":
 		id, _ := args["task_id"].(string)
 		ev := stringList(args["evidence"])
 		opts := core.MutateOptions{DryRun: boolArg(args["dry_run"])}
-		c, path, err := s.Tasks.Complete(id, ev, opts)
-		return mapResult(c, path, err)
+		res, err := s.Tasks.Complete(id, ev, opts)
+		return mapMutation(res, err)
 	case "arah_block_task":
 		id, _ := args["task_id"].(string)
 		reason, _ := args["reason"].(string)
 		opts := core.MutateOptions{DryRun: boolArg(args["dry_run"])}
-		c, path, err := s.Tasks.Block(id, reason, opts)
-		return mapResult(c, path, err)
+		res, err := s.Tasks.Block(id, reason, opts)
+		return mapMutation(res, err)
 	case "arah_get_timeline":
 		id, _ := args["task_id"].(string)
 		evs, err := s.Tasks.Timeline(id)
@@ -237,7 +237,14 @@ func (s *Server) callTool(name string, args map[string]any) (envelope.Envelope, 
 	}
 }
 
-func mapResult(c *core.Contract, path string, err error) (envelope.Envelope, bool) {
+func mapMutation(res *core.MutationResult, err error) (envelope.Envelope, bool) {
+	if err != nil {
+		return domainToEnvelope(err), true
+	}
+	return mapResult(res.Contract, res.Path, nil, res.Diff, res.Idempotent, res.DryRun)
+}
+
+func mapResult(c *core.Contract, path string, err error, diff string, idempotent, dryRun bool) (envelope.Envelope, bool) {
 	if err != nil {
 		return domainToEnvelope(err), true
 	}
@@ -247,7 +254,9 @@ func mapResult(c *core.Contract, path string, err error) (envelope.Envelope, boo
 		"primary_executor":  c.PrimaryExecutor,
 		"objective":         c.Objective,
 		"path":              path,
-		"dry_run":           strings.HasPrefix(path, "dry-run"),
+		"dry_run":           dryRun || strings.HasPrefix(path, "dry-run"),
+		"idempotent":        idempotent,
+		"diff":              diff,
 		"blocking_reason":   c.Result.BlockingReason,
 		"evidence":          c.Execution.CompletionEvidence,
 		"choreography_rule": c.ChoreographyRule,

@@ -74,30 +74,30 @@ func buildArahCLI(t *testing.T) string {
 
 func TestDryRunCreateDoesNotPersist(t *testing.T) {
 	_, svc := fixtureRepo(t)
-	c, path, err := svc.Create("plan only", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{DryRun: true})
+	res, err := svc.Create("plan only", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{DryRun: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if path != "dry-run" || c.State != core.StateExecuting {
-		t.Fatalf("path=%s state=%s", path, c.State)
+	if res.Path != "dry-run" || res.Contract.State != core.StateExecuting {
+		t.Fatalf("path=%s state=%s", res.Path, res.Contract.State)
 	}
-	if _, _, err := svc.Get(c.TaskID); err == nil {
+	if _, _, err := svc.Get(res.Contract.TaskID); err == nil {
 		t.Fatal("dry-run create must not persist")
 	}
 }
 
 func TestStableErrorCodes(t *testing.T) {
 	_, svc := fixtureRepo(t)
-	c, _, err := svc.Create("need evidence", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	created, err := svc.Create("need evidence", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = svc.Complete(c.TaskID, nil, core.MutateOptions{})
+	_, err = svc.Complete(created.Contract.TaskID, nil, core.MutateOptions{})
 	de, ok := err.(*core.DomainError)
 	if !ok || de.Code != "EXECUTION.COMPLETION_EVIDENCE_REQUIRED" {
 		t.Fatalf("got %#v", err)
 	}
-	_, _, err = svc.Block(c.TaskID, "", core.MutateOptions{})
+	_, err = svc.Block(created.Contract.TaskID, "", core.MutateOptions{})
 	de, ok = err.(*core.DomainError)
 	if !ok || de.Code != "EXECUTION.BLOCKING_REASON_REQUIRED" {
 		t.Fatalf("got %#v", err)
@@ -168,18 +168,21 @@ func TestCLIMCPParityOnCreateDecision(t *testing.T) {
 
 func TestCompleteDryRunLeavesTaskExecuting(t *testing.T) {
 	_, svc := fixtureRepo(t)
-	c, _, err := svc.Create("stay executing", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	created, err := svc.Create("stay executing", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	planned, path, err := svc.Complete(c.TaskID, []string{"file.go updated"}, core.MutateOptions{DryRun: true})
+	planned, err := svc.Complete(created.Contract.TaskID, []string{"file.go updated"}, core.MutateOptions{DryRun: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if planned.State != core.StateDone || !strings.HasPrefix(path, "dry-run") {
-		t.Fatalf("planned=%s path=%s", planned.State, path)
+	if planned.Contract.State != core.StateDone || !strings.HasPrefix(planned.Path, "dry-run") {
+		t.Fatalf("planned=%s path=%s", planned.Contract.State, planned.Path)
 	}
-	got, _, err := svc.Get(c.TaskID)
+	if planned.Diff == "" || !strings.Contains(planned.Diff, "+ state: done") {
+		t.Fatalf("expected complete diff, got %q", planned.Diff)
+	}
+	got, _, err := svc.Get(created.Contract.TaskID)
 	if err != nil {
 		t.Fatal(err)
 	}

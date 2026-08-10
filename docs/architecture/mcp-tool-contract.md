@@ -50,6 +50,7 @@ No required input. Returns runtime version, surfaces, and command list.
 Creates the contract, routes choreography, and starts `executing` in the returned plan.
 With `dry_run=true`, `TaskService.Create` still returns that executing plan but skips
 persistence and event emission (path `dry-run`). Non-dry-run behaviour is unchanged.
+Response includes textual `diff` and `idempotent` (always false for create).
 
 ## `arah_complete_task`
 
@@ -59,6 +60,9 @@ persistence and event emission (path `dry-run`). Non-dry-run behaviour is unchan
 | `evidence` | string[] | yes (concrete) |
 | `dry_run` | boolean | no |
 
+Returns `diff` (state/evidence). Re-complete with the same evidence on an already-done
+task is **idempotent** (`idempotent: true`, empty diff, no Save/emit).
+
 ## `arah_block_task`
 
 | Field | Type | Required |
@@ -66,6 +70,8 @@ persistence and event emission (path `dry-run`). Non-dry-run behaviour is unchan
 | `task_id` | string | yes |
 | `reason` | string | yes |
 | `dry_run` | boolean | no |
+
+Re-block with the same reason is **idempotent** (no Save/emit).
 
 ## `arah_get_timeline`
 

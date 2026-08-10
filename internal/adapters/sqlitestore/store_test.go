@@ -53,17 +53,19 @@ func TestSQLiteLifecycleAndMigration(t *testing.T) {
 		Events: store,
 		Router: choreography.New(root),
 	}
-	c, _, err := svc.Create("sqlite path", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	created, err := svc.Create("sqlite path", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
+	c := created.Contract
 	if _, err := os.Stat(filepath.Join(root, ".arah", "local", "runtime.db")); err != nil {
 		t.Fatal("runtime.db missing")
 	}
-	c2, _, err := svc.Complete(c.TaskID, []string{"internal/adapters/sqlitestore/store.go updated"}, core.MutateOptions{})
+	done, err := svc.Complete(c.TaskID, []string{"internal/adapters/sqlitestore/store.go updated"}, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
+	c2 := done.Contract
 	if c2.State != core.StateDone {
 		t.Fatalf("state=%s", c2.State)
 	}
@@ -255,12 +257,90 @@ func TestPeekAndDryRunDoNotReconcileSQLite(t *testing.T) {
 	}
 
 	svc := &core.TaskService{Store: store}
-	_, _, err = svc.Complete("task-dry-run-peek", []string{"would complete"}, core.MutateOptions{DryRun: true})
+	_, err = svc.Complete("task-dry-run-peek", []string{"would complete"}, core.MutateOptions{DryRun: true})
 	if err == nil {
 		t.Fatal("dry-run complete on terminal FS state should fail without mutating sqlite")
 	}
 	if got := sqliteTaskState(t, store.DBPath, "task-dry-run-peek"); got != string(core.StateExecuting) {
 		t.Fatalf("dry-run complete must leave sqlite untouched; state=%s", got)
+	}
+}
+
+func TestIdempotentCompleteReconcilesMissingEvent(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, ".agents", "choreography.yaml"), []byte("version: 2\nrules: []\n"), 0o644)
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	svc := &core.TaskService{Store: store, Events: store, Router: choreography.New(root)}
+	created, err := svc.Create("reconcile event", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ev := []string{"internal/adapters/sqlitestore/store.go updated"}
+	// Simulate Save-without-event: mark done in store only.
+	done := *created.Contract
+	if err := done.Complete(ev); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Save(&done); err != nil {
+		t.Fatal(err)
+	}
+	before, err := store.ListByTask(created.Contract.TaskID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	completedBefore := 0
+	for _, e := range before {
+		if e.Kind == "task.completed" {
+			completedBefore++
+		}
+	}
+	if completedBefore != 0 {
+		t.Fatalf("setup expected no completed event, got %d", completedBefore)
+	}
+
+	res, err := svc.Complete(created.Contract.TaskID, ev, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.Idempotent {
+		t.Fatal("expected idempotent reconcile path")
+	}
+	after, err := store.ListByTask(created.Contract.TaskID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	completed := 0
+	for _, e := range after {
+		if e.Kind == "task.completed" {
+			completed++
+		}
+	}
+	if completed != 1 {
+		t.Fatalf("expected exactly one task.completed after reconcile, got %d", completed)
+	}
+	// Second retry must not duplicate the event.
+	res2, err := svc.Complete(created.Contract.TaskID, ev, core.MutateOptions{})
+	if err != nil || !res2.Idempotent {
+		t.Fatalf("second retry: err=%v idempotent=%v", err, res2 != nil && res2.Idempotent)
+	}
+	after2, err := store.ListByTask(created.Contract.TaskID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	completed = 0
+	for _, e := range after2 {
+		if e.Kind == "task.completed" {
+			completed++
+		}
+	}
+	if completed != 1 {
+		t.Fatalf("duplicate completed events: %d", completed)
 	}
 }
 

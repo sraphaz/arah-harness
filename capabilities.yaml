@@ -60,7 +60,7 @@ experimental:
     notes: H-13 — internal/core + task CLI; inspirado em rafaelnicolett/kern (hexagonal)
   - id: json-command-envelope
     name: Envelope JSON estável de CLI/MCP
-    notes: H-14 — ok/code/trace_id/remediation + dry-run mutações
+    notes: H-14 — ok/code/trace_id/remediation + dry-run + diff + idempotent
   - id: mcp-harness-surface
     name: MCP serve do harness
     notes: H-17 — arah mcp serve; task + timeline + evidence; dry_run nas mutações
