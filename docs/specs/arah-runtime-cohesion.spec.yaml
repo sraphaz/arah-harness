@@ -63,7 +63,7 @@ acceptance:
     when: MCP e CLI recebem o mesmo input de task complete
     then: produzem a mesma decisão e o mesmo error code estável
     status: covered
-    covered_by: internal/mcp/server.go
+    covered_by: internal/conformance/conformance_test.go
 
   - id: AC-07
     when: pacote kernel é gerado no build

@@ -246,35 +246,52 @@ func TestCLIMCPParityOnBlockDryRun(t *testing.T) {
 	}
 }
 
-func TestMCPStableErrorCodes(t *testing.T) {
-	_, svc := fixtureRepo(t)
+func TestCLIMCPParityOnStableErrorCodes(t *testing.T) {
+	root, svc := fixtureRepo(t)
+	bin := buildArahCLI(t)
 	created, err := svc.Create("need evidence", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	id := created.Contract.TaskID
 
-	env, isErr := callMCPTool(t, svc, "arah_complete_task", map[string]any{
+	cliCompleteOut, cliCompleteErr := exec.Command(bin, "task", "complete",
+		"--task-id", id,
+		"--evidence", "",
+		"--json",
+		"--target", root,
+	).CombinedOutput()
+	if cliCompleteErr == nil {
+		t.Fatalf("cli complete expected non-zero exit\n%s", cliCompleteOut)
+	}
+	cliComplete := mustEnvelope(t, cliCompleteOut)
+	mcpComplete, mcpCompleteErr := callMCPTool(t, svc, "arah_complete_task", map[string]any{
 		"task_id":  id,
 		"evidence": []any{},
 	})
-	if !isErr {
+	if !mcpCompleteErr {
 		t.Fatal("expected MCP isError for empty evidence")
 	}
-	if env.OK || env.Code != "EXECUTION.COMPLETION_EVIDENCE_REQUIRED" {
-		t.Fatalf("complete code=%s ok=%v", env.Code, env.OK)
-	}
+	assertErrorEnvelopeParity(t, cliComplete, mcpComplete, "EXECUTION.COMPLETION_EVIDENCE_REQUIRED")
 
-	env, isErr = callMCPTool(t, svc, "arah_block_task", map[string]any{
+	cliBlockOut, cliBlockErr := exec.Command(bin, "task", "block",
+		"--task-id", id,
+		"--reason", "",
+		"--json",
+		"--target", root,
+	).CombinedOutput()
+	if cliBlockErr == nil {
+		t.Fatalf("cli block expected non-zero exit\n%s", cliBlockOut)
+	}
+	cliBlock := mustEnvelope(t, cliBlockOut)
+	mcpBlock, mcpBlockErr := callMCPTool(t, svc, "arah_block_task", map[string]any{
 		"task_id": id,
 		"reason":  "",
 	})
-	if !isErr {
+	if !mcpBlockErr {
 		t.Fatal("expected MCP isError for empty reason")
 	}
-	if env.OK || env.Code != "EXECUTION.BLOCKING_REASON_REQUIRED" {
-		t.Fatalf("block code=%s ok=%v", env.Code, env.OK)
-	}
+	assertErrorEnvelopeParity(t, cliBlock, mcpBlock, "EXECUTION.BLOCKING_REASON_REQUIRED")
 }
 
 func TestCompleteDryRunLeavesTaskExecuting(t *testing.T) {
@@ -364,5 +381,27 @@ func assertParityFields(t *testing.T, cli, mcp map[string]any, fields ...string)
 		if !reflect.DeepEqual(cv, mv) {
 			t.Fatalf("%s cli=%v mcp=%v", f, cv, mv)
 		}
+	}
+}
+
+func assertErrorEnvelopeParity(t *testing.T, cli, mcp envelope.Envelope, wantCode string) {
+	t.Helper()
+	if cli.OK || mcp.OK {
+		t.Fatalf("expected failure envelopes ok cli=%v mcp=%v", cli.OK, mcp.OK)
+	}
+	if cli.Code != wantCode || mcp.Code != wantCode {
+		t.Fatalf("code want=%s cli=%s mcp=%s", wantCode, cli.Code, mcp.Code)
+	}
+	if cli.Code != mcp.Code {
+		t.Fatalf("code mismatch cli=%s mcp=%s", cli.Code, mcp.Code)
+	}
+	if cli.Message != mcp.Message {
+		t.Fatalf("message mismatch cli=%q mcp=%q", cli.Message, mcp.Message)
+	}
+	if !reflect.DeepEqual(cli.Details, mcp.Details) {
+		t.Fatalf("details mismatch cli=%#v mcp=%#v", cli.Details, mcp.Details)
+	}
+	if !reflect.DeepEqual(cli.Remediation, mcp.Remediation) {
+		t.Fatalf("remediation mismatch cli=%#v mcp=%#v", cli.Remediation, mcp.Remediation)
 	}
 }
