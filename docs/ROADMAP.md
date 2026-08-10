@@ -23,7 +23,7 @@ Spec: `arah-runtime-cohesion`
 
 ### P1
 
-- **H-17** MCP serve sobre os mesmos casos de uso da CLI
+- **H-17** MCP serve sobre os mesmos casos de uso da CLI — **done** (contrato v0 + paridade)
 - **H-18** Evidence Graph determinístico
 - **H-19** Timeline unificada por task/run + correlacionadores
 - **H-20** Conformance suite + repositórios-fixture

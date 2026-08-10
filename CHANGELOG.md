@@ -6,6 +6,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ### Added
 
+- **H-17 MCP parity** — conformance CLI↔MCP para `complete`/`block` `--dry-run` + error codes via `tools/call`; H-17 marcado done (contrato v0)
 - **H-16 StateStore schema migrations** — Up/Down versionados (`schema_meta`); v2 `idx_events_kind`; testes upgrade/rollback
 - **H-15 kernel gerado (fase 1)** — `internal/kernel` + CLI `arah kernel sync|verify`
   - Fonte canônica na raiz → pacote `kernel/` + `kernel/manifest.json` (SHA-256)

@@ -111,11 +111,12 @@ Acesso exclusivo por portas; adapter filesystem permanece na migração.
 
 ### 3.4 MCP (primeira classe)
 
-Ferramentas de leitura (exemplos): `arah_get_task`, `arah_explain_route`,
-`arah_get_evidence`, `arah_get_pending_gates`, `arah_get_capabilities`.
+**Contrato v0** ([mcp-tool-contract.md](mcp-tool-contract.md)): `arah_get_capabilities`,
+`arah_get_task`, `arah_create_task`, `arah_complete_task`, `arah_block_task`,
+`arah_get_timeline`, `arah_get_evidence_graph`. Mutações aceitam `dry_run`.
 
-Mutação governada: `arah_create_task`, `arah_complete_task`, `arah_block_task`,
-`arah_request_approval`, `arah_submit_consultation`.
+Exemplos aspiracionais (dependem de portas H-13 ainda não expostas): `arah_explain_route`,
+`arah_get_pending_gates`, `arah_request_approval`, `arah_submit_consultation`.
 
 MCP e CLI chamam os **mesmos** casos de uso. Sem shell genérico remoto.
 
