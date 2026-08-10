@@ -30,6 +30,7 @@ Ver [REGISTRY.md](REGISTRY.md).
 |---------|------|
 | `arah-biocomponent` | Discovery, organismo, sinais, evolve, regenerate |
 | `arah-graphify-knowledge-graph` | Knowledge Graph opcional (Graphify) |
+| `arah-runtime-cohesion` | v0.5 Runtime Cohesion (draft) |
 
 ## Template
 

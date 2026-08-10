@@ -2,6 +2,16 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Direção 0.5 — Runtime Cohesion** (docs; implementação em H-13…H-20)
+  - ADR-002: [`docs/adr/002-runtime-cohesion-0.5.md`](docs/adr/002-runtime-cohesion-0.5.md)
+  - Arquitetura: [`docs/architecture/RUNTIME_COHESION.md`](docs/architecture/RUNTIME_COHESION.md)
+  - Spec draft: `arah-runtime-cohesion`
+  - Roadmap Next realinhado; capabilities planned para core/MCP/StateStore/Evidence Graph
+
 ## [0.4.4] - 2026-07-28
 
 ### Added

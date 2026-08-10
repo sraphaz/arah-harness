@@ -17,6 +17,16 @@
 | H-10 | Fonte única de status de capacidades | **done** — `capabilities.yaml` |
 | H-11 | Modo mínimo de adoção | **done** — `install -Minimal` |
 | H-12 | Knowledge Graph (Graphify) | **fase 0 done** — adapter opcional; fases 1–3 backlog |
+| H-13 | `arah-core` tipado (Go) | **backlog 0.5 P0** |
+| H-14 | Contratos JSON + `plan→validate→apply` | **backlog 0.5 P0** |
+| H-15 | Kernel gerado (fim da segunda fonte) | **backlog 0.5 P0** |
+| H-16 | StateStore SQLite + migração | **backlog 0.5 P0** |
+| H-17 | MCP serve (mesmos use cases da CLI) | **backlog 0.5 P1** |
+| H-18 | Evidence Graph determinístico | **backlog 0.5 P1** |
+| H-19 | Timeline unificada task/run | **backlog 0.5 P1** |
+| H-20 | Conformance suite + fixtures | **backlog 0.5 P1** |
+
+**Direção 0.5:** [ADR-002](../adr/002-runtime-cohesion-0.5.md) · [RUNTIME_COHESION.md](../architecture/RUNTIME_COHESION.md)
 
 ---
 
@@ -61,4 +71,41 @@ Adapter opcional (`arah knowledge-graph`, skill, manifesto). Veredito e fases em
 - [x] Fase 0 — ADR + adapter `--code-only` + CLI + capability experimental  
 - [ ] Fase 1 — discover/evolve consomem comunidades Graphify  
 - [ ] Fase 2 — C-12 dual-pane no Live Console  
-- [ ] Fase 3 — MCP `graphify.serve` opcional
+- [ ] Fase 3 — MCP `graphify.serve` opcional  
+- **Nota 0.5:** fases 1–3 só após porta `KnowledgeProvider` (H-13); Graphify vira adapter, não exceção.
+
+---
+
+## Épico H · 0.5 Runtime Cohesion
+
+### H-13 · `arah-core` (Go) — backlog P0
+Domínio tipado: Task, Run, Agent, Skill, Policy, Gate, Approval, Evidence, Event,
+ExecutionContract. Invariantes do Execution Control no código. Core não conhece
+PS/GitHub/Cursor/Graphify. Ver RUNTIME_COHESION §3.1.
+
+### H-14 · Envelope JSON + pipeline único — backlog P0
+`--json` com `ok` / `code` / `message` / `trace_id` / `details` / `remediation`.
+Todo write path: `plan → validate → apply` (dry-run, diff, idempotência).
+
+### H-15 · Kernel gerado — backlog P0
+Fonte canônica → validação → pacote + hashes. Preferir `go:embed`. Eliminar edição
+manual de `kernel/.agents` / `kernel/.skills` / `kernel/scripts` como segunda fonte.
+
+### H-16 · StateStore — backlog P0
+Hot state em `.arah/local/runtime.db` (SQLite WAL). EventStore append-only lógico.
+Adapter filesystem na migração. Cold evidence permanece em `docs/_meta/runs/`.
+
+### H-17 · MCP primeira classe — backlog P1
+`arah mcp serve` sobre os mesmos casos de uso da CLI. Tools de leitura + mutação
+governada. Sem shell genérico remoto.
+
+### H-18 · Evidence Graph — backlog P1
+Grafo determinístico schemas→arestas (sem LLM como fonte). Completa Agent ∪ Knowledge.
+
+### H-19 · Timeline por Run — backlog P1
+Correlacionadores `task_id` / `run_id` / `trace_id` / …; timeline create→done|blocked.
+OTel opcional.
+
+### H-20 · Conformance suite — backlog P1
+Fixtures (vazio, web, API, monorepo, drift, gate pendente, …) + provas de
+install/update/migração/paridade CLI≡MCP/error codes. Dogfood em arah-harness.

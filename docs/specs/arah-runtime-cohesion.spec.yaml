@@ -1,0 +1,89 @@
+id: arah-runtime-cohesion
+title: Arah Harness 0.5 — Runtime Cohesion
+status: draft
+owner: solutions-architect
+version: 1
+updated_at: 2026-08-10
+covers:
+  - docs/adr/002-runtime-cohesion-0.5.md
+  - docs/architecture/RUNTIME_COHESION.md
+  - docs/ROADMAP.md
+  - docs/backlog/H-harness-improvements.md
+  - docs/EXECUTION_CONTROL.md
+  - docs/STATE_MODEL.md
+  - docs/CLI_SURFACE.md
+  - docs/adr/001-portable-cli-language.md
+  - capabilities.yaml
+  - cmd/arah/
+
+description: |
+  Direção normativa da minor 0.5: coesão do runtime em vez de expansão agentic.
+  Consolida arah-core (Go), portas/adapters, StateStore, contratos JSON/MCP,
+  kernel gerado e Evidence Graph determinístico. Explicitamente não incorpora
+  RAG/ontologia de kernels externos como dependência do harness.
+
+acceptance:
+  - id: AC-01
+    when: direção 0.5 é documentada
+    then: ADR-002 + RUNTIME_COHESION.md descrevem escopo P0/P1/P2 e exclusões
+    status: covered
+    covered_by: docs/adr/002-runtime-cohesion-0.5.md
+
+  - id: AC-02
+    when: roadmap do harness é lido
+    then: Next aponta Runtime Cohesion 0.5 e referencia o ADR/arquitetura
+    status: covered
+    covered_by: docs/ROADMAP.md
+
+  - id: AC-03
+    when: backlog H é consultado
+    then: itens H-13+ cobrem core, StateStore, MCP, Evidence Graph, conformance
+    status: covered
+    covered_by: docs/backlog/H-harness-improvements.md
+
+  - id: AC-04
+    when: capabilities.yaml é consultado
+    then: capacidades planned refletem runtime-cohesion / mcp / evidence-graph / state-store
+    status: covered
+    covered_by: capabilities.yaml
+
+  - id: AC-05
+    when: implementação P0 de arah-core existir (pós-0.5 coding)
+    then: invariantes do Execution Control são enforceadas no core tipado
+    status: pending
+    covered_by: null
+
+  - id: AC-06
+    when: MCP e CLI recebem o mesmo input de task complete
+    then: produzem a mesma decisão e o mesmo error code estável
+    status: pending
+    covered_by: null
+
+  - id: AC-07
+    when: pacote kernel é gerado no build
+    then: não há edição manual de segunda fonte equivalente no tree de release
+    status: pending
+    covered_by: null
+
+  - id: AC-08
+    when: estado quente é acessado
+    then: ocorre apenas via StateStore/EventStore (filesystem só como adapter de migração)
+    status: pending
+    covered_by: null
+
+  - id: AC-09
+    when: Evidence Graph é exportado
+    then: arestas derivam só de schemas Arah, sem LLM como fonte de verdade
+    status: pending
+    covered_by: null
+
+  - id: AC-10
+    when: conformance suite roda contra fixtures
+    then: install/update/migração/transições/error codes passam de forma reproduzível
+    status: pending
+    covered_by: null
+
+harness:
+  commands:
+    - test -f docs/adr/002-runtime-cohesion-0.5.md
+    - test -f docs/architecture/RUNTIME_COHESION.md

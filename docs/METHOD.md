@@ -1,7 +1,7 @@
 # Método ARAH
 
 **ARAH** — *Agent Runtime Autonomous Harness*  
-**Versão do método** alinhada ao harness **0.4.0**
+**Versão do método** alinhada ao harness **0.4.4** · próxima minor planejada: **0.5 Runtime Cohesion** ([ADR-002](adr/002-runtime-cohesion-0.5.md))
 
 Framework de bootstrap para repositórios gerenciados por agentes: autonomia coreografada, auditável, observável, com economia de tokens **medida** (Economy Intelligence), **Execution Control** (terminalidade) — e dimensão **TechOrganism** para discovery, organização e evolução contínua.
 

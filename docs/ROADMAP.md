@@ -1,30 +1,52 @@
 # Roadmap — arah-harness
 
-## Now · v0.3.1 Control Plane foundations
+## Now · v0.4.4
 
-- Estado quente × evidência fria (`.arah/local/` + `docs/_meta/runs/`)
-- Arquivo-por-evento + `arah compact` / `migrate-state`
-- Scrubbing de secrets na evidência; hooks pre-commit
-- `capabilities.yaml`; ADR-001 (CLI Go); install `-Minimal`
-- Backlog visual: site (W) + Live Console (C) em `docs/backlog/`
+- Execution Control, TechOrganism, Economy, Graphify (fase 0), Slice Compose
+- CLI Go fase 1 (H-07): `doctor` / `sync-check` / `version`
+- Estado quente × frio; arquivo-por-evento; capabilities.yaml
+- Site / Live Console em andamento (`docs/backlog/`)
 
-## Next
+## Next · v0.5 — Runtime Cohesion
 
-- `propose_and_draft_pr` — Apply discovery/evolution abre PR draft opcional  
-- Doctor com diff de managed-blocks (profile install)  
-- MCP: agent-graph + leitura do bus de sinais  
-- Heurísticas de discovery mais ricas (PowerShell, monorepos profundos, README NLP leve)  
-- **H-07** CLI binária portátil (Go) — doctor / sync-check / export-graph  
-- C-01 schemas do console (contrato de artefatos)
+**Norte da minor:** coesão do runtime, não mais features agentic.  
+ADR: [`docs/adr/002-runtime-cohesion-0.5.md`](adr/002-runtime-cohesion-0.5.md) ·  
+Arquitetura: [`docs/architecture/RUNTIME_COHESION.md`](architecture/RUNTIME_COHESION.md) ·  
+Spec: `arah-runtime-cohesion`
 
-## Later · v1.0
+### P0
 
-- Produto Arah consome harness como dependência versionada (prova real)  
-- **W** Site de produto + portal docs MDX  
-- **C** ARAH Live Console MVP + **H-08** `arahd`  
-- Releases semver com CHANGELOG contínuo e notas de migração automáticas  
-- Profiles enterprise com retention contractual + dashboards de evolução  
+- **H-13** `arah-core` (Go) — modelo tipado Task/Run/Policy/Evidence/ExecutionContract
+- **H-14** Pipeline único `plan → validate → apply` + catálogo de erros JSON
+- **H-15** Kernel como artefato gerado (fim da segunda fonte manual)
+- **H-16** StateStore (SQLite WAL) + migração versionada do hot state
+
+### P1
+
+- **H-17** MCP serve sobre os mesmos casos de uso da CLI
+- **H-18** Evidence Graph determinístico
+- **H-19** Timeline unificada por task/run + correlacionadores
+- **H-20** Conformance suite + repositórios-fixture
+
+Compat / estrangulamento: PowerShell como wrapper; priorizar no Go
+`install` · `update` · `task *` · `policy check` · `graph export` · `evidence explain` · `mcp serve`.
+
+## Later · v0.5.x → v1.0
+
+- **H-08** Daemon `arahd` (P2)
+- Knowledge providers plugáveis; full-text local; semântica opcional
+- Produto Arah consome harness como dependência versionada
+- **W** Site + portal docs · **C** Live Console MVP
+- Control plane multi-repo (org) — só após contratos 0.5 estáveis
+- Profiles enterprise / retention contractual
+
+## Explicitamente adiado (protege coesão)
+
+Novos tipos de agentes · RAG próprio · ontologia LLM · swarm irrestrito ·
+expandir Graphify antes da porta `KnowledgeProvider` · dashboards antes de
+contratos estáveis.
 
 ## Norte
 
-**ARAH Harness · TechOrganism** como control plane de repositórios sérios: autonomia crescente, ledger intacto, humano no merge.
+**ARAH Harness · TechOrganism** como control plane de repositórios sérios:
+runtime tipado e explicável, autonomia crescente, ledger intacto, humano no merge.
