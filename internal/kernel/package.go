@@ -30,7 +30,7 @@ const (
 // Manifest records SHA-256 digests of every file under kernel/ (except itself).
 type Manifest struct {
 	Version     int               `json:"version"`
-	GeneratedAt string            `json:"generated_at"`
+	GeneratedAt string            `json:"generated_at,omitempty"`
 	Files       map[string]string `json:"files"` // path relative to kernel/ → sha256 hex
 }
 
@@ -256,10 +256,17 @@ func Sync(repoRoot string) (*Manifest, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
+	manPath := filepath.Join(repoRoot, filepath.FromSlash(ManifestRel))
+	prevMan, prevErr := os.ReadFile(manPath)
 	if err := writeManifest(repoRoot, m); err != nil {
 		return nil, 0, err
 	}
 	if _, err := writePayloadZip(repoRoot, entries, m); err != nil {
+		if prevErr == nil {
+			_ = os.WriteFile(manPath, prevMan, 0o644)
+		} else if os.IsNotExist(prevErr) {
+			_ = os.Remove(manPath)
+		}
 		return nil, 0, fmt.Errorf("payload zip: %w", err)
 	}
 	return m, copied, nil

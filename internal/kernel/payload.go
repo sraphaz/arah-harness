@@ -27,34 +27,45 @@ func manifestBytes(m *Manifest) ([]byte, error) {
 	return append(raw, '\n'), nil
 }
 
-// writePayloadZip builds a zip of allowlisted sources + manifest.json for go:embed.
+// packagedManifest returns a copy suitable for the embed zip: volatile
+// generated_at is cleared so identical source trees produce identical payload bytes.
+func packagedManifest(m *Manifest) *Manifest {
+	files := make(map[string]string, len(m.Files))
+	for k, v := range m.Files {
+		files[k] = v
+	}
+	return &Manifest{
+		Version: m.Version,
+		Files:   files,
+	}
+}
+
+// writePayloadZip builds a zip of allowlisted sources + packaged manifest.json for go:embed.
 func writePayloadZip(repoRoot string, entries []SourceEntry, m *Manifest) (string, error) {
+	byDest := make(map[string]string, len(entries))
 	paths := make([]string, 0, len(entries)+1)
 	for _, e := range entries {
 		paths = append(paths, e.Dest)
+		byDest[e.Dest] = e.Source
 	}
 	paths = append(paths, "manifest.json")
 	sort.Strings(paths)
 
+	packaged := packagedManifest(m)
 	var buf bytes.Buffer
 	zw := zip.NewWriter(&buf)
 	for _, rel := range paths {
 		var raw []byte
 		var err error
 		if rel == "manifest.json" {
-			raw, err = manifestBytes(m)
+			raw, err = manifestBytes(packaged)
 		} else {
-			src := ""
-			for _, e := range entries {
-				if e.Dest == rel {
-					src = filepath.Join(repoRoot, filepath.FromSlash(e.Source))
-					break
-				}
-			}
-			if src == "" {
+			rawSrc, ok := byDest[rel]
+			if !ok {
 				_ = zw.Close()
 				return "", fmt.Errorf("payload: missing source for %s", rel)
 			}
+			src := filepath.Join(repoRoot, filepath.FromSlash(rawSrc))
 			raw, err = os.ReadFile(src)
 		}
 		if err != nil {
@@ -82,7 +93,12 @@ func writePayloadZip(repoRoot string, entries []SourceEntry, m *Manifest) (strin
 	if err := os.MkdirAll(filepath.Dir(out), 0o755); err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(out, buf.Bytes(), 0o644); err != nil {
+	tmp := out + ".tmp"
+	if err := os.WriteFile(tmp, buf.Bytes(), 0o644); err != nil {
+		return "", err
+	}
+	if err := os.Rename(tmp, out); err != nil {
+		_ = os.Remove(tmp)
 		return "", err
 	}
 	sum := sha256.Sum256(buf.Bytes())
@@ -107,7 +123,7 @@ func verifyZipBytes(raw []byte, entries []SourceEntry, m *Manifest, label string
 	for _, e := range entries {
 		want[e.Dest] = m.Files[e.Dest]
 	}
-	manRaw, err := manifestBytes(m)
+	manRaw, err := manifestBytes(packagedManifest(m))
 	if err != nil {
 		return []Drift{{Path: label, Reason: "manifest marshal failed"}}
 	}

@@ -169,6 +169,96 @@ func TestInstallFromZip(t *testing.T) {
 	}
 }
 
+func TestInstallEmbeddedNilAndForceRestore(t *testing.T) {
+	if len(kernel.EmbeddedZip()) == 0 {
+		t.Skip("embedded kernel zip empty")
+	}
+	target := t.TempDir()
+	n, err := kernel.Install(target, nil, kernel.InstallOptions{Force: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n < 5 {
+		t.Fatalf("installed=%d", n)
+	}
+	p := filepath.Join(target, ".agents", "choreography.yaml")
+	orig, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(p, []byte("mutated-by-test\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n2, err := kernel.Install(target, nil, kernel.InstallOptions{Force: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n2 < 1 {
+		t.Fatalf("force reinstall wrote nothing, n=%d", n2)
+	}
+	got, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != string(orig) {
+		t.Fatalf("force reinstall did not restore file")
+	}
+}
+
+func TestSyncPayloadDeterministic(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root)
+	if _, _, err := kernel.Sync(root); err != nil {
+		t.Fatal(err)
+	}
+	zipPath := filepath.Join(root, filepath.FromSlash(kernel.PayloadZipRel))
+	a, err := os.ReadFile(zipPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := kernel.Sync(root); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(zipPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(a, b) {
+		t.Fatal("payload zip must be stable across syncs with unchanged sources")
+	}
+}
+
+func TestSyncRestoresManifestWhenPayloadFails(t *testing.T) {
+	root := t.TempDir()
+	writeTree(t, root)
+	if _, _, err := kernel.Sync(root); err != nil {
+		t.Fatal(err)
+	}
+	manPath := filepath.Join(root, "kernel", "manifest.json")
+	prev, err := os.ReadFile(manPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	payloadDir := filepath.Join(root, "internal", "kernel", "payload")
+	if err := os.RemoveAll(payloadDir); err != nil {
+		t.Fatal(err)
+	}
+	// Replace directory with a file so writing kernel.zip fails.
+	if err := os.WriteFile(payloadDir, []byte("not-a-dir\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := kernel.Sync(root); err == nil {
+		t.Fatal("expected payload zip failure")
+	}
+	got, err := os.ReadFile(manPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(prev, got) {
+		t.Fatal("manifest must be restored when payload generation fails")
+	}
+}
+
 func buildTestZip(t *testing.T, files map[string]string) []byte {
 	t.Helper()
 	var buf bytes.Buffer
