@@ -66,7 +66,7 @@ experimental:
     notes: H-17 — arah mcp serve; task + timeline + evidence; dry_run nas mutações
   - id: state-store-sqlite
     name: StateStore local (SQLite WAL)
-    notes: H-16 — .arah/local/runtime.db + YAML mirror; EventStore task_events
+    notes: H-16 — .arah/local/runtime.db WAL + YAML mirror; schema Up/Down (v2)
   - id: evidence-graph
     name: Evidence Graph determinístico
     notes: H-18 — arah evidence graph; schemas→arestas
