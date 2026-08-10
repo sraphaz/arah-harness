@@ -314,14 +314,17 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	return merged, nil
 }
 
-// Delete removes a task from SQLite, its events, and the filesystem mirror/artifacts.
-// Used to abort a partially persisted Create so retries do not leave zombie tasks.
+// Delete removes filesystem mirror/artifacts first, then SQLite rows.
+// FS-first avoids Get falling back to a leftover YAML mirror after the DB row is gone.
 func (s *Store) Delete(taskID string) error {
 	taskID = strings.TrimSpace(taskID)
 	if taskID == "" {
 		return fmt.Errorf("task_id required")
 	}
 	if err := s.EnsureLayout(); err != nil {
+		return err
+	}
+	if err := s.fs.Delete(taskID); err != nil {
 		return err
 	}
 	tx, err := s.db.Begin()
@@ -335,10 +338,7 @@ func (s *Store) Delete(taskID string) error {
 	if _, err := tx.Exec(`DELETE FROM tasks WHERE task_id = ?`, taskID); err != nil {
 		return err
 	}
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-	return s.fs.Delete(taskID)
+	return tx.Commit()
 }
 
 // Append implements EventStore. Duplicate event_id is a no-op (idempotent retries).

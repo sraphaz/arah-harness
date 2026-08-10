@@ -109,6 +109,29 @@ func TestCreateRollsBackWhenBriefingFails(t *testing.T) {
 	}
 }
 
+type failDeleteStore struct {
+	core.StateStore
+	err error
+}
+
+func (f failDeleteStore) Delete(taskID string) error {
+	return f.err
+}
+
+func TestCreateSurfacesAbortFailure(t *testing.T) {
+	_, svc, store := sqliteSvc(t)
+	svc.Briefings = failBriefing{}
+	svc.Store = failDeleteStore{StateStore: store, err: fmt.Errorf("delete refused")}
+	res, err := svc.Create("abort-fail", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err == nil || res != nil {
+		t.Fatalf("expected abort failure, got res=%v err=%v", res, err)
+	}
+	de := err.(*core.DomainError)
+	if de.Code != "STATE.CREATE_ABORT_FAILED" {
+		t.Fatalf("code=%s msg=%s", de.Code, de.Message)
+	}
+}
+
 func TestCreateRollsBackWhenStartedEventFails(t *testing.T) {
 	_, svc, store := sqliteSvc(t)
 	svc.Events = &failEvents{inner: store, failOn: "task.started"}

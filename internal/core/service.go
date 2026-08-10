@@ -160,8 +160,7 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 	}
 	if s.Briefings != nil {
 		if _, berr := s.Briefings.WriteBriefing(c); berr != nil {
-			s.abortCreate(c.TaskID)
-			return nil, errf("STATE.BRIEFING_WRITE_FAILED", berr.Error(), map[string]any{"task_id": c.TaskID})
+			return nil, s.failCreate(c.TaskID, errf("STATE.BRIEFING_WRITE_FAILED", berr.Error(), map[string]any{"task_id": c.TaskID}))
 		}
 	}
 	if err := s.emitCorrelated(c, "task.created", map[string]any{
@@ -169,19 +168,36 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 		"state":            string(c.State),
 		"area":             area,
 	}); err != nil {
-		s.abortCreate(c.TaskID)
-		return nil, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.created"})
+		return nil, s.failCreate(c.TaskID, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.created"}))
 	}
 	if err := s.emitCorrelated(c, "task.started", map[string]any{"state": string(c.State)}); err != nil {
-		s.abortCreate(c.TaskID)
-		return nil, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.started"})
+		return nil, s.failCreate(c.TaskID, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.started"}))
 	}
 	return resultOf(c, path, before, after, opts, false), nil
 }
 
-// abortCreate rolls back a partially persisted create so callers can retry safely.
-func (s *TaskService) abortCreate(taskID string) {
-	_ = s.Store.Delete(taskID)
+// failCreate aborts a partially persisted create. If Delete fails, surface
+// CREATE_ABORT_FAILED so callers know the store may still contain the task.
+func (s *TaskService) failCreate(taskID string, primary *DomainError) error {
+	if aerr := s.Store.Delete(taskID); aerr != nil {
+		details := map[string]any{"task_id": taskID, "abort_error": aerr.Error()}
+		if primary != nil && primary.Details != nil {
+			for k, v := range primary.Details {
+				details[k] = v
+			}
+		}
+		msg := aerr.Error()
+		if primary != nil && primary.Message != "" {
+			msg = primary.Message + "; create abort also failed: " + aerr.Error()
+		}
+		return errf("STATE.CREATE_ABORT_FAILED", msg, details,
+			"Inspect .arah/local/execution and runtime.db for leftover task state",
+			"Retry after removing the stale task_id manually if needed")
+	}
+	if primary != nil {
+		return primary
+	}
+	return errf("STATE.CREATE_ABORT_FAILED", "create abort failed", map[string]any{"task_id": taskID})
 }
 
 // Context returns a budgeted progressive-disclosure view of a task.
