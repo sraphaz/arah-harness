@@ -15,16 +15,16 @@ import (
 func writeTree(t *testing.T, root string) {
 	t.Helper()
 	files := map[string]string{
-		".agents/choreography.yaml":            "version: 2\n",
-		".agents/backend.agent.yaml":           "id: backend\n",
-		".agents/choreography.harness.yaml":    "harness-only: true\n",
-		".agents/domain/cli.agent.yaml":        "id: cli\n",
+		".agents/choreography.yaml":                "version: 2\n",
+		".agents/backend.agent.yaml":               "id: backend\n",
+		".agents/choreography.harness.yaml":        "harness-only: true\n",
+		".agents/domain/cli.agent.yaml":            "id: cli\n",
 		".agents/domain/test-architect.agent.yaml": "id: test-architect\n",
-		".skills/demo.skill.yaml":              "id: demo\n",
-		".cursor/hooks.json":                   "{}\n",
-		"scripts/agents/hello.ps1":             "# hello\n",
-		"scripts/harness/validate-specs.ps1":   "# specs\n",
-		"scripts/harness/doctor-harness.ps1":   "# doctor\n",
+		".skills/demo.skill.yaml":                  "id: demo\n",
+		".cursor/hooks.json":                       "{}\n",
+		"scripts/agents/hello.ps1":                 "# hello\n",
+		"scripts/harness/validate-specs.ps1":       "# specs\n",
+		"scripts/harness/doctor-harness.ps1":       "# doctor\n",
 	}
 	for rel, body := range files {
 		p := filepath.Join(root, filepath.FromSlash(rel))
@@ -239,6 +239,15 @@ func TestSyncRestoresManifestWhenPayloadFails(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	kernelFile := filepath.Join(root, "kernel", "scripts", "agents", "hello.ps1")
+	prevKernel, err := os.ReadFile(kernelFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srcFile := filepath.Join(root, "scripts", "agents", "hello.ps1")
+	if err := os.WriteFile(srcFile, []byte("# changed\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	payloadDir := filepath.Join(root, "internal", "kernel", "payload")
 	if err := os.RemoveAll(payloadDir); err != nil {
 		t.Fatal(err)
@@ -256,6 +265,13 @@ func TestSyncRestoresManifestWhenPayloadFails(t *testing.T) {
 	}
 	if !bytes.Equal(prev, got) {
 		t.Fatal("manifest must be restored when payload generation fails")
+	}
+	gotKernel, err := os.ReadFile(kernelFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(prevKernel, gotKernel) {
+		t.Fatal("kernel tree must remain unchanged when payload generation fails")
 	}
 }
 

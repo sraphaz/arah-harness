@@ -218,6 +218,13 @@ func Sync(repoRoot string) (*Manifest, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
+	m, err := buildManifest(repoRoot, entries)
+	if err != nil {
+		return nil, 0, err
+	}
+	if _, err := writePayloadZip(repoRoot, entries, m); err != nil {
+		return nil, 0, fmt.Errorf("payload zip: %w", err)
+	}
 	wanted := make(map[string]bool, len(entries))
 	copied := 0
 	for _, e := range entries {
@@ -252,22 +259,8 @@ func Sync(repoRoot string) (*Manifest, int, error) {
 	}); err != nil {
 		return nil, 0, err
 	}
-	m, err := buildManifest(repoRoot, entries)
-	if err != nil {
-		return nil, 0, err
-	}
-	manPath := filepath.Join(repoRoot, filepath.FromSlash(ManifestRel))
-	prevMan, prevErr := os.ReadFile(manPath)
 	if err := writeManifest(repoRoot, m); err != nil {
 		return nil, 0, err
-	}
-	if _, err := writePayloadZip(repoRoot, entries, m); err != nil {
-		if prevErr == nil {
-			_ = os.WriteFile(manPath, prevMan, 0o644)
-		} else if os.IsNotExist(prevErr) {
-			_ = os.Remove(manPath)
-		}
-		return nil, 0, fmt.Errorf("payload zip: %w", err)
 	}
 	return m, copied, nil
 }
