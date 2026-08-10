@@ -53,7 +53,7 @@ func TestCompleteIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ev := []string{"internal/core/mutate.go updated"}
+	ev := []string{"internal/core/mutate.go updated", "go test ./internal/core passed"}
 	first, err := svc.Complete(created.Contract.TaskID, ev, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
@@ -73,6 +73,15 @@ func TestCompleteIdempotent(t *testing.T) {
 	}
 	if second.Contract.State != core.StateDone {
 		t.Fatalf("state=%s", second.Contract.State)
+	}
+	// Partial evidence must not be treated as an idempotent replay.
+	_, err = svc.Complete(created.Contract.TaskID, []string{ev[0]}, core.MutateOptions{})
+	if err == nil {
+		t.Fatal("expected terminal error for partial evidence replay")
+	}
+	de, ok := err.(*core.DomainError)
+	if !ok || de.Code != "EXECUTION.TERMINAL_STATE_IMMUTABLE" {
+		t.Fatalf("got %#v", err)
 	}
 }
 

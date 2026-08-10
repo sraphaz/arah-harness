@@ -99,25 +99,34 @@ func diffStrings(before, after []string) []string {
 	return out
 }
 
-func evidenceSatisfied(c *Contract, evidence []string) bool {
+func evidenceSameSet(c *Contract, evidence []string) bool {
 	if c == nil {
 		return false
 	}
-	have := map[string]bool{}
-	for _, e := range c.Execution.CompletionEvidence {
-		have[strings.TrimSpace(e)] = true
+	req := normalizedEvidenceSet(evidence)
+	if len(req) == 0 {
+		return false
 	}
-	for _, e := range c.Result.Evidence {
-		have[strings.TrimSpace(e)] = true
+	have := normalizedEvidenceSet(c.Execution.CompletionEvidence)
+	if len(have) != len(req) {
+		return false
 	}
-	for _, e := range evidence {
-		e = strings.TrimSpace(e)
-		if e == "" {
-			continue
-		}
+	for e := range req {
 		if !have[e] {
 			return false
 		}
 	}
-	return len(filterNonEmpty(evidence)) > 0
+	return true
+}
+
+func normalizedEvidenceSet(items []string) map[string]bool {
+	out := map[string]bool{}
+	for _, e := range items {
+		e = strings.TrimSpace(e)
+		if e == "" {
+			continue
+		}
+		out[e] = true
+	}
+	return out
 }

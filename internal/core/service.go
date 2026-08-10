@@ -124,7 +124,7 @@ func (s *TaskService) Complete(taskID string, evidence []string, opts MutateOpti
 		return nil, err
 	}
 	before := snapContract(c)
-	if c.State == StateDone && evidenceSatisfied(c, evidence) {
+	if c.State == StateDone && evidenceSameSet(c, evidence) {
 		outPath := path
 		if opts.DryRun {
 			outPath = "dry-run:" + path
