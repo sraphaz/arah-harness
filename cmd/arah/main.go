@@ -112,27 +112,27 @@ func runTask(root string, args []string, jsonOut bool) int {
 		wc := flagValue(rest, "-class", "--class", "standard")
 		intent := flagValue(rest, "-intent", "--intent", "execution")
 		opts := core.MutateOptions{DryRun: dryRun}
-		c, path, err := svc.Create(obj, area, core.WorkClass(wc), core.IntentType(intent), opts)
-		return emitTask(jsonOut, c, path, err, opts.DryRun)
+		res, err := svc.Create(obj, area, core.WorkClass(wc), core.IntentType(intent), opts)
+		return emitMutation(jsonOut, res, err)
 	case "status":
 		id := flagValue(rest, "-task-id", "--task-id", "")
 		if id == "" && len(rest) > 0 && !strings.HasPrefix(rest[0], "-") {
 			id = rest[0]
 		}
 		c, path, err := svc.Get(id)
-		return emitTask(jsonOut, c, path, err, false)
+		return emitTask(jsonOut, c, path, err, false, "", false)
 	case "complete":
 		id := flagValue(rest, "-task-id", "--task-id", "")
 		ev := flagValue(rest, "-evidence", "--evidence", "")
 		opts := core.MutateOptions{DryRun: dryRun}
-		c, path, err := svc.Complete(id, []string{ev}, opts)
-		return emitTask(jsonOut, c, path, err, opts.DryRun)
+		res, err := svc.Complete(id, []string{ev}, opts)
+		return emitMutation(jsonOut, res, err)
 	case "block":
 		id := flagValue(rest, "-task-id", "--task-id", "")
 		reason := flagValue(rest, "-reason", "--reason", "")
 		opts := core.MutateOptions{DryRun: dryRun}
-		c, path, err := svc.Block(id, reason, opts)
-		return emitTask(jsonOut, c, path, err, opts.DryRun)
+		res, err := svc.Block(id, reason, opts)
+		return emitMutation(jsonOut, res, err)
 	case "timeline":
 		id := flagValue(rest, "-task-id", "--task-id", "")
 		evs, err := svc.Timeline(id)
@@ -225,7 +225,14 @@ func runEvidence(root string, args []string, jsonOut bool) int {
 	return 0
 }
 
-func emitTask(jsonOut bool, c *core.Contract, path string, err error, dryRun bool) int {
+func emitMutation(jsonOut bool, res *core.MutationResult, err error) int {
+	if err != nil {
+		return failEnv(jsonOut, domainEnv(err))
+	}
+	return emitTask(jsonOut, res.Contract, res.Path, nil, res.DryRun, res.Diff, res.Idempotent)
+}
+
+func emitTask(jsonOut bool, c *core.Contract, path string, err error, dryRun bool, diff string, idempotent bool) int {
 	if err != nil {
 		return failEnv(jsonOut, domainEnv(err))
 	}
@@ -238,6 +245,8 @@ func emitTask(jsonOut bool, c *core.Contract, path string, err error, dryRun boo
 		"intent_type":       c.IntentType,
 		"path":              path,
 		"dry_run":           dryRun || strings.HasPrefix(path, "dry-run"),
+		"idempotent":        idempotent,
+		"diff":              diff,
 		"choreography_rule": c.ChoreographyRule,
 		"evidence":          c.Execution.CompletionEvidence,
 		"blocking_reason":   c.Result.BlockingReason,
@@ -245,14 +254,23 @@ func emitTask(jsonOut bool, c *core.Contract, path string, err error, dryRun boo
 	if jsonOut {
 		return envelope.WriteJSON(os.Stdout, envelope.OK(data))
 	}
+	label := ""
 	if dryRun || strings.HasPrefix(path, "dry-run") {
-		fmt.Printf("task %s: %s (dry-run)\n", c.TaskID, c.State)
-	} else {
-		fmt.Printf("task %s: %s\n", c.TaskID, c.State)
+		label = " (dry-run)"
 	}
+	if idempotent {
+		label += " (idempotent)"
+	}
+	fmt.Printf("task %s: %s%s\n", c.TaskID, c.State, label)
 	fmt.Printf("  executor: %s\n", c.PrimaryExecutor)
 	fmt.Printf("  objective: %s\n", c.Objective)
 	fmt.Printf("  path: %s\n", path)
+	if diff != "" {
+		fmt.Printf("  diff:\n")
+		for _, line := range strings.Split(diff, "\n") {
+			fmt.Printf("    %s\n", line)
+		}
+	}
 	if c.Result.BlockingReason != nil {
 		fmt.Printf("  blocked: %s\n", *c.Result.BlockingReason)
 	}

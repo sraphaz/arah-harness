@@ -53,17 +53,19 @@ func TestSQLiteLifecycleAndMigration(t *testing.T) {
 		Events: store,
 		Router: choreography.New(root),
 	}
-	c, _, err := svc.Create("sqlite path", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	created, err := svc.Create("sqlite path", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
+	c := created.Contract
 	if _, err := os.Stat(filepath.Join(root, ".arah", "local", "runtime.db")); err != nil {
 		t.Fatal("runtime.db missing")
 	}
-	c2, _, err := svc.Complete(c.TaskID, []string{"internal/adapters/sqlitestore/store.go updated"}, core.MutateOptions{})
+	done, err := svc.Complete(c.TaskID, []string{"internal/adapters/sqlitestore/store.go updated"}, core.MutateOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
+	c2 := done.Contract
 	if c2.State != core.StateDone {
 		t.Fatalf("state=%s", c2.State)
 	}
@@ -255,7 +257,7 @@ func TestPeekAndDryRunDoNotReconcileSQLite(t *testing.T) {
 	}
 
 	svc := &core.TaskService{Store: store}
-	_, _, err = svc.Complete("task-dry-run-peek", []string{"would complete"}, core.MutateOptions{DryRun: true})
+	_, err = svc.Complete("task-dry-run-peek", []string{"would complete"}, core.MutateOptions{DryRun: true})
 	if err == nil {
 		t.Fatal("dry-run complete on terminal FS state should fail without mutating sqlite")
 	}
