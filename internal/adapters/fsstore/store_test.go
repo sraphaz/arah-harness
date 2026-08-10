@@ -120,3 +120,28 @@ func TestSaveKeepsPriorBucketOnWriteFailure(t *testing.T) {
 		t.Fatalf("expected active bucket, got %s", path)
 	}
 }
+
+func TestDeleteReturnsFilesystemErrors(t *testing.T) {
+	root := t.TempDir()
+	store := fsstore.New(root)
+	c := &core.Contract{
+		Version: "1.0", TaskID: "task-delete-error", Objective: "delete",
+		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		State: core.StateExecuting, PrimaryExecutor: "backend",
+	}
+	if _, err := store.Save(c); err != nil {
+		t.Fatal(err)
+	}
+	active := filepath.Join(root, ".arah", "local", "execution", "active")
+	if err := os.Chmod(active, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chmod(active, 0o755) }()
+
+	if err := store.Delete(c.TaskID); err == nil {
+		t.Fatal("expected delete failure when mirror file cannot be removed")
+	}
+	if _, err := os.Stat(filepath.Join(active, c.TaskID+".yaml")); err != nil {
+		t.Fatalf("expected YAML mirror to remain after failed delete: %v", err)
+	}
+}

@@ -157,8 +157,7 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 	}
 	if s.Briefings != nil {
 		if _, berr := s.Briefings.WriteBriefing(c); berr != nil {
-			s.abortCreate(c.TaskID)
-			return nil, errf("STATE.BRIEFING_WRITE_FAILED", berr.Error(), map[string]any{"task_id": c.TaskID})
+			return nil, createRollbackError("STATE.BRIEFING_WRITE_FAILED", berr, map[string]any{"task_id": c.TaskID}, s.abortCreate(c.TaskID))
 		}
 	}
 	if err := s.emitCorrelated(c, "task.created", map[string]any{
@@ -166,19 +165,32 @@ func (s *TaskService) Create(objective, area string, wc WorkClass, intent Intent
 		"state":            string(c.State),
 		"area":             area,
 	}); err != nil {
-		s.abortCreate(c.TaskID)
-		return nil, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.created"})
+		return nil, createRollbackError("STATE.EVENT_APPEND_FAILED", err, map[string]any{"task_id": c.TaskID, "kind": "task.created"}, s.abortCreate(c.TaskID))
 	}
 	if err := s.emitCorrelated(c, "task.started", map[string]any{"state": string(c.State)}); err != nil {
-		s.abortCreate(c.TaskID)
-		return nil, errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": c.TaskID, "kind": "task.started"})
+		return nil, createRollbackError("STATE.EVENT_APPEND_FAILED", err, map[string]any{"task_id": c.TaskID, "kind": "task.started"}, s.abortCreate(c.TaskID))
 	}
 	return resultOf(c, path, before, after, opts, false), nil
 }
 
 // abortCreate rolls back a partially persisted create so callers can retry safely.
-func (s *TaskService) abortCreate(taskID string) {
-	_ = s.Store.Delete(taskID)
+func (s *TaskService) abortCreate(taskID string) error {
+	return s.Store.Delete(taskID)
+}
+
+func createRollbackError(code string, cause error, details map[string]any, rollbackErr error) error {
+	if rollbackErr == nil {
+		return errf(code, cause.Error(), details)
+	}
+	merged := map[string]any{
+		"create_error":   cause.Error(),
+		"create_stage":   code,
+		"rollback_error": rollbackErr.Error(),
+	}
+	for k, v := range details {
+		merged[k] = v
+	}
+	return errf("STATE.STORE_ERROR", fmt.Sprintf("create rollback failed after %s", code), merged)
 }
 
 // Context returns a budgeted progressive-disclosure view of a task.

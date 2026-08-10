@@ -2,6 +2,7 @@
 package fsstore
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -148,9 +149,16 @@ func (s *Store) Delete(taskID string) error {
 	if err := s.EnsureLayout(); err != nil {
 		return err
 	}
+	var errs []error
 	for _, b := range []string{"active", "completed", "blocked"} {
-		_ = os.Remove(filepath.Join(s.root(), b, taskID+".yaml"))
+		path := filepath.Join(s.root(), b, taskID+".yaml")
+		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			errs = append(errs, fmt.Errorf("remove %s: %w", path, err))
+		}
 	}
-	_ = os.RemoveAll(filepath.Join(s.root(), taskID))
-	return nil
+	dir := filepath.Join(s.root(), taskID)
+	if err := os.RemoveAll(dir); err != nil && !errors.Is(err, os.ErrNotExist) {
+		errs = append(errs, fmt.Errorf("remove %s: %w", dir, err))
+	}
+	return errors.Join(errs...)
 }

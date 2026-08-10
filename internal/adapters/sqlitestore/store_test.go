@@ -202,6 +202,43 @@ func TestGetReconcilesFresherFilesystemState(t *testing.T) {
 	}
 }
 
+func TestDeletePropagatesMirrorFailures(t *testing.T) {
+	root := t.TempDir()
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	c := &core.Contract{
+		Version: "1.0", TaskID: "task-delete-zombie", Objective: "delete",
+		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		State: core.StateExecuting, PrimaryExecutor: "backend",
+	}
+	if _, err := store.Save(c); err != nil {
+		t.Fatal(err)
+	}
+	active := filepath.Join(root, ".arah", "local", "execution", "active")
+	if err := os.Chmod(active, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chmod(active, 0o755) }()
+
+	if err := store.Delete(c.TaskID); err == nil {
+		t.Fatal("expected delete to report mirror cleanup failure")
+	}
+	if sqliteTaskExists(t, store.DBPath, c.TaskID) {
+		t.Fatal("sqlite row should already be gone when mirror cleanup fails")
+	}
+	got, ref, err := store.Get(c.TaskID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.TaskID != c.TaskID || filepath.Base(filepath.Dir(ref)) != "active" {
+		t.Fatalf("expected surviving filesystem mirror fallback, got ref=%s task=%s", ref, got.TaskID)
+	}
+}
+
 func sqliteTaskState(t *testing.T, dbPath, taskID string) string {
 	t.Helper()
 	db, err := sql.Open("sqlite", dbPath)
@@ -214,6 +251,20 @@ func sqliteTaskState(t *testing.T, dbPath, taskID string) string {
 		t.Fatal(err)
 	}
 	return state
+}
+
+func sqliteTaskExists(t *testing.T, dbPath, taskID string) bool {
+	t.Helper()
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	var n int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM tasks WHERE task_id = ?`, taskID).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	return n > 0
 }
 
 func TestPeekAndDryRunDoNotReconcileSQLite(t *testing.T) {
@@ -343,4 +394,3 @@ func TestIdempotentCompleteReconcilesMissingEvent(t *testing.T) {
 		t.Fatalf("duplicate completed events: %d", completed)
 	}
 }
-

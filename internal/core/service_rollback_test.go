@@ -24,10 +24,30 @@ func (f failBriefing) WriteBriefing(c *core.Contract) (string, error) {
 }
 
 type failEvents struct {
-	inner     core.EventStore
-	failOn    string
-	appended  []string
+	inner    core.EventStore
+	failOn   string
+	appended []string
 }
+
+type deleteFailStore struct {
+	inner     core.StateStore
+	deleteErr error
+}
+
+func (s deleteFailStore) EnsureLayout() error { return s.inner.EnsureLayout() }
+func (s deleteFailStore) Save(c *core.Contract) (string, error) {
+	return s.inner.Save(c)
+}
+func (s deleteFailStore) Get(taskID string) (*core.Contract, string, error) {
+	return s.inner.Get(taskID)
+}
+func (s deleteFailStore) Peek(taskID string) (*core.Contract, string, error) {
+	return s.inner.Peek(taskID)
+}
+func (s deleteFailStore) List(bucket string) ([]*core.Contract, error) {
+	return s.inner.List(bucket)
+}
+func (s deleteFailStore) Delete(taskID string) error { return s.deleteErr }
 
 func (f *failEvents) Append(ev core.Event) error {
 	f.appended = append(f.appended, ev.Kind)
@@ -117,6 +137,37 @@ func TestCreateRollsBackWhenStartedEventFails(t *testing.T) {
 	list, _ := svc.Store.List("active")
 	if len(list) != 0 {
 		t.Fatalf("zombie tasks after event failure: %d", len(list))
+	}
+}
+
+func TestCreateReturnsRollbackFailureWhenDeleteFails(t *testing.T) {
+	_, svc, store := sqliteSvc(t)
+	svc.Store = deleteFailStore{inner: store, deleteErr: fmt.Errorf("delete boom")}
+	svc.Briefings = failBriefing{}
+
+	res, err := svc.Create("rollback fails", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{})
+	if err == nil || res != nil {
+		t.Fatalf("expected failure without result, got res=%v err=%v", res, err)
+	}
+	de, ok := err.(*core.DomainError)
+	if !ok {
+		t.Fatalf("expected DomainError, got %T", err)
+	}
+	if de.Code != "STATE.STORE_ERROR" {
+		t.Fatalf("code=%s", de.Code)
+	}
+	if got := de.Details["create_stage"]; got != "STATE.BRIEFING_WRITE_FAILED" {
+		t.Fatalf("create_stage=%v", got)
+	}
+	if got := de.Details["rollback_error"]; got != "delete boom" {
+		t.Fatalf("rollback_error=%v", got)
+	}
+	list, err := store.List("active")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 {
+		t.Fatalf("expected persisted zombie to be visible after rollback failure, got %d", len(list))
 	}
 }
 
