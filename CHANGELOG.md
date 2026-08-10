@@ -9,9 +9,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - **arah-core (0.5 foundation)** — runtime Go hexagonal inspirado em
   [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern) (engenharia, não RAG)
   - `internal/core` — Execution Control tipado (transitions, evidence, TaskService)
-  - `internal/adapters/fsstore` + `choreography` — StateStore filesystem
+  - `internal/adapters/sqlitestore` — StateStore SQLite WAL + EventStore + migração YAML
+  - `internal/adapters/fsstore` — mirror/compatibilidade PS
   - `internal/envelope` — contrato JSON `ok/code/trace_id/remediation`
-  - CLI: `arah task create|status|complete|block` e `arah mcp serve`
+  - `internal/evidence` — Evidence Graph determinístico
+  - CLI: `arah task *`, `arah task timeline`, `arah evidence graph`, `arah mcp serve`
   - Contrato MCP: [`docs/architecture/mcp-tool-contract.md`](docs/architecture/mcp-tool-contract.md)
   - Testes: `go test ./...`
 - **Direção 0.5 — Runtime Cohesion** (docs)
