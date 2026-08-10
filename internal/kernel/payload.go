@@ -155,7 +155,57 @@ type InstallOptions struct {
 	Force bool
 }
 
+// joinUnderTarget resolves name under target and rejects path escape
+// (absolute names, ".." segments, or cleaned paths leaving the tree).
+func joinUnderTarget(target, name string) (string, error) {
+	name = filepath.ToSlash(strings.TrimSpace(name))
+	if name == "" {
+		return "", fmt.Errorf("kernel install: empty zip entry name")
+	}
+	rel := filepath.FromSlash(name)
+	if filepath.IsAbs(rel) {
+		return "", fmt.Errorf("kernel install: absolute zip entry rejected: %s", name)
+	}
+	cleaned := filepath.Clean(rel)
+	if cleaned == "." || cleaned == string(filepath.Separator) {
+		return "", fmt.Errorf("kernel install: invalid zip entry: %s", name)
+	}
+	if cleaned == ".." || strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("kernel install: zip entry escapes target: %s", name)
+	}
+	for _, seg := range strings.Split(filepath.ToSlash(cleaned), "/") {
+		if seg == ".." {
+			return "", fmt.Errorf("kernel install: zip entry escapes target: %s", name)
+		}
+	}
+
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return "", err
+	}
+	dest := filepath.Join(absTarget, cleaned)
+	absDest, err := filepath.Abs(dest)
+	if err != nil {
+		return "", err
+	}
+	relOut, err := filepath.Rel(absTarget, absDest)
+	if err != nil {
+		return "", err
+	}
+	if relOut == ".." || strings.HasPrefix(relOut, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("kernel install: zip entry escapes target: %s", name)
+	}
+	return absDest, nil
+}
+
+type installItem struct {
+	dest string
+	body []byte
+}
+
 // Install extracts a kernel zip payload into target (overlay of .agents/.skills/.cursor/scripts).
+// All entries are validated and buffered before any write. On write failure, files created
+// in this call are removed so the target is not left partially applied.
 func Install(target string, zipData []byte, opts InstallOptions) (int, error) {
 	if len(zipData) == 0 {
 		zipData = EmbeddedZip()
@@ -167,7 +217,8 @@ func Install(target string, zipData []byte, opts InstallOptions) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	installed := 0
+
+	var plan []installItem
 	for _, f := range zr.File {
 		name := filepath.ToSlash(f.Name)
 		if name == "" || strings.HasSuffix(name, "/") {
@@ -176,7 +227,10 @@ func Install(target string, zipData []byte, opts InstallOptions) (int, error) {
 		if name == "manifest.json" {
 			name = ".arah/kernel.manifest.json"
 		}
-		dest := filepath.Join(target, filepath.FromSlash(name))
+		dest, err := joinUnderTarget(target, name)
+		if err != nil {
+			return 0, err
+		}
 		if !opts.Force {
 			if _, err := os.Stat(dest); err == nil {
 				continue
@@ -184,20 +238,32 @@ func Install(target string, zipData []byte, opts InstallOptions) (int, error) {
 		}
 		rc, err := f.Open()
 		if err != nil {
-			return installed, err
+			return 0, err
 		}
 		body, err := io.ReadAll(rc)
 		_ = rc.Close()
 		if err != nil {
-			return installed, err
+			return 0, err
 		}
-		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-			return installed, err
-		}
-		if err := os.WriteFile(dest, body, 0o644); err != nil {
-			return installed, err
-		}
-		installed++
+		plan = append(plan, installItem{dest: dest, body: body})
 	}
-	return installed, nil
+
+	written := make([]string, 0, len(plan))
+	rollback := func() {
+		for i := len(written) - 1; i >= 0; i-- {
+			_ = os.Remove(written[i])
+		}
+	}
+	for _, it := range plan {
+		if err := os.MkdirAll(filepath.Dir(it.dest), 0o755); err != nil {
+			rollback()
+			return 0, err
+		}
+		if err := os.WriteFile(it.dest, it.body, 0o644); err != nil {
+			rollback()
+			return 0, err
+		}
+		written = append(written, it.dest)
+	}
+	return len(written), nil
 }

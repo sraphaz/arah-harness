@@ -1,8 +1,11 @@
 package kernel_test
 
 import (
+	"archive/zip"
+	"bytes"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -163,6 +166,89 @@ func TestInstallFromZip(t *testing.T) {
 	}
 	if n2 != 0 {
 		t.Fatalf("expected skip when present, installed=%d", n2)
+	}
+}
+
+func buildTestZip(t *testing.T, files map[string]string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	names := make([]string, 0, len(files))
+	for name := range files {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		w, err := zw.Create(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.Write([]byte(files[name])); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+func TestInstallRejectsPathEscape(t *testing.T) {
+	target := t.TempDir()
+	outside := filepath.Join(filepath.Dir(target), "escaped.txt")
+	_ = os.Remove(outside)
+
+	raw := buildTestZip(t, map[string]string{
+		"../escaped.txt": "pwned\n",
+	})
+	n, err := kernel.Install(target, raw, kernel.InstallOptions{Force: true})
+	if err == nil {
+		t.Fatal("expected path escape error")
+	}
+	if n != 0 {
+		t.Fatalf("installed=%d want 0", n)
+	}
+	if _, err := os.Stat(outside); err == nil {
+		t.Fatal("escaped file must not be written outside target")
+	}
+	if _, err := os.Stat(filepath.Join(target, "escaped.txt")); err == nil {
+		t.Fatal("escaped entry must not land inside target either")
+	}
+}
+
+func TestInstallRejectsAbsoluteEntry(t *testing.T) {
+	target := t.TempDir()
+	raw := buildTestZip(t, map[string]string{
+		"/tmp/arah-kernel-evil": "nope\n",
+	})
+	n, err := kernel.Install(target, raw, kernel.InstallOptions{Force: true})
+	if err == nil {
+		t.Fatal("expected absolute entry rejection")
+	}
+	if n != 0 {
+		t.Fatalf("installed=%d want 0", n)
+	}
+}
+
+func TestInstallRollbackOnPartialFailure(t *testing.T) {
+	target := t.TempDir()
+	// Second entry needs dir "blocked/c.txt", but "blocked" is a file → MkdirAll fails after first write.
+	if err := os.WriteFile(filepath.Join(target, "blocked"), []byte("not a dir\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	raw := buildTestZip(t, map[string]string{
+		".agents/ok.yaml": "ok\n",
+		"blocked/c.txt":   "fail\n",
+	})
+	n, err := kernel.Install(target, raw, kernel.InstallOptions{Force: true})
+	if err == nil {
+		t.Fatal("expected install failure")
+	}
+	if n != 0 {
+		t.Fatalf("installed=%d want 0 after rollback", n)
+	}
+	if _, err := os.Stat(filepath.Join(target, ".agents", "ok.yaml")); err == nil {
+		t.Fatal("partial install must roll back .agents/ok.yaml")
 	}
 }
 
