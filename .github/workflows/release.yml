@@ -1,5 +1,15 @@
 # Publicação autônoma: após merge em main, garante tag vX.Y.Z + GitHub Release
-# a partir de VERSION (idempotente). Tags manuais v*.*.* também publicam.
+# a partir de VERSION (idempotente) e anexa os artefatos de supply chain:
+# binários multi-plataforma do CLI arah, SHA256SUMS.txt, assinatura keyless
+# (Cosign/Sigstore via OIDC), SBOM CycloneDX (Trivy) e provenance (SLSA).
+# Tags manuais v*.*.* também publicam.
+#
+# NOTA: o job artifacts vive NESTE workflow (e não em um workflow separado
+# on: push: tags) porque a tag é criada via API com GITHUB_TOKEN e o GitHub
+# não dispara workflows a partir de eventos gerados por esse token.
+#
+# Dry-run: workflow_dispatch com dry_run=true builda + assina sem criar
+# tag/Release nem publicar nada (validação do pipeline de artefatos).
 name: Release
 
 on:
@@ -13,9 +23,14 @@ on:
         description: 'Override VERSION (e.g. 0.4.1). Empty = read VERSION file.'
         required: false
         default: ''
+      dry_run:
+        description: 'Build + sign sem cortar tag/Release nem publicar assets.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: arah-release
@@ -23,7 +38,14 @@ concurrency:
 
 jobs:
   cut:
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      tag: ${{ steps.ver.outputs.tag }}
+      status: ${{ steps.cut.outputs.status }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,6 +66,7 @@ jobs:
           echo "tag=v$VER" >> "$GITHUB_OUTPUT"
 
       - name: Cut tag + GitHub Release
+        id: cut
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,5 +75,127 @@ jobs:
         run: |
           $script = Join-Path $PWD 'scripts/agents/cut-release.ps1'
           if (-not (Test-Path $script)) { throw 'cut-release.ps1 missing' }
-          & $script -Version '${{ steps.ver.outputs.version }}' -FailIfChangelogMissing
+          $out = & $script -Version '${{ steps.ver.outputs.version }}' -FailIfChangelogMissing -Json
+          if ($out) { $out | Write-Host }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $r = ($out -join "`n") | ConvertFrom-Json
+          "status=$($r.status)" >> $env:GITHUB_OUTPUT
+
+  artifacts:
+    # Só roda quando o cut publicou o Release AGORA (status=published): isso
+    # garante que os binários são construídos exatamente no commit da tag.
+    # Pushes em main sem bump de VERSION (status=already_released) não
+    # reconstroem/sobrescrevem assets de releases antigos. Em dry-run, builda
+    # e assina sem publicar.
+    needs: cut
+    if: >-
+      !cancelled() && (
+        needs.cut.outputs.status == 'published' ||
+        (github.event_name == 'workflow_dispatch' && inputs.dry_run)
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write     # upload de assets no Release
+      id-token: write     # OIDC para cosign keyless + attestation
+      attestations: write # actions/attest-build-provenance
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          if [ -n "${{ needs.cut.outputs.version }}" ]; then
+            VER="${{ needs.cut.outputs.version }}"
+          elif [ -n "${{ inputs.force_version }}" ]; then
+            VER="${{ inputs.force_version }}"
+          else
+            VER="$(tr -d '[:space:]' < VERSION)"
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VER" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      # CGO_ENABLED=0 é viável na matriz completa: o SQLite do runtime é
+      # modernc.org/sqlite (Go puro, sem cgo). A versão vem de go:embed do
+      # arquivo VERSION — sem ldflags de versão.
+      - name: Build binaries (5 plataformas)
+        shell: bash
+        env:
+          VER: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; do
+            GOOS="${target%/*}"
+            GOARCH="${target#*/}"
+            ext=""
+            [ "$GOOS" = "windows" ] && ext=".exe"
+            out="dist/arah-v${VER}-${GOOS}-${GOARCH}${ext}"
+            echo "building $out"
+            CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" \
+              go build -trimpath -ldflags='-s -w' -o "$out" ./cmd/arah
+          done
+          ls -la dist/
+
+      # SBOM do módulo Go raiz (o que os binários embarcam). skip-dirs exclui
+      # módulos/lockfiles que não fazem parte dos artefatos publicados.
+      - name: SBOM (CycloneDX via Trivy)
+        uses: aquasecurity/trivy-action@0.36.0
+        env:
+          TRIVY_SKIP_DIRS: website,extension,live,dist
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: cyclonedx
+          output: dist/arah-v${{ steps.ver.outputs.version }}-sbom.cdx.json
+
+      - name: Checksums (SHA256SUMS.txt)
+        shell: bash
+        working-directory: dist
+        run: |
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v4
+
+      # Keyless: certificado efêmero Fulcio ligado à identidade OIDC deste
+      # workflow, registrado no Rekor — nenhuma chave privada gerenciada.
+      # Verificação fail-closed no próprio run antes de publicar.
+      - name: Sign SHA256SUMS.txt (Cosign keyless) + verify
+        shell: bash
+        working-directory: dist
+        run: |
+          set -euo pipefail
+          cosign sign-blob --yes SHA256SUMS.txt --bundle SHA256SUMS.txt.sigstore.json
+          cosign verify-blob SHA256SUMS.txt \
+            --bundle SHA256SUMS.txt.sigstore.json \
+            --certificate-identity-regexp '^https://github.com/${{ github.repository }}/\.github/workflows/release\.yml@' \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+      - name: Provenance attestation (SLSA)
+        if: env.DRY_RUN != 'true'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/arah-v*
+
+      - name: Upload assets to Release
+        if: env.DRY_RUN != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: gh release upload "$TAG" dist/* --clobber --repo "${{ github.repository }}"
+
+      - name: Upload dry-run artifacts (inspeção)
+        if: env.DRY_RUN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arah-release-dry-run
+          path: dist/
