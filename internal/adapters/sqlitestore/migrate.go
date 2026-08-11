@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // schemaVersion is the latest applied schema. Bump when adding a migration.
-const schemaVersion = 2
+const schemaVersion = 3
 
 type migration struct {
 	Version int
@@ -71,6 +72,41 @@ DROP TABLE IF EXISTS tasks;
 			return err
 		},
 	},
+	{
+		Version: 3,
+		Name:    "event_correlation_columns",
+		Up: func(tx *sql.Tx) error {
+			stmts := []string{
+				`ALTER TABLE task_events ADD COLUMN run_id TEXT;`,
+				`ALTER TABLE task_events ADD COLUMN correlation_id TEXT;`,
+				`ALTER TABLE task_events ADD COLUMN agent_id TEXT;`,
+				`ALTER TABLE task_events ADD COLUMN session_id TEXT;`,
+				`CREATE INDEX IF NOT EXISTS idx_events_correlation ON task_events(correlation_id);`,
+				`CREATE INDEX IF NOT EXISTS idx_events_run ON task_events(run_id);`,
+			}
+			for _, q := range stmts {
+				if _, err := tx.Exec(q); err != nil {
+					// SQLite may error if column already exists on partial upgrade — ignore duplicate.
+					if !stringsContains(err.Error(), "duplicate column") {
+						return err
+					}
+				}
+			}
+			return nil
+		},
+		Down: func(tx *sql.Tx) error {
+			_, err := tx.Exec(`
+DROP INDEX IF EXISTS idx_events_correlation;
+DROP INDEX IF EXISTS idx_events_run;
+`)
+			// Columns remain (SQLite cannot DROP COLUMN portably on all versions); indexes removed.
+			return err
+		},
+	},
+}
+
+func stringsContains(s, sub string) bool {
+	return strings.Contains(s, sub)
 }
 
 func migrate(db *sql.DB) error {

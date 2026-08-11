@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - id: broken
+    paths: ["**"]
+    agents:
+      - id: backend
+        type: operational
+        role: executor

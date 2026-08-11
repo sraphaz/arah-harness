@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/sraphaz/arah-harness/internal/adapters/choreography"
+	"github.com/sraphaz/arah-harness/internal/adapters/fsstore"
 	"github.com/sraphaz/arah-harness/internal/adapters/sqlitestore"
 	"github.com/sraphaz/arah-harness/internal/core"
 	"github.com/sraphaz/arah-harness/internal/envelope"
@@ -50,6 +51,8 @@ func main() {
 		os.Exit(runTask(root, args, jsonOut))
 	case "evidence":
 		os.Exit(runEvidence(root, args, jsonOut))
+	case "economy":
+		os.Exit(runEconomy(root, args, jsonOut))
 	case "mcp":
 		sub := stripGlobalFlags(args)
 		if len(sub) == 0 || sub[0] != "serve" {
@@ -69,7 +72,7 @@ func main() {
 		usage()
 	default:
 		msg := fmt.Sprintf("unknown command %q", cmd)
-		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, msg, nil, "arah doctor|sync-check|version|task|evidence|mcp|kernel"))
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, msg, nil, "arah doctor|sync-check|version|task|evidence|economy|mcp|kernel"))
 	}
 }
 
@@ -79,9 +82,11 @@ func newTaskService(root string) (*core.TaskService, error) {
 		return nil, err
 	}
 	return &core.TaskService{
-		Store:  store,
-		Events: store,
-		Router: choreography.New(root),
+		Store:         store,
+		Events:        store,
+		Router:        choreography.New(root),
+		Briefings:     fsstore.New(root),
+		Consultations: fsstore.New(root),
 	}, nil
 }
 
@@ -91,12 +96,12 @@ func evidenceBuilder(root string, svc *core.TaskService) *evidence.Builder {
 
 func runTask(root string, args []string, jsonOut bool) int {
 	if len(args) == 0 {
-		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline>", nil))
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline|context>", nil))
 	}
 	dryRun := boolFlag(args, "--dry-run", "-dry-run")
 	subArgs := stripGlobalFlags(args)
 	if len(subArgs) == 0 {
-		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline>", nil))
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah task <create|status|complete|block|timeline|context>", nil))
 	}
 	action := subArgs[0]
 	rest := subArgs[1:]
@@ -144,12 +149,29 @@ func runTask(root string, args []string, jsonOut bool) int {
 		}
 		fmt.Printf("timeline %s (%d events)\n", id, len(evs))
 		for _, e := range evs {
-			fmt.Printf("  %s  %s\n", e.At, e.Kind)
+			fmt.Printf("  %s  %s  run=%s corr=%s agent=%s\n", e.At, e.Kind, e.RunID, e.CorrelationID, e.AgentID)
+		}
+		return 0
+	case "context":
+		id := flagValue(rest, "-task-id", "--task-id", "")
+		budget := flagValue(rest, "-budget", "--budget", "standard")
+		tc, err := svc.Context(id, core.ParseContextBudget(budget))
+		if err != nil {
+			return failEnv(jsonOut, domainEnv(err))
+		}
+		if jsonOut {
+			return envelope.WriteJSON(os.Stdout, envelope.OK(tc))
+		}
+		fmt.Printf("context %s budget=%s tokens≈%d\n", tc.TaskID, tc.Budget, tc.EstimatedTokens)
+		fmt.Printf("  executor=%s state=%s\n", tc.PrimaryExecutor, tc.State)
+		fmt.Printf("  objective=%s\n", tc.Objective)
+		for _, n := range tc.DisclosureNotes {
+			fmt.Printf("  note: %s\n", n)
 		}
 		return 0
 	default:
 		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "unknown task action: "+action, nil,
-			"arah task create|status|complete|block|timeline"))
+			"arah task create|status|complete|block|timeline|context"))
 	}
 }
 
@@ -225,22 +247,119 @@ func runKernel(root string, args []string, jsonOut bool) int {
 
 func runEvidence(root string, args []string, jsonOut bool) int {
 	sub := stripGlobalFlags(args)
-	if len(sub) == 0 || sub[0] != "graph" {
-		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah evidence graph [--json]", nil))
+	if len(sub) == 0 {
+		failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah evidence <graph|explain>", nil))
 	}
 	svc, err := newTaskService(root)
 	if err != nil {
 		return failEnv(jsonOut, envelope.Fail(envelope.CodeStore, err.Error(), nil))
 	}
-	g, err := evidenceBuilder(root, svc).Build()
+	b := evidenceBuilder(root, svc)
+	switch sub[0] {
+	case "graph":
+		g, err := b.Build()
+		if err != nil {
+			return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
+		}
+		return envelope.WriteJSON(os.Stdout, envelope.OK(g))
+	case "explain":
+		id := flagValue(sub[1:], "-task-id", "--task-id", "")
+		data, err := b.Explain(id)
+		if err != nil {
+			return failEnv(jsonOut, domainEnv(err))
+		}
+		return envelope.WriteJSON(os.Stdout, envelope.OK(data))
+	default:
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah evidence <graph|explain>", nil))
+	}
+}
+
+func runEconomy(root string, args []string, jsonOut bool) int {
+	sub := stripGlobalFlags(args)
+	if len(sub) == 0 || sub[0] != "context-compare" {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeUsage, "usage: arah economy context-compare [--task-id id] [--json]", nil))
+	}
+	rest := sub[1:]
+	id := flagValue(rest, "-task-id", "--task-id", "")
+	svc, err := newTaskService(root)
+	if err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeStore, err.Error(), nil))
+	}
+	// If no task id, create a dry-run sample for measurement.
+	var c *core.Contract
+	if id == "" {
+		res, err := svc.Create("measure context budget for runtime cohesion", "backend", core.WorkStandard, core.IntentExecution, core.MutateOptions{DryRun: true})
+		if err != nil {
+			return failEnv(jsonOut, domainEnv(err))
+		}
+		c = res.Contract
+	} else {
+		c, _, err = svc.Get(id)
+		if err != nil {
+			return failEnv(jsonOut, domainEnv(err))
+		}
+	}
+	agentsMD, _ := os.ReadFile(filepath.Join(root, "AGENTS.md"))
+	execMD, _ := os.ReadFile(filepath.Join(root, "docs", "EXECUTION_CONTROL.md"))
+	raw, _ := yamlMarshal(c)
+	briefing := core.RenderBriefing(c)
+	before := core.BaselinePromptTokens(string(agentsMD), string(execMD), string(raw), briefing)
+
+	var events []core.Event
+	if id != "" {
+		events, _ = svc.Timeline(id)
+	}
+	minimal := core.BuildTaskContext(c, events, core.BudgetMinimal, "")
+	standard := core.BuildTaskContext(c, events, core.BudgetStandard, "")
+	full := core.BuildTaskContext(c, events, core.BudgetFull, briefing)
+
+	savingsStandard := 0.0
+	if before > 0 {
+		savingsStandard = float64(before-standard.EstimatedTokens) / float64(before) * 100
+	}
+	data := map[string]any{
+		"task_id": c.TaskID,
+		"before": map[string]any{
+			"mode":             "legacy_dump",
+			"estimated_tokens": before,
+			"includes":         []string{"AGENTS.md", "docs/EXECUTION_CONTROL.md", "full_contract_yaml", "briefing"},
+		},
+		"after": map[string]any{
+			"minimal":  minimal.EstimatedTokens,
+			"standard": standard.EstimatedTokens,
+			"full":     full.EstimatedTokens,
+		},
+		"savings_pct_standard_vs_before": savingsStandard,
+		"proxy":                          "chars/4",
+		"note":                           "Deterministic token proxy for harness context budget (Economy M2-compatible).",
+	}
+	// Persist cold evidence under docs/_meta/runs when writing to this repo.
+	outDir := filepath.Join(root, "docs", "_meta", "runs", "context-budget")
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, "cannot create context-budget run dir: "+err.Error(), map[string]any{"path": outDir}))
+	}
+	summaryPath := filepath.Join(outDir, "summary.json")
+	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
 	}
-	if jsonOut || true {
-		// evidence graph is always structured
-		return envelope.WriteJSON(os.Stdout, envelope.OK(g))
+	if err := os.WriteFile(summaryPath, b, 0o644); err != nil {
+		return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, "cannot write context-budget summary: "+err.Error(), map[string]any{"path": summaryPath}))
 	}
+	data["summary_path"] = "docs/_meta/runs/context-budget/summary.json"
+	if jsonOut {
+		return envelope.WriteJSON(os.Stdout, envelope.OK(data))
+	}
+	fmt.Printf("economy context-compare task=%s\n", c.TaskID)
+	fmt.Printf("  before (legacy dump) ≈ %d tokens\n", before)
+	fmt.Printf("  after  minimal≈%d  standard≈%d  full≈%d\n", minimal.EstimatedTokens, standard.EstimatedTokens, full.EstimatedTokens)
+	fmt.Printf("  savings standard vs before: %.1f%%\n", savingsStandard)
+	fmt.Printf("  wrote %s\n", summaryPath)
 	return 0
+}
+
+func yamlMarshal(v any) ([]byte, error) {
+	return json.Marshal(v) // size proxy; avoid yaml dep in main for estimate
 }
 
 func emitMutation(jsonOut bool, res *core.MutationResult, err error) int {
@@ -416,11 +535,14 @@ func usage() {
   arah task complete -task-id ID -evidence "…" [--dry-run] [--json]
   arah task block -task-id ID -reason "…" [--dry-run] [--json]
   arah task timeline -task-id ID [--json]
-  arah evidence graph [--json]
+  arah task context -task-id ID [-budget minimal|standard|full] [--json]
+  arah evidence graph|explain [-task-id ID] [--json]
+  arah economy context-compare [-task-id ID] [--json]
   arah mcp serve [-target path]
   arah kernel sync|verify|install [-target path] [--force] [--json]
 
 Hot state: .arah/local/runtime.db (SQLite WAL) + YAML mirror for PS.
+Context budget: progressive disclosure via task context / MCP arah_get_task_context.
 Kernel: edit root sources, then "arah kernel sync"; CI runs "arah kernel verify";
 install extracts the go:embed payload zip without a harness checkout.
 Exit codes: 0 ok · 1 error · 2 drift · 4 unhealthy · 10 usage

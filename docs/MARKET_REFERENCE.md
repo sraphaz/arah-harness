@@ -45,18 +45,31 @@ Síntese das referências usadas para desenhar o ARAH Harness e o posicionamento
 - **Força**: Harness = superfície determinística (schemas, manifests, ledgers, routers)
 - **ARAH adota**: Manifests YAML + gates + agent graph como vocabulário auditável
 
+### NVIDIA-labs OO Agents (NOOA) — jul/2026
+- **URL**: https://github.com/NVIDIA-NeMo/labs-OO-Agents · paper https://arxiv.org/abs/2607.20709
+- **Blog**: [Six Agent Harness Capabilities](https://developer.nvidia.com/blog/six-agent-harness-capabilities-for-higher-model-performance/)
+- **Força**: agente = objeto Python tipado; docstrings/prompts/contratos unificados; 6 capacidades model-facing (typed I/O, pass-by-reference, code-as-action, loop engineering, object state, harness APIs); tese “o harness muda o resultado sem trocar o modelo”
+- **Gap vs ARAH**: SDK de agent loop / CodeAct REPL — não é control plane de repositório nem ECP multiagente
+- **ARAH adota (princípios, não o runtime)**:
+  - Harness APIs model-callable → MCP (`arah_get_task_context`, `arah_explain_route`, timeline, evidence)
+  - Progressive disclosure / context budget (minimal|standard|full) + proxy de tokens
+  - Eventos tipados com correlação (`run_id` / `correlation_id` / `agent_id`)
+  - Fronteira determinístico × agentic (`scripts/` × skills; briefing estático)
+- **ARAH rejeita**: CodeAct irrestrito como default; colapsar organismo em uma classe; substituir merge humano
+
 ## Matriz comparativa
 
-| Capacidade | Spec Kit | BMAD | autonomous-sdlc | harnessforge | **ARAH** |
-|---|---|---|---|---|---|
-| CLI bootstrap | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Multi-agente | ❌ | ✅ | ✅ | ❌ | ✅ |
-| Coreografia paths | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Domínio consultivo | ❌ | ❌ | ❌ | ❌ | ✅ |
-| SDD + harness | ✅ | parcial | ✅ | ❌ | ✅ |
-| Drift check | ❌ | ❌ | parcial | ✅ | ✅ |
-| Economia tokens | parcial | ❌ | parcial | ✅ | ✅ |
-| Discovery + evolve (TechOrganism) | ❌ | parcial | parcial | ❌ | ✅ |
+| Capacidade | Spec Kit | BMAD | autonomous-sdlc | harnessforge | NOOA | **ARAH** |
+|---|---|---|---|---|---|---|
+| CLI bootstrap | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Multi-agente | ❌ | ✅ | ✅ | ❌ | parcial | ✅ |
+| Coreografia paths | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Domínio consultivo | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| SDD + harness | ✅ | parcial | ✅ | ❌ | ❌ | ✅ |
+| Drift check | ❌ | ❌ | parcial | ✅ | ❌ | ✅ |
+| Economia tokens | parcial | ❌ | parcial | ✅ | parcial | ✅ |
+| Discovery + evolve (TechOrganism) | ❌ | parcial | parcial | ❌ | ❌ | ✅ |
+| Typed harness APIs / context budget | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ (0.5) |
 
 ## Validação no Arah (repo origem)
 

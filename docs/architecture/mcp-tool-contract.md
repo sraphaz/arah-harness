@@ -79,12 +79,54 @@ Re-block with the same reason is **idempotent** (no Save/emit).
 |-------|------|----------|
 | `task_id` | string | yes |
 
-Returns append-only `task_events` from SQLite (`task.created`, `task.started`, …).
+Returns append-only `task_events` from SQLite (`task.created`, `task.started`, …)
+including correlation fields `run_id`, `correlation_id`, `agent_id`, `session_id`.
+
+## `arah_get_task_context`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `task_id` | string | yes |
+| `budget` | string | no (`minimal` \| `standard` \| `full`, default `standard`) |
+
+Progressive disclosure of task state with `estimated_tokens` (chars/4 proxy).
+Prefer this over dumping AGENTS.md + full contract every turn.
+
+## `arah_explain_route`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `area` | string | no |
+| `preferred` | string | no |
+
+Returns choreography decision (primary_executor, consultants, allowed_paths).
+
+## `arah_get_evidence`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `task_id` | string | yes |
+
+Evidence Graph slice for one task (`evidence explain`).
+
+## `arah_submit_consultation`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `task_id` | string | yes |
+| `consultant_id` | string | yes |
+| `summary` | string | yes |
+| `recommendations` | string[] | no |
+| `blockers` | string[] | no |
+
+Writes structured YAML under `.arah/local/execution/<task-id>/consultations/`.
+Increments consultation counters; respects work-class limits.
 
 ## `arah_get_evidence_graph`
 
 No required input. Deterministic graph from specs (`covers`), tasks
-(`assigned_to`, `evidenced_by`, `implements`, …). No LLM.
+(`assigned_to`, `evidenced_by`, `implements`, …), and runtime events
+(`validated_by`). No LLM.
 
 ---
 
@@ -93,3 +135,4 @@ No required input. Deterministic graph from specs (`covers`), tasks
 - Generic shell execution
 - RAG / ontology / vector search (kern product surface — not absorbed)
 - REST/OpenAPI as primary contract
+- CodeAct / unrestricted REPL (NOOA research surface — principles only)

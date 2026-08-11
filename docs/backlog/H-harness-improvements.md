@@ -17,14 +17,14 @@
 | H-10 | Fonte única de status de capacidades | **done** — `capabilities.yaml` |
 | H-11 | Modo mínimo de adoção | **done** — `install -Minimal` |
 | H-12 | Knowledge Graph (Graphify) | **fase 0 done** — adapter opcional; fases 1–3 backlog |
-| H-13 | `arah-core` tipado (Go) | **in progress** — domain + task CLI + MCP stdio |
-| H-14 | Contratos JSON + `plan→validate→apply` | **partial** — envelope + dry-run + diff + idempotência complete/block |
-| H-15 | Kernel gerado (fim da segunda fonte) | **partial** — sync/verify + go:embed zip + `arah kernel install` |
-| H-16 | StateStore SQLite + migração | **done** — `.arah/local/runtime.db` WAL + mirror YAML; schema Up/Down testados (v2) |
-| H-17 | MCP serve (mesmos use cases da CLI) | **in progress** — tools ECP + timeline + evidence; `dry_run` nas mutações |
-| H-18 | Evidence Graph determinístico | **in progress** — `arah evidence graph` + MCP tool |
-| H-19 | Timeline unificada task/run | **partial** — `task timeline` + EventStore; correlacionadores amplos TBD |
-| H-20 | Conformance suite + fixtures | **partial** — `internal/conformance` create dry-run CLI↔MCP, error codes |
+| H-13 | `arah-core` tipado (Go) | **done** — domain + briefing + context budget + consultations |
+| H-14 | Contratos JSON + `plan→validate→apply` | **done** — envelope + dry-run + diff + idempotência |
+| H-15 | Kernel gerado (fim da segunda fonte) | **done** — sync/verify + go:embed zip + `arah kernel install` |
+| H-16 | StateStore SQLite + migração | **done** — runtime.db WAL + schema v3 correlação |
+| H-17 | MCP serve (mesmos use cases da CLI) | **done** — tools ECP + context + route + evidence + consultations |
+| H-18 | Evidence Graph determinístico | **done** — graph + explain + event edges |
+| H-19 | Timeline unificada task/run | **done** (base) — correlacionadores no Event; OTel later |
+| H-20 | Conformance suite + fixtures | **done** — fixtures + CLI↔MCP + AC-10 |
 
 **Direção 0.5:** [ADR-002](../adr/002-runtime-cohesion-0.5.md) · [RUNTIME_COHESION.md](../architecture/RUNTIME_COHESION.md)
 
@@ -78,43 +78,44 @@ Adapter opcional (`arah knowledge-graph`, skill, manifesto). Veredito e fases em
 
 ## Épico H · 0.5 Runtime Cohesion
 
-### H-13 · `arah-core` (Go) — in progress P0
-Domínio tipado em `internal/core`: Task/Contract, transitions, evidence, TaskService.
-Ports no core; adapters `fsstore`, `choreography`, `mcp`. Inspirado em kern ADR-0001.
+### H-13 · `arah-core` (Go) — **done** P0
+Domínio tipado em `internal/core`: Task/Contract, transitions, evidence, TaskService,
+briefing (`BRIEFING.md`), consultas tipadas, context budget.
+Ports: StateStore, EventStore, BriefingWriter, ConsultationWriter, ChoreographyResolver.
+Adapters `fsstore`, `choreography`, `sqlitestore`, `mcp`.
 
-### H-14 · Envelope JSON + pipeline único — partial P0
+### H-14 · Envelope JSON + pipeline único — **done** P0
 `--json` com `ok` / `code` / `message` / `trace_id` / `details` / `remediation`
 (`internal/envelope`). Mutações aceitam `--dry-run` / `dry_run` (plan sem persistir).
 Resposta inclui `diff` textual e `idempotent` (re-complete/re-block com a mesma
 evidência/razão não persiste de novo).
 
-### H-15 · Kernel gerado — partial P0
-Fonte canônica na raiz (`.agents` / `.skills` / `.cursor` / `scripts/{agents,harness}`,
-com exclusões harness-only) → `arah kernel sync` → `kernel/` + `kernel/manifest.json`
-+ `internal/kernel/payload/kernel.zip` (`go:embed`). `arah kernel verify` + CI bloqueiam
-drift. `arah kernel install -target` extrai o zip embutido sem checkout do harness.
-Não editar `kernel/` à mão.
+### H-15 · Kernel gerado — **done** P0
+Fonte canônica na raiz → `arah kernel sync` → `kernel/` + embed zip.
+`arah kernel verify` + CI. `arah kernel install` extrai go:embed.
+Capability `generated-kernel-package` experimental.
 
 ### H-16 · StateStore — done P0
-Hot state em `.arah/local/runtime.db` (SQLite WAL, `modernc.org/sqlite`).
-Migração automática a partir de YAML; mirror filesystem para PS. EventStore
-`task_events` append-only (timeline). Reconcile de frescor YAML↔SQLite no Get/List.
-Schema versionado (`schema_meta`) com Up/Down testados — v2 adiciona
-`idx_events_kind`; `RollbackTo` para recuperação controlada / testes DoD.
+Hot state em `.arah/local/runtime.db` (SQLite WAL). Schema v3 com colunas de
+correlação em `task_events`.
 
-### H-17 · MCP primeira classe — in progress P1
+### H-17 · MCP primeira classe — **done** P1
 `arah mcp serve` + [mcp-tool-contract.md](../architecture/mcp-tool-contract.md).
-Tools: capabilities, get/create/complete/block task, timeline, evidence graph.
-`dry_run` é opção das tools de mutação de task — não é tool MCP à parte.
+Tools: capabilities, get/create/complete/block task, timeline, **task_context**,
+**explain_route**, **get_evidence**, **submit_consultation**, evidence graph.
+`dry_run` nas mutações.
 
-### H-18 · Evidence Graph — in progress P1
-Grafo determinístico schemas→arestas (`internal/evidence`). CLI
-`arah evidence graph`. IDs estáveis via SHA-256.
+### H-18 · Evidence Graph — **done** P1
+Grafo determinístico (`internal/evidence`). Eventos → `validated_by` / `invokes`.
+CLI `arah evidence graph|explain`. IDs estáveis via SHA-256.
 
-### H-19 · Timeline por Run — partial P1
-`arah task timeline` + EventStore. Correlacionadores amplos / OTel ainda TBD.
+### H-19 · Timeline por Run — **done** P1 (base)
+`arah task timeline` + EventStore com `run_id` / `correlation_id` / `agent_id` /
+`session_id`. OTel adapter permanece later.
 
-### H-20 · Conformance suite — partial P1
-`internal/conformance` — dry-run não persiste; error codes estáveis; paridade
-`arah task create --dry-run` (CLI real) ↔ MCP `arah_create_task` no roteamento
-(executor/state/`dry_run`). Fixtures ampliadas (monorepo/drift) TBD.
+### H-20 · Conformance suite — **done** P1
+`internal/conformance` + fixtures (`valid-minimal`, `invalid-config`, `monorepo`,
+`task-blocked`, …). Provas: install idempotente, update não destrutivo, migração
+StateStore, dry-run, error codes, CLI↔MCP create/complete/block, transições,
+briefing, context budget, kernel dogfood, correlação de eventos.
+Spec AC-10 covered.

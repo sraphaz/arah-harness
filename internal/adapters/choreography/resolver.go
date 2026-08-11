@@ -66,9 +66,38 @@ type fileDoc struct {
 	Rules []fileRule `yaml:"rules"`
 }
 
-// Resolve returns the primary executor and participants for an area.
+// Resolve returns the primary executor and participants for an area or file path.
+// When area contains path separators it is matched against choreography rule paths.
 func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error) {
-	area = strings.ToLower(strings.TrimSpace(area))
+	rawArea := strings.TrimSpace(area)
+	area = strings.ToLower(rawArea)
+	// Preserve input case for path matching (choreography paths may be mixed-case).
+	pathKey := filepath.ToSlash(rawArea)
+
+	path := filepath.Join(r.RepoRoot, ".agents", "choreography.yaml")
+	raw, err := os.ReadFile(path)
+	var doc fileDoc
+	if err == nil {
+		if uerr := yaml.Unmarshal(raw, &doc); uerr != nil {
+			return core.ResolvedRouting{}, uerr
+		}
+	}
+
+	// Path-shaped inputs (e.g. apps/web/index.ts) match choreography paths first.
+	if looksLikeRepoPath(pathKey) && len(doc.Rules) > 0 {
+		if matched := matchRuleByPath(doc.Rules, pathKey); matched != nil {
+			out := routingFromRule(matched, preferred)
+			if out.PrimaryExecutor == "" {
+				return out, &core.DomainError{
+					Code:    "EXECUTION.EXACTLY_ONE_PRIMARY_EXECUTOR_REQUIRED",
+					Message: "no eligible primary_executor",
+					Details: map[string]any{"area": area, "choreography_rule": matched.ID},
+				}
+			}
+			return out, nil
+		}
+	}
+
 	if preferred == "" {
 		preferred = areaExec[area]
 	}
@@ -76,12 +105,10 @@ func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error)
 		PrimaryExecutor: preferred,
 		AllowedPaths:    append([]string{}, areaPaths[area]...),
 	}
-	if len(out.AllowedPaths) == 0 && area != "" {
+	if len(out.AllowedPaths) == 0 && area != "" && !looksLikeRepoPath(pathKey) {
 		out.AllowedPaths = []string{area + "/**"}
 	}
 
-	path := filepath.Join(r.RepoRoot, ".agents", "choreography.yaml")
-	raw, err := os.ReadFile(path)
 	if err != nil {
 		if out.PrimaryExecutor == "" {
 			return out, &core.DomainError{
@@ -91,10 +118,6 @@ func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error)
 			}
 		}
 		return out, nil
-	}
-	var doc fileDoc
-	if err := yaml.Unmarshal(raw, &doc); err != nil {
-		return out, err
 	}
 
 	var matched *fileRule
@@ -113,23 +136,10 @@ func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error)
 		}
 	}
 	if matched != nil {
+		applyRuleAgents(&out, matched)
 		out.ChoreographyRule = matched.ID
 		if matched.Execution.PrimaryExecutor != "" && preferred == "" {
 			out.PrimaryExecutor = matched.Execution.PrimaryExecutor
-		}
-		for _, a := range matched.Agents {
-			if a.ID == out.PrimaryExecutor || a.ID == "orchestrator" {
-				continue
-			}
-			role := a.Role
-			isConsultant := a.Type == "domain" || a.Type == "specialist" || role == "consultant" ||
-				contains(a.Autonomy, "consult") || contains(a.Autonomy, "consult_post")
-			isReviewer := role == "reviewer" || a.ID == "qa" || a.ID == "security" || a.ID == "pr-steward"
-			if isConsultant {
-				out.Consultants = appendUnique(out.Consultants, a.ID)
-			} else if isReviewer {
-				out.Reviewers = appendUnique(out.Reviewers, a.ID)
-			}
 		}
 	}
 	if out.PrimaryExecutor == "" {
@@ -140,6 +150,107 @@ func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error)
 		}
 	}
 	return out, nil
+}
+
+// looksLikeRepoPath detects file/dir paths. Only slash separators — a lone "."
+// must not treat dotted area labels (e.g. api.v2) as repo paths.
+func looksLikeRepoPath(s string) bool {
+	return strings.Contains(s, "/") || strings.Contains(s, `\`)
+}
+
+func matchRuleByPath(rules []fileRule, filePath string) *fileRule {
+	filePath = strings.TrimPrefix(filepath.ToSlash(filePath), "./")
+	for i := range rules {
+		rule := &rules[i]
+		if rule.When == "pull_request" {
+			continue
+		}
+		for _, p := range rule.Paths {
+			if pathMatches(filePath, filepath.ToSlash(p)) {
+				return rule
+			}
+		}
+	}
+	return nil
+}
+
+func pathMatches(filePath, pattern string) bool {
+	pattern = strings.TrimPrefix(filepath.ToSlash(pattern), "./")
+	filePath = strings.TrimPrefix(filepath.ToSlash(filePath), "./")
+	if pattern == "**" || pattern == filePath {
+		return true
+	}
+	if !strings.Contains(pattern, "*") {
+		return false
+	}
+	return matchPathSegments(splitPath(filePath), splitPath(pattern))
+}
+
+func splitPath(p string) []string {
+	p = strings.Trim(p, "/")
+	if p == "" {
+		return nil
+	}
+	return strings.Split(p, "/")
+}
+
+// matchPathSegments matches path segments with *, **, and exact names.
+// "**" spans zero or more intermediate segments (e.g. src/**/api/**).
+func matchPathSegments(file, pat []string) bool {
+	for len(pat) > 0 {
+		if pat[0] == "**" {
+			rest := pat[1:]
+			if len(rest) == 0 {
+				return true
+			}
+			for i := 0; i <= len(file); i++ {
+				if matchPathSegments(file[i:], rest) {
+					return true
+				}
+			}
+			return false
+		}
+		if len(file) == 0 {
+			return false
+		}
+		ok, err := filepath.Match(pat[0], file[0])
+		if err != nil || !ok {
+			return false
+		}
+		pat = pat[1:]
+		file = file[1:]
+	}
+	return len(file) == 0
+}
+
+func routingFromRule(rule *fileRule, preferred string) core.ResolvedRouting {
+	out := core.ResolvedRouting{
+		PrimaryExecutor:  rule.Execution.PrimaryExecutor,
+		ChoreographyRule: rule.ID,
+		AllowedPaths:     append([]string{}, rule.Paths...),
+	}
+	if preferred != "" {
+		out.PrimaryExecutor = preferred
+	}
+	applyRuleAgents(&out, rule)
+	return out
+}
+
+func applyRuleAgents(out *core.ResolvedRouting, rule *fileRule) {
+	for _, a := range rule.Agents {
+		if a.ID == out.PrimaryExecutor || a.ID == "orchestrator" {
+			continue
+		}
+		role := a.Role
+		isConsultant := a.Type == "domain" || a.Type == "specialist" || role == "consultant" ||
+			contains(a.Autonomy, "consult") || contains(a.Autonomy, "consult_post")
+		isReviewer := role == "reviewer" || a.ID == "qa" || a.ID == "security" || a.ID == "pr-steward"
+		if isConsultant {
+			out.Consultants = appendUnique(out.Consultants, a.ID)
+		} else if isReviewer {
+			out.Reviewers = appendUnique(out.Reviewers, a.ID)
+		}
+	}
 }
 
 func contains(xs []string, v string) bool {

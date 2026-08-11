@@ -66,11 +66,14 @@ INSERT INTO schema_meta(key, value) VALUES('version', '1');
 	if err != nil {
 		t.Fatal(err)
 	}
-	if v != 2 {
-		t.Fatalf("expected upgrade to v2, got %d", v)
+	if v != 3 {
+		t.Fatalf("expected upgrade to v3, got %d", v)
 	}
 	if !indexExists(t, store.DBPath, "idx_events_kind") {
 		t.Fatal("expected idx_events_kind after upgrade")
+	}
+	if !indexExists(t, store.DBPath, "idx_events_correlation") {
+		t.Fatal("expected idx_events_correlation after upgrade to v3")
 	}
 
 	// Round-trip a terminal write on the upgraded schema.
@@ -119,8 +122,8 @@ INSERT INTO schema_meta(key, value) VALUES('version', '1');
 	if err != nil {
 		t.Fatal(err)
 	}
-	if v != 2 {
-		t.Fatalf("re-open should upgrade to v2, got %d", v)
+	if v != 3 {
+		t.Fatalf("re-open should upgrade to v3, got %d", v)
 	}
 }
 
@@ -135,11 +138,14 @@ func TestFreshStoreIsLatestSchema(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if v != 2 {
+	if v != 3 {
 		t.Fatalf("fresh store version=%d", v)
 	}
 	if !indexExists(t, store.DBPath, "idx_events_kind") {
 		t.Fatal("fresh store missing v2 index")
+	}
+	if !indexExists(t, store.DBPath, "idx_events_correlation") {
+		t.Fatal("fresh store missing v3 correlation index")
 	}
 }
 

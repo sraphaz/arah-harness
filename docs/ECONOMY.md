@@ -62,6 +62,27 @@ Sem esses campos, o scorecard usa **proxies** (outcomes, turns, signals) — já
 | **M2** | Tokens/custo opcionais no audit |
 | **M3** | Heurísticas no evolve + digest |
 
+## Context budget (0.5)
+
+O agente **não** deve receber AGENTS.md + contrato completo + histórico em todo turno.
+Use progressive disclosure (inspirado nas harness APIs do NOOA):
+
+```bash
+arah task context --task-id task-… --budget minimal|standard|full --json
+arah economy context-compare [--task-id task-…] --json
+```
+
+MCP: `arah_get_task_context` com `budget`.
+
+| Budget | Conteúdo | Uso |
+|--------|----------|-----|
+| `minimal` | id, state, executor, objective truncado | roteamento / status |
+| `standard` | + paths (cap), limits, event kinds recentes | execução típica |
+| `full` | contrato + timeline + BRIEFING.md | debugging / handoff |
+
+Proxy de tokens: `chars/4` (determinístico). Comparativo before/after em
+`docs/_meta/runs/context-budget/summary.json`.
+
 ## O que não fazer
 
 - Chat entre agentes sobre métricas a cada turn
