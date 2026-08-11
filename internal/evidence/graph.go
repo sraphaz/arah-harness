@@ -43,8 +43,21 @@ type Builder struct {
 	Events   core.EventStore
 }
 
+// BuildOptions tunes Build. Zero value loads events for every task.
+type BuildOptions struct {
+	// EventTaskIDs, when non-empty, limits ListByTask to these IDs only.
+	EventTaskIDs []string
+}
+
 // Build derives nodes and edges exclusively from Arah schemas and runtime state.
-func (b *Builder) Build() (*Graph, error) {
+func (b *Builder) Build(opts ...BuildOptions) (*Graph, error) {
+	var eventFilter map[string]bool
+	if len(opts) > 0 && len(opts[0].EventTaskIDs) > 0 {
+		eventFilter = make(map[string]bool, len(opts[0].EventTaskIDs))
+		for _, id := range opts[0].EventTaskIDs {
+			eventFilter[id] = true
+		}
+	}
 	g := &Graph{Version: "1"}
 	idx := map[string]bool{}
 	add := func(n Node) {
@@ -167,6 +180,9 @@ func (b *Builder) Build() (*Graph, error) {
 	if b.Events != nil {
 		seenEv := map[string]bool{}
 		for _, taskID := range taskIDs {
+			if eventFilter != nil && !eventFilter[taskID] {
+				continue
+			}
 			evs, err := b.Events.ListByTask(taskID)
 			if err != nil {
 				continue
@@ -204,7 +220,7 @@ func (b *Builder) Explain(taskID string) (map[string]any, error) {
 			Message: "task_id is required",
 		}
 	}
-	g, err := b.Build()
+	g, err := b.Build(BuildOptions{EventTaskIDs: []string{taskID}})
 	if err != nil {
 		return nil, err
 	}

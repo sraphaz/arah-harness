@@ -40,8 +40,15 @@ func (s *TaskService) emit(taskID, kind string, payload map[string]any) error {
 }
 
 func (s *TaskService) emitCorrelated(c *Contract, kind string, payload map[string]any) error {
+	return s.emitCorrelatedAs(c, c.PrimaryExecutor, kind, payload)
+}
+
+func (s *TaskService) emitCorrelatedAs(c *Contract, agentID, kind string, payload map[string]any) error {
 	if s.Events == nil {
 		return nil
+	}
+	if agentID == "" {
+		agentID = c.PrimaryExecutor
 	}
 	ev := Event{
 		ID:            newEventID(),
@@ -52,7 +59,7 @@ func (s *TaskService) emitCorrelated(c *Contract, kind string, payload map[strin
 		Payload:       payload,
 		RunID:         runIDFor(c),
 		CorrelationID: c.TaskID,
-		AgentID:       c.PrimaryExecutor,
+		AgentID:       agentID,
 	}
 	return s.Events.Append(ev)
 }

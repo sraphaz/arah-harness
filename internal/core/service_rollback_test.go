@@ -191,6 +191,11 @@ func TestSubmitConsultationEmitsOrRollsBack(t *testing.T) {
 	if !found {
 		t.Fatalf("missing consultation.submitted in %#v", evs)
 	}
+	for _, ev := range evs {
+		if ev.Kind == "consultation.submitted" && ev.AgentID != "solutions-architect" {
+			t.Fatalf("consultation event must attribute consultant, agent_id=%s", ev.AgentID)
+		}
+	}
 }
 
 func TestSubmitConsultationConcurrentRespectsLimit(t *testing.T) {

@@ -109,7 +109,7 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 		}
 		return nil, "", wrapStore(err)
 	}
-	if err := s.emitCorrelated(c, "consultation.submitted", map[string]any{
+	if err := s.emitCorrelatedAs(c, consultantID, "consultation.submitted", map[string]any{
 		"consultant_id": consultantID,
 		"path":          path,
 		"id":            res.ID,
