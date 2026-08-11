@@ -16,7 +16,7 @@ fields:
   agent_id:        {type: string, required: true}
   action:          {type: string, required: true}
   autonomy_level:  {type: string, required: true}
-  outcome:         {type: enum[ok, blocked, denied, error, pending], required: true}
+  outcome:         {type: "enum[ok, blocked, denied, error, pending]", required: true}
   human_gate:      {type: string, nullable: true}
   details:         {type: string, description: "Scrubbed before persist"}
   # Economy Intelligence (M2) — todos opcionais / backward compatible
