@@ -102,7 +102,11 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 
 	path, err := s.Consultations.WriteConsultation(taskID, res)
 	if err != nil {
-		_ = s.rollbackConsultationSlot(c)
+		if rerr := s.rollbackConsultationSlot(c); rerr != nil {
+			return nil, "", errf("STATE.CONSULTATION_ROLLBACK_FAILED",
+				fmt.Sprintf("write failed: %v; rollback failed: %v", err, rerr),
+				map[string]any{"task_id": taskID, "write_error": err.Error(), "rollback_error": rerr.Error()})
+		}
 		return nil, "", wrapStore(err)
 	}
 	if err := s.emitCorrelated(c, "consultation.submitted", map[string]any{
@@ -110,8 +114,20 @@ func (s *TaskService) SubmitConsultation(taskID, consultantID, summary string, r
 		"path":          path,
 		"id":            res.ID,
 	}); err != nil {
-		_ = s.Consultations.RemoveConsultation(path)
-		_ = s.rollbackConsultationSlot(c)
+		details := map[string]any{"task_id": taskID, "kind": "consultation.submitted", "emit_error": err.Error()}
+		compFailed := false
+		if rerr := s.Consultations.RemoveConsultation(path); rerr != nil {
+			details["remove_error"] = rerr.Error()
+			compFailed = true
+		}
+		if rerr := s.rollbackConsultationSlot(c); rerr != nil {
+			details["rollback_error"] = rerr.Error()
+			compFailed = true
+		}
+		if compFailed {
+			return nil, "", errf("STATE.CONSULTATION_ROLLBACK_FAILED",
+				fmt.Sprintf("event append failed: %v; compensation incomplete", err), details)
+		}
 		return nil, "", errf("STATE.EVENT_APPEND_FAILED", err.Error(), map[string]any{"task_id": taskID, "kind": "consultation.submitted"})
 	}
 	return res, path, nil

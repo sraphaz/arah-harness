@@ -230,3 +230,58 @@ func TestSubmitConsultationConcurrentRespectsLimit(t *testing.T) {
 		t.Fatalf("counter=%d", got.Counters.Consultations)
 	}
 }
+
+type boomWriteConsult struct{}
+
+func (boomWriteConsult) WriteConsultation(string, *core.ConsultationResult) (string, error) {
+	return "", fmt.Errorf("write boom")
+}
+func (boomWriteConsult) RemoveConsultation(string) error { return nil }
+
+type flakyReleaseStore struct {
+	*sqlitestore.Store
+}
+
+func (f *flakyReleaseStore) ReleaseConsultationSlot(taskID string) (*core.Contract, error) {
+	return nil, fmt.Errorf("release boom")
+}
+
+type boomRemoveConsult struct {
+	inner core.ConsultationWriter
+}
+
+func (b boomRemoveConsult) WriteConsultation(taskID string, result *core.ConsultationResult) (string, error) {
+	return b.inner.WriteConsultation(taskID, result)
+}
+func (b boomRemoveConsult) RemoveConsultation(string) error {
+	return fmt.Errorf("remove boom")
+}
+
+func TestSubmitConsultationSurfacesCompensationFailures(t *testing.T) {
+	root, svc, store := sqliteSvc(t)
+	created, err := svc.Create("comp fail", "backend", core.WorkArchitectural, core.IntentExecution, core.MutateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := created.Contract.TaskID
+
+	svc.Store = &flakyReleaseStore{Store: store}
+	svc.Consultations = boomWriteConsult{}
+	_, _, err = svc.SubmitConsultation(id, "solutions-architect", "x", nil, nil)
+	de, ok := err.(*core.DomainError)
+	if !ok || de.Code != "STATE.CONSULTATION_ROLLBACK_FAILED" {
+		t.Fatalf("write+rollback path: %#v", err)
+	}
+
+	// Fresh service for emit+remove compensation path.
+	fs := fsstore.New(root)
+	svc2 := &core.TaskService{
+		Store: store, Events: &failEvents{inner: store, failOn: "consultation.submitted"},
+		Router: choreography.New(root), Briefings: fs, Consultations: boomRemoveConsult{inner: fs},
+	}
+	_, _, err = svc2.SubmitConsultation(id, "solutions-architect", "y", nil, nil)
+	de, ok = err.(*core.DomainError)
+	if !ok || de.Code != "STATE.CONSULTATION_ROLLBACK_FAILED" {
+		t.Fatalf("emit+remove path: %#v", err)
+	}
+}

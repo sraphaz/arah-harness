@@ -73,9 +73,7 @@ const maxEventsStandard = 8
 
 // BuildTaskContext renders a progressive-disclosure view for the given budget.
 func BuildTaskContext(c *Contract, events []Event, budget ContextBudget, briefing string) *TaskContext {
-	if budget == "" {
-		budget = BudgetStandard
-	}
+	budget = ParseContextBudget(string(budget))
 	tc := &TaskContext{
 		Budget:           budget,
 		TaskID:           c.TaskID,

@@ -5,7 +5,6 @@ package evidence
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -200,7 +199,10 @@ func (b *Builder) Build() (*Graph, error) {
 func (b *Builder) Explain(taskID string) (map[string]any, error) {
 	taskID = strings.TrimSpace(taskID)
 	if taskID == "" {
-		return nil, fmt.Errorf("task_id is required")
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.TASK_ID_REQUIRED",
+			Message: "task_id is required",
+		}
 	}
 	g, err := b.Build()
 	if err != nil {
@@ -212,7 +214,11 @@ func (b *Builder) Explain(taskID string) (map[string]any, error) {
 		nodes[n.ID] = n
 	}
 	if _, ok := nodes[tid]; !ok {
-		return nil, fmt.Errorf("unknown task_id: %s", taskID)
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.TASK_NOT_FOUND",
+			Message: "task not found: " + taskID,
+			Details: map[string]any{"task_id": taskID},
+		}
 	}
 	var edges []Edge
 	related := map[string]bool{tid: true}

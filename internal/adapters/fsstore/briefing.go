@@ -59,9 +59,12 @@ func (s *Store) WriteConsultation(taskID string, result *core.ConsultationResult
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
 	if _, err := f.Write(raw); err != nil {
 		_ = f.Close()
+		_ = os.Remove(path)
+		return "", err
+	}
+	if err := f.Close(); err != nil {
 		_ = os.Remove(path)
 		return "", err
 	}

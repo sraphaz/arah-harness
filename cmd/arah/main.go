@@ -266,7 +266,7 @@ func runEvidence(root string, args []string, jsonOut bool) int {
 		id := flagValue(sub[1:], "-task-id", "--task-id", "")
 		data, err := b.Explain(id)
 		if err != nil {
-			return failEnv(jsonOut, envelope.Fail(envelope.CodeInternal, err.Error(), nil))
+			return failEnv(jsonOut, domainEnv(err))
 		}
 		return envelope.WriteJSON(os.Stdout, envelope.OK(data))
 	default:

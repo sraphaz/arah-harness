@@ -202,6 +202,7 @@ func (s *TaskService) failCreate(taskID string, primary *DomainError) error {
 
 // Context returns a budgeted progressive-disclosure view of a task.
 func (s *TaskService) Context(taskID string, budget ContextBudget) (*TaskContext, error) {
+	budget = ParseContextBudget(string(budget))
 	c, _, err := s.Store.Get(taskID)
 	if err != nil {
 		return nil, err

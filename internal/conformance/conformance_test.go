@@ -366,7 +366,6 @@ func TestMonorepoRouting(t *testing.T) {
 	if back.Contract.PrimaryExecutor != "backend" {
 		t.Fatalf("backend path create → want backend, got %s", back.Contract.PrimaryExecutor)
 	}
-	_ = root
 }
 
 func TestKernelVerifyCleanOnModuleRoot(t *testing.T) {

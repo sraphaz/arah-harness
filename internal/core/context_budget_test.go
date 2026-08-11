@@ -7,6 +7,18 @@ import (
 	"unicode/utf8"
 )
 
+func TestBuildTaskContextNormalizesBudget(t *testing.T) {
+	c := &Contract{TaskID: "t", Objective: "o", State: StateExecuting, PrimaryExecutor: "backend"}
+	tc := BuildTaskContext(c, nil, ContextBudget(" FULL "), "")
+	if tc.Budget != BudgetFull || tc.Contract == nil {
+		t.Fatalf("expected full disclosure for %q, got budget=%s contract=%v", " FULL ", tc.Budget, tc.Contract != nil)
+	}
+	tc = BuildTaskContext(c, nil, ContextBudget("MINIMAL"), "")
+	if tc.Budget != BudgetMinimal {
+		t.Fatalf("budget=%s", tc.Budget)
+	}
+}
+
 func TestBuildTaskContextBudgets(t *testing.T) {
 	c := &Contract{
 		TaskID:          "task-ctx",

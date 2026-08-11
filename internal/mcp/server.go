@@ -283,7 +283,7 @@ func (s *Server) callTool(name string, args map[string]any) (envelope.Envelope, 
 		}
 		data, err := s.Evidence.Explain(id)
 		if err != nil {
-			return envelope.Fail(envelope.CodeInternal, err.Error(), nil), true
+			return domainToEnvelope(err), true
 		}
 		return envelope.OK(data), false
 	case "arah_submit_consultation":

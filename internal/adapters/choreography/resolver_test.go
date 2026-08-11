@@ -79,6 +79,54 @@ rules:
 	}
 }
 
+func TestResolveMixedCasePathPreserved(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, ".agents", "choreography.yaml"), []byte(`
+version: 2
+rules:
+  - id: craft-web-cased
+    paths: ["apps/Web/**"]
+    execution:
+      primary_executor: frontend
+    agents:
+      - id: frontend
+        type: operational
+        role: executor
+`), 0o644)
+	r, err := choreography.New(root).Resolve("apps/Web/index.ts", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.PrimaryExecutor != "frontend" {
+		t.Fatalf("got %s", r.PrimaryExecutor)
+	}
+}
+
+func TestResolveEmbeddedDoublestar(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, ".agents", "choreography.yaml"), []byte(`
+version: 2
+rules:
+  - id: craft-api-nested
+    paths: ["src/**/api/**"]
+    execution:
+      primary_executor: backend
+    agents:
+      - id: backend
+        type: operational
+        role: executor
+`), 0o644)
+	r, err := choreography.New(root).Resolve("src/payments/api/handler.go", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.PrimaryExecutor != "backend" {
+		t.Fatalf("got %s", r.PrimaryExecutor)
+	}
+}
+
 func TestResolvePathRuleRequiresPrimaryExecutor(t *testing.T) {
 	root := t.TempDir()
 	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)

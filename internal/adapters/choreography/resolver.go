@@ -71,7 +71,8 @@ type fileDoc struct {
 func (r *Resolver) Resolve(area, preferred string) (core.ResolvedRouting, error) {
 	rawArea := strings.TrimSpace(area)
 	area = strings.ToLower(rawArea)
-	pathKey := filepath.ToSlash(area)
+	// Preserve input case for path matching (choreography paths may be mixed-case).
+	pathKey := filepath.ToSlash(rawArea)
 
 	path := filepath.Join(r.RepoRoot, ".agents", "choreography.yaml")
 	raw, err := os.ReadFile(path)
@@ -174,24 +175,52 @@ func matchRuleByPath(rules []fileRule, filePath string) *fileRule {
 }
 
 func pathMatches(filePath, pattern string) bool {
-	pattern = strings.TrimPrefix(pattern, "./")
+	pattern = strings.TrimPrefix(filepath.ToSlash(pattern), "./")
+	filePath = strings.TrimPrefix(filepath.ToSlash(filePath), "./")
 	if pattern == "**" || pattern == filePath {
 		return true
 	}
-	if strings.HasSuffix(pattern, "/**") {
-		prefix := strings.TrimSuffix(pattern, "/**")
-		return filePath == prefix || strings.HasPrefix(filePath, prefix+"/")
+	if !strings.Contains(pattern, "*") {
+		return false
 	}
-	if strings.HasSuffix(pattern, "/**/**") {
-		prefix := strings.TrimSuffix(pattern, "/**/**")
-		return strings.HasPrefix(filePath, prefix+"/")
+	return matchPathSegments(splitPath(filePath), splitPath(pattern))
+}
+
+func splitPath(p string) []string {
+	p = strings.Trim(p, "/")
+	if p == "" {
+		return nil
 	}
-	// simple * segment: services/*
-	if strings.Contains(pattern, "*") {
-		ok, _ := filepath.Match(pattern, filePath)
-		return ok
+	return strings.Split(p, "/")
+}
+
+// matchPathSegments matches path segments with *, **, and exact names.
+// "**" spans zero or more intermediate segments (e.g. src/**/api/**).
+func matchPathSegments(file, pat []string) bool {
+	for len(pat) > 0 {
+		if pat[0] == "**" {
+			rest := pat[1:]
+			if len(rest) == 0 {
+				return true
+			}
+			for i := 0; i <= len(file); i++ {
+				if matchPathSegments(file[i:], rest) {
+					return true
+				}
+			}
+			return false
+		}
+		if len(file) == 0 {
+			return false
+		}
+		ok, err := filepath.Match(pat[0], file[0])
+		if err != nil || !ok {
+			return false
+		}
+		pat = pat[1:]
+		file = file[1:]
 	}
-	return false
+	return len(file) == 0
 }
 
 func routingFromRule(rule *fileRule, preferred string) core.ResolvedRouting {
