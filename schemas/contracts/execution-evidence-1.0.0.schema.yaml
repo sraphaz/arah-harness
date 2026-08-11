@@ -1,0 +1,98 @@
+# schema: contracts/execution-evidence
+# version: 1.0.0
+# Contrato da federação Surya (doc I §4). Emitido pelo ARAH Harness no repo
+# alvo ao concluir (ou falhar) uma execução; ingerido pelo Workspace.
+# Transporte inicial: artefato commitado/anexado ao PR + POST na API de
+# ingestão do Workspace.
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sraphaz.github.io/contracts/execution-evidence/1.0.0"
+title: ExecutionEvidence
+type: object
+required: [schema_version, evidence_id, request_id, correlation_id, project_id,
+           task_id, run_id, outcome, produced_by, produced_at, evidence]
+additionalProperties: false
+properties:
+  schema_version: { const: "1.0.0" }
+  evidence_id:    { type: string, description: "ULID" }
+  request_id:     { type: string }
+  correlation_id: { type: string }
+  project_id:     { type: string }
+  demand_id:      { type: [string, "null"] }
+  spec_id:        { type: [string, "null"] }
+  task_id:        { type: string, description: "cunhado pelo ARAH Harness" }
+  run_id:         { type: string }
+  outcome:        { enum: [completed, partial, failed, blocked, cancelled] }
+  produced_by:    { type: string, description: "actor_id agent:<nome>@<versão>" }
+  produced_at:    { type: string, format: date-time }
+  kernel:
+    type: object
+    properties:
+      arah_harness_version: { type: string }
+      profile:              { type: string }
+  evidence:
+    type: object
+    description: "Núcleo probatório — tudo referenciável, nada opaco"
+    properties:
+      files:
+        type: array
+        items:
+          type: object
+          required: [path, change]
+          properties:
+            path:   { type: string }
+            change: { enum: [added, modified, deleted, renamed] }
+      tests:
+        type: object
+        properties:
+          suite_ref: { type: string, description: "workflow run / relatório" }
+          passed:    { type: integer }
+          failed:    { type: integer }
+          skipped:   { type: integer }
+          coverage:  { type: [number, "null"] }
+      evals:
+        type: object
+        properties:
+          provider:   { type: string, description: "EvalProvider usado (O)" }
+          report_ref: { type: string }
+          passed:     { type: integer }
+          failed:     { type: integer }
+          regressions: { type: array, items: { type: string } }
+      security:
+        type: object
+        properties:
+          scans:
+            type: array
+            items:
+              type: object
+              properties:
+                tool:     { type: string, description: "trivy, gitleaks, conftest..." }
+                critical: { type: integer }
+                high:     { type: integer }
+                report_ref: { type: string }
+      policies:
+        type: object
+        properties:
+          evaluated: { type: integer }
+          violations: { type: array, items: { type: string } }
+      pr:
+        type: object
+        properties:
+          number: { type: [integer, "null"] }
+          url:    { type: [string, "null"] }
+          state:  { enum: [open, merged, closed, "null"] }
+          merged_by: { type: [string, "null"], description: "actor_id humano — merge é sempre humano em arquitetura crítica" }
+      commits:
+        type: array
+        items: { type: string, description: "SHA" }
+      evidence_graph_ref: { type: [string, "null"], description: "export do Evidence Graph do kernel" }
+  economy:
+    type: object
+    description: "Diagnóstico, não KPI (N)"
+    properties:
+      tokens_in:    { type: [integer, "null"] }
+      tokens_out:   { type: [integer, "null"] }
+      cost_usd:     { type: [number, "null"] }
+      wall_time_s:  { type: [number, "null"] }
+      turns:        { type: [integer, "null"] }
+      first_pass_accepted: { type: [boolean, "null"] }
+  notes: { type: [string, "null"] }

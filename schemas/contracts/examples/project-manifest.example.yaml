@@ -1,0 +1,33 @@
+# Exemplo válido de contracts/project-manifest 2.0.0
+schema_version: "2.0.0"
+id: iautos
+name: IAutos
+status: active
+repository:
+  remote: sraphaz/iautos
+  default_branch: main
+  visibility: private
+engineering_profile: standard-product
+risk_tier: medio
+arah_harness:
+  version: "0.5.0"
+  profile: standard-product
+  exception: null
+demands:
+  - dmd-2026-iautos-llm-real
+owners:
+  - "github:sraphaz"
+contracts_supported:
+  - contract: execution-request
+    version: "1.0.0"
+    role: consumes
+  - contract: execution-evidence
+    version: "1.0.0"
+    role: emits
+  - contract: canonical-event
+    version: "1.0.0"
+    role: emits
+health:
+  scorecard_ref: docs/_meta/scorecard.yaml
+  last_assessed: "2026-08-11"
+risk_notes: Produto com tenant múltiplo; mutações live proibidas fora de gate humano.
