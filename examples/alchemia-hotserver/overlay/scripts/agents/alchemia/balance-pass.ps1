@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $OutDir = Join-Path $Root "coisas do codex\arah-checklists"
-if (-not (Test-Path -LiteralPath $OutDir)) {
+if (-not (Test-Path -LiteralPath (Split-Path $OutDir))) {
   $OutDir = Join-Path $Root "docs\arah\checklists"
 }
 New-Item -ItemType Directory -Path $OutDir -Force | Out-Null

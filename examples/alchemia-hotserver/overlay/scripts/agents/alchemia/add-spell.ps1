@@ -6,7 +6,7 @@
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $OutDir = Join-Path $Root "coisas do codex\arah-checklists"
-if (-not (Test-Path -LiteralPath $OutDir)) {
+if (-not (Test-Path -LiteralPath (Split-Path $OutDir))) {
   # fallback se pasta Codex ainda nao existe
   $OutDir = Join-Path $Root "docs\arah\checklists"
 }

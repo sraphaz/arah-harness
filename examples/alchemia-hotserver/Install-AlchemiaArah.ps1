@@ -44,6 +44,14 @@ function Copy-OverlayTree([string]$src, [string]$dst) {
   }
 }
 
+function Invoke-CheckedPowerShell([string]$ScriptPath, [string[]]$Arguments = @()) {
+  & powershell -ExecutionPolicy Bypass -File $ScriptPath @Arguments
+  if ($LASTEXITCODE -ne 0) {
+    $exitCode = $LASTEXITCODE
+    throw "Processo filho falhou com exit code $exitCode: $ScriptPath $($Arguments -join ' ')"
+  }
+}
+
 Write-Host "============================================" -ForegroundColor Green
 Write-Host " Alchemia HotServer — ARAH Pack Installer" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
@@ -124,7 +132,7 @@ if (Test-Path -LiteralPath $AgentsTarget) {
 # --- domain sync / validate / doctor ---
 Write-Step "domain sync"
 try {
-  & powershell -ExecutionPolicy Bypass -File $ArahCli domain sync -Target $Target
+  Invoke-CheckedPowerShell -ScriptPath $ArahCli -Arguments @("domain", "sync", "-Target", $Target)
 } catch {
   Write-Warning "domain sync falhou (overlay de domains ja vem no pack): $_"
 }
@@ -133,7 +141,7 @@ Write-Step "validate-manifests"
 $Validate = Join-Path $Target "scripts\agents\validate-manifests.ps1"
 if (Test-Path -LiteralPath $Validate) {
   try {
-    & powershell -ExecutionPolicy Bypass -File $Validate
+    Invoke-CheckedPowerShell -ScriptPath $Validate
   } catch {
     Write-Warning "validate-manifests: $_"
   }
@@ -144,14 +152,14 @@ if (Test-Path -LiteralPath $Validate) {
 if (-not $SkipDoctor) {
   Write-Step "doctor"
   try {
-    & powershell -ExecutionPolicy Bypass -File $ArahCli doctor -Target $Target
+    Invoke-CheckedPowerShell -ScriptPath $ArahCli -Arguments @("doctor", "-Target", $Target)
   } catch {
     Write-Warning "doctor: $_"
   }
 }
 
 try {
-  & powershell -ExecutionPolicy Bypass -File $ArahCli export-graph -Target $Target
+  Invoke-CheckedPowerShell -ScriptPath $ArahCli -Arguments @("export-graph", "-Target", $Target)
 } catch {
   Write-Warning "export-graph: $_"
 }

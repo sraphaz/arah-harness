@@ -60,7 +60,7 @@ foreach ($rel in $Files) {
 Write-Host "lua-validate: checked=$checked failed=$failed area=$Area"
 if ($checked -eq 0) {
   Write-Warning "Nenhum arquivo encontrado para validar. Paths do pack podem diferir do seu tree."
-  exit 0
+  exit 1
 }
 if ($failed -gt 0) { exit 1 }
 exit 0
