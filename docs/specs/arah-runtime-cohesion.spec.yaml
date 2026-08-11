@@ -3,7 +3,7 @@ title: Arah Harness 0.5 — Runtime Cohesion
 status: draft
 owner: solutions-architect
 version: 1
-updated_at: 2026-08-10
+updated_at: 2026-08-11
 covers:
   - docs/adr/002-runtime-cohesion-0.5.md
   - docs/architecture/RUNTIME_COHESION.md
@@ -91,15 +91,9 @@ acceptance:
 
   - id: AC-10
     when: conformance suite roda contra fixtures
-    then: dry-run, error codes, CLI↔MCP parity, transitions, briefing, context budget e correlação de eventos passam de forma reproduzível
+    then: install/update/migração, dry-run, error codes, CLI↔MCP parity, transitions, briefing, context budget e correlação de eventos passam de forma reproduzível
     status: covered
     covered_by: internal/conformance/conformance_test.go
-
-  - id: AC-10b
-    when: conformance suite cobre install/update/migração de harness
-    then: fixtures de install idempotente, update não destrutivo e migração StateStore passam
-    status: pending
-    covered_by: null
 
 harness:
   commands:

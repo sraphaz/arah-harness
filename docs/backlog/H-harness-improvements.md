@@ -115,6 +115,7 @@ CLI `arah evidence graph|explain`. IDs estáveis via SHA-256.
 
 ### H-20 · Conformance suite — **done** P1
 `internal/conformance` + fixtures (`valid-minimal`, `invalid-config`, `monorepo`,
-`task-blocked`, …). Provas: dry-run, error codes, CLI↔MCP create/complete/block,
-transições, briefing, context budget, kernel dogfood, correlação de eventos.
+`task-blocked`, …). Provas: install idempotente, update não destrutivo, migração
+StateStore, dry-run, error codes, CLI↔MCP create/complete/block, transições,
+briefing, context budget, kernel dogfood, correlação de eventos.
 Spec AC-10 covered.

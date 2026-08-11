@@ -2,6 +2,7 @@ package conformance_test
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"os"
 	"os/exec"
@@ -9,6 +10,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	_ "modernc.org/sqlite"
 
 	"github.com/sraphaz/arah-harness/internal/adapters/choreography"
 	"github.com/sraphaz/arah-harness/internal/adapters/fsstore"
@@ -427,6 +430,163 @@ func TestEventCorrelationFields(t *testing.T) {
 	}
 	if evs[0].CorrelationID != res.Contract.TaskID || evs[0].RunID == "" || evs[0].AgentID == "" {
 		t.Fatalf("correlation fields missing: %+v", evs[0])
+	}
+}
+
+// AC-10 — install idempotente (kernel.Install sem -Force não reescreve).
+func TestInstallIdempotent(t *testing.T) {
+	if len(kernel.EmbeddedZip()) == 0 {
+		t.Skip("embedded kernel zip empty")
+	}
+	target := t.TempDir()
+	n, err := kernel.Install(target, nil, kernel.InstallOptions{Force: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n < 5 {
+		t.Fatalf("first install wrote too little: %d", n)
+	}
+	if _, err := os.Stat(filepath.Join(target, ".agents", "choreography.yaml")); err != nil {
+		t.Fatal(err)
+	}
+	n2, err := kernel.Install(target, nil, kernel.InstallOptions{Force: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n2 != 0 {
+		t.Fatalf("idempotent install must skip existing files, wrote=%d", n2)
+	}
+}
+
+// AC-10 — update não destrutivo: overlay do consumidor e mutações locais
+// sobrevivem a re-install sem Force (equivalente Go de `arah update` KernelOnly).
+func TestUpdateNonDestructive(t *testing.T) {
+	if len(kernel.EmbeddedZip()) == 0 {
+		t.Skip("embedded kernel zip empty")
+	}
+	target := t.TempDir()
+	if _, err := kernel.Install(target, nil, kernel.InstallOptions{Force: true}); err != nil {
+		t.Fatal(err)
+	}
+
+	overlayDir := filepath.Join(target, ".agents", "domain")
+	if err := os.MkdirAll(overlayDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	overlay := filepath.Join(overlayDir, "consumer-overlay.yaml")
+	if err := os.WriteFile(overlay, []byte("id: consumer-overlay\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	choreo := filepath.Join(target, ".agents", "choreography.yaml")
+	if err := os.WriteFile(choreo, []byte("version: 2\nrules: []\n# local-mutation\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(choreo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	n, err := kernel.Install(target, nil, kernel.InstallOptions{Force: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("non-destructive update must not overwrite, wrote=%d", n)
+	}
+	after, err := os.ReadFile(choreo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(after) != string(before) {
+		t.Fatal("update without force overwrote local choreography mutation")
+	}
+	if _, err := os.Stat(overlay); err != nil {
+		t.Fatal("consumer overlay must survive update")
+	}
+}
+
+// AC-10 — migração StateStore: YAML filesystem → SQLite + upgrade de schema v1→v3.
+func TestStateStoreMigration(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, ".agents"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, ".agents", "choreography.yaml"), []byte("version: 2\nrules: []\n"), 0o644)
+
+	fs := fsstore.New(root)
+	seed := &core.Contract{
+		Version: "1.0", TaskID: "task-fs-migrate", Objective: "migrate me",
+		WorkClass: core.WorkStandard, IntentType: core.IntentExecution,
+		State: core.StateExecuting, PrimaryExecutor: "backend",
+		Execution: core.Execution{}, Result: core.Result{},
+	}
+	if _, err := fs.Save(seed); err != nil {
+		t.Fatal(err)
+	}
+
+	dbPath := filepath.Join(root, ".arah", "local", "runtime.db")
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// Seed empty v1 schema so Open upgrades to current and then imports FS tasks.
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = db.Exec(`
+CREATE TABLE schema_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE tasks (
+  task_id TEXT PRIMARY KEY,
+  state TEXT NOT NULL,
+  bucket TEXT NOT NULL,
+  primary_executor TEXT,
+  objective TEXT,
+  work_class TEXT,
+  intent_type TEXT,
+  choreography_rule TEXT,
+  contract_yaml TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX idx_tasks_bucket ON tasks(bucket);
+CREATE TABLE task_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id TEXT NOT NULL UNIQUE,
+  task_id TEXT,
+  kind TEXT NOT NULL,
+  at TEXT NOT NULL,
+  trace_id TEXT,
+  payload_json TEXT NOT NULL
+);
+CREATE INDEX idx_events_task ON task_events(task_id);
+INSERT INTO schema_meta(key, value) VALUES('version', '1');
+`)
+	if err != nil {
+		_ = db.Close()
+		t.Fatal(err)
+	}
+	_ = db.Close()
+
+	store, err := sqlitestore.New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	v, err := store.SchemaVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v != 3 {
+		t.Fatalf("expected schema v3 after migrate, got %d", v)
+	}
+	got, ref, err := store.Get("task-fs-migrate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Objective != "migrate me" {
+		t.Fatalf("objective=%s", got.Objective)
+	}
+	if !strings.HasPrefix(ref, "sqlite:") {
+		t.Fatalf("expected sqlite ref after migration, got %s", ref)
 	}
 }
 

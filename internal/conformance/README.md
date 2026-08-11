@@ -23,6 +23,9 @@ Proves Runtime Cohesion 0.5 invariants against fixture repositories.
 - Context budget MCP tool
 - Kernel verify dogfood on module root
 - Event correlation fields (`run_id`, `correlation_id`, `agent_id`)
+- Kernel install idempotent (`Force: false` skips existing files)
+- Update non-destructive (consumer overlay + local mutations survive)
+- StateStore migration (filesystem YAML → SQLite + schema v1→v3)
 
 ```bash
 go test ./internal/conformance/ -count=1
