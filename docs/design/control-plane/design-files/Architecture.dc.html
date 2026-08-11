@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture — ARAH Harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#0A0C0F;color:#E7ECF1;font-family:'Schibsted Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E7ECF1;text-decoration:none}
+a:hover{color:oklch(80% 0.09 200)}
+*{box-sizing:border-box}
+::selection{background:oklch(70% 0.09 200 / .35)}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0A0C0F">
+<nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:28px;padding:10px 32px;min-height:64px;row-gap:6px;flex-wrap:wrap;background:rgba(10,12,15,.82);backdrop-filter:blur(14px);border-bottom:1px solid #161C24">
+  <a href="Home.dc.html" style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.02em">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="3" y1="19" x2="11" y2="11" stroke="oklch(78% 0.09 200)" stroke-width="1.6"></line><line x1="11" y1="3" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><line x1="19" y1="19" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><circle cx="11" cy="11" r="3" fill="oklch(78% 0.09 200)"></circle><circle cx="3" cy="19" r="2" fill="#3A4553"></circle><circle cx="19" cy="19" r="2" fill="#3A4553"></circle><circle cx="11" cy="3" r="2" fill="#3A4553"></circle></svg>
+    <span>ARAH Harness</span>
+  </a>
+  <div style="display:flex;gap:22px;font-size:14px;color:#9AA5B1;margin-left:12px;flex:1;flex-wrap:wrap">
+    <a href="Home.dc.html" style="color:#9AA5B1">Product</a>
+    <a href="Architecture.dc.html" style="color:#E7ECF1">Architecture</a>
+    <a href="How It Works.dc.html" style="color:#9AA5B1">How It Works</a>
+    <a href="TechOrganism.dc.html" style="color:#9AA5B1">TechOrganism</a>
+    <a href="Use Cases.dc.html" style="color:#9AA5B1">Use Cases</a>
+    <a href="Docs.dc.html" style="color:#9AA5B1">Documentation</a>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center"><div style="display:flex;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #232B36;border-radius:7px;padding:2px"><span style="padding:4px 9px;border-radius:5px;background:#1E2630;color:#E7ECF1">EN</span><a href="Architecture PT.dc.html" style="padding:4px 9px;border-radius:5px;color:#5A6675">PT</a></div>
+    <a href="https://github.com/sraphaz/arah-harness" style="font-size:13.5px;font-family:'IBM Plex Mono',monospace;color:#9AA5B1;border:1px solid #232B36;padding:7px 14px;border-radius:6px;white-space:nowrap" style-hover="border-color:#3A4553;color:#E7ECF1">View on GitHub</a>
+    <a href="Docs.dc.html" style="font-size:13.5px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:8px 16px;border-radius:6px" style-hover="background:oklch(84% 0.09 200)">Get Started</a>
+  </div>
+</nav>
+
+<header style="max-width:1200px;margin:0 auto;padding:88px 32px 64px">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:oklch(78% 0.09 200);margin-bottom:20px">Architecture</div>
+  <h1 style="font-size:clamp(32px,5vw,48px);line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:0 0 20px;max-width:820px;text-wrap:balance">Two repositories, one contract: kernel and consumer</h1>
+  <p style="font-size:18px;line-height:1.6;color:#9AA5B1;margin:0;max-width:720px;text-wrap:pretty">The harness is developed and versioned in its own repository (the product), and installed into consumer repositories as a maintained kernel. Everything the consumer runs is versioned, inspectable and regenerable.</p>
+</header>
+
+<!-- LAYER STACK -->
+<section style="max-width:1200px;margin:0 auto;padding:24px 32px 80px">
+  <div style="border:1px solid #1A212B;border-radius:14px;background:#0C0F14;padding:36px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#5A6675;margin-bottom:24px">Layered view · authority flows down, evidence flows up</div>
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:860px;margin:0 auto">
+      <div style="border:1px solid #2A3340;border-radius:10px;padding:16px 24px;display:flex;justify-content:space-between;gap:16px;align-items:baseline;flex-wrap:wrap"><span style="font-size:16px;font-weight:600">Human Intent</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7B8694">goals · decisions · approval · merge</span></div>
+      <div style="text-align:center;color:#3A4553;font-size:13px">↓ ↑</div>
+      <div style="border:1px solid #2A3340;border-radius:10px;padding:16px 24px;display:flex;justify-content:space-between;gap:16px;align-items:baseline;flex-wrap:wrap"><span style="font-size:16px;font-weight:600">AI Environments</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7B8694">Claude Code · Cursor · Copilot · Codex · local models</span></div>
+      <div style="text-align:center;color:#3A4553;font-size:13px">↓ ↑</div>
+      <div style="border:1px solid oklch(75% 0.09 200 / .45);border-radius:10px;padding:18px 24px;display:flex;justify-content:space-between;gap:16px;align-items:baseline;flex-wrap:wrap;background:oklch(75% 0.09 200 / .06)"><span style="font-size:17px;font-weight:700;color:oklch(84% 0.07 200)">ARAH Harness</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8C97A5">agents · skills · choreography · policies · gates · signals · graph · audit · evolution</span></div>
+      <div style="text-align:center;color:#3A4553;font-size:13px">↓ ↑</div>
+      <div style="border:1px solid #2A3340;border-radius:10px;padding:16px 24px;display:flex;justify-content:space-between;gap:16px;align-items:baseline;flex-wrap:wrap"><span style="font-size:16px;font-weight:600">Repository</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7B8694">code · architecture · domain · specs · docs · tests · infra · CI</span></div>
+      <div style="text-align:center;color:#3A4553;font-size:13px">↓ ↑</div>
+      <div style="border:1px solid #2A3340;border-radius:10px;padding:16px 24px;display:flex;justify-content:space-between;gap:16px;align-items:baseline;flex-wrap:wrap"><span style="font-size:16px;font-weight:600">Delivery</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7B8694">pull request · review · merge · deployment</span></div>
+    </div>
+  </div>
+</section>
+<!-- KERNEL VS CONSUMER -->
+<section style="border-top:1px solid #141A22;padding:90px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:760px;margin-bottom:48px">
+      <h2 style="font-size:clamp(27px,4vw,34px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 16px">Product repository and consumer repository</h2>
+      <p style="font-size:16px;line-height:1.65;color:#9AA5B1;margin:0;text-wrap:pretty">The kernel (agents, skills, scripts, schemas, templates) is developed in <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#B7C0CB">arah-harness</span> and distributed into consumers by <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#B7C0CB">install</span> and <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#B7C0CB">regenerate</span>. The consumer keeps its own state: config, signals, audit, organism.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px">
+      <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;overflow:hidden">
+        <div style="padding:14px 22px;border-bottom:1px solid #1A212B;display:flex;justify-content:space-between;align-items:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;color:#8C97A5">PRODUCT · KERNEL SOURCE</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">distributed →</span></div>
+        <pre style="margin:0;padding:22px 26px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.85;color:#B7C0CB;overflow:auto">arah-harness/
+├── cli/            <span style="color:#5A6675"># arah.ps1 entrypoint</span>
+├── kernel/
+│   ├── .agents/    <span style="color:#5A6675"># agent manifests</span>
+│   ├── .skills/    <span style="color:#5A6675"># executable skills</span>
+│   ├── .cursor/    <span style="color:#5A6675"># IDE rules</span>
+│   └── scripts/    <span style="color:#5A6675"># gates &amp; operations</span>
+├── schemas/        <span style="color:#5A6675"># contract validation</span>
+├── templates/      <span style="color:#5A6675"># bootstrap templates</span>
+├── extension/      <span style="color:#5A6675"># ARAH Live (IDE)</span>
+├── harness/        <span style="color:#5A6675"># choreography core</span>
+└── docs/</pre>
+      </div>
+      <div style="border:1px solid oklch(75% 0.09 200 / .35);border-radius:12px;background:linear-gradient(180deg,oklch(75% 0.09 200 / .05),#0D1117);overflow:hidden">
+        <div style="padding:14px 22px;border-bottom:1px solid #1A212B;display:flex;justify-content:space-between;align-items:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;color:oklch(80% 0.08 200)">CONSUMER · YOUR REPOSITORY</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">← installed kernel + local state</span></div>
+        <pre style="margin:0;padding:22px 26px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.85;color:#B7C0CB;overflow:auto">consumer-repository/
+├── arah.config.yaml     <span style="color:#5A6675"># policies &amp; autonomy</span>
+├── AGENTS.md            <span style="color:#5A6675"># entry contract</span>
+├── .agents/             <span style="color:#5A6675"># installed manifests</span>
+├── .skills/             <span style="color:#5A6675"># installed skills</span>
+├── .arah/
+│   ├── audit/           <span style="color:#5A6675"># append-only ledger</span>
+│   ├── bus/             <span style="color:#5A6675"># typed signals</span>
+│   └── organism/        <span style="color:#5A6675"># organism state</span>
+├── docs/_meta/          <span style="color:#5A6675"># domains · graph · discovery</span>
+├── scripts/             <span style="color:#5A6675"># gates (local + CI)</span>
+└── .github/workflows/   <span style="color:#5A6675"># CI integration</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTRACTS & STORAGE -->
+<section style="border-top:1px solid #141A22;padding:90px 32px">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:760px;margin-bottom:48px">
+      <h2 style="font-size:clamp(27px,4vw,34px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 16px">Contracts, storage and generation</h2>
+      <p style="font-size:16px;line-height:1.65;color:#9AA5B1;margin:0">Every mechanism is a file with a schema — no hidden state, no external database.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:10px">CONTRACTS</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Schema-validated YAML</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">Agent manifests, skill manifests, choreography, domains and config validate against <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">schemas/</span> on every gate run.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:10px">SIGNAL STORAGE</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Append-only JSONL bus</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">Typed events under <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">.arah/bus/</span> — readable by any tool, diffable in PRs, portable across models.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:10px">AUDIT STORAGE</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Session ledger</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">Actions, results, autonomy decisions and session telemetry under <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">.arah/audit/</span>.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:10px">GRAPH GENERATION</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Derived, never hand-written</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5"><span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">arah export-graph</span> derives the agent graph from manifests; a gate fails if the graph drifts from its sources.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:10px">IDE INTEGRATION</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Rules + ARAH Live</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">Installed <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">.cursor/</span> rules and AGENTS.md bind Cursor, Claude Code and Copilot to the contracts; ARAH Live (experimental) streams bus events into the IDE.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;margin-bottom:10px">CI INTEGRATION</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Gates in workflows</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">The same gates run in <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px">.github/workflows/</span>: a PR that fails validation cannot be merged.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- LIFECYCLE -->
+<section style="border-top:1px solid #141A22;padding:90px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:760px;margin-bottom:44px">
+      <h2 style="font-size:clamp(27px,4vw,34px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 16px">Update lifecycle</h2>
+      <p style="font-size:16px;line-height:1.65;color:#9AA5B1;margin:0">The consumer stays consistent with the kernel through regeneration — never by manual copying.</p>
+    </div>
+    <div style="display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:13px">
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;flex:1;min-width:150px"><div style="color:#5A6675;font-size:10.5px;margin-bottom:8px">1</div><div style="color:#E7ECF1;margin-bottom:6px">kernel update</div><div style="color:#7B8694;font-size:11.5px;font-family:'Schibsted Grotesk',sans-serif">new agents, skills, gates land in arah-harness</div></div>
+      <div style="align-self:center;color:#3A4553">→</div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;flex:1;min-width:150px"><div style="color:#5A6675;font-size:10.5px;margin-bottom:8px">2</div><div style="color:#E7ECF1;margin-bottom:6px">arah regenerate</div><div style="color:#7B8694;font-size:11.5px;font-family:'Schibsted Grotesk',sans-serif">kernel synced, discovery re-run, domains synced</div></div>
+      <div style="align-self:center;color:#3A4553">→</div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;flex:1;min-width:150px"><div style="color:#5A6675;font-size:10.5px;margin-bottom:8px">3</div><div style="color:#E7ECF1;margin-bottom:6px">arah doctor · sync-check</div><div style="color:#7B8694;font-size:11.5px;font-family:'Schibsted Grotesk',sans-serif">installation validated, drift detected</div></div>
+      <div style="align-self:center;color:#3A4553">→</div>
+      <div style="border:1px solid oklch(75% 0.09 80 / .4);border-radius:9px;padding:16px 18px;flex:1;min-width:150px"><div style="color:#5A6675;font-size:10.5px;margin-bottom:8px">4</div><div style="color:oklch(84% 0.07 80);margin-bottom:6px">pull request</div><div style="color:#7B8694;font-size:11.5px;font-family:'Schibsted Grotesk',sans-serif">the update itself is reviewed and merged by humans</div></div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:80px 32px;text-align:center">
+  <div style="max-width:680px;margin:0 auto">
+    <p style="font-size:20px;line-height:1.5;font-weight:500;color:#DDE4EB;margin:0 0 28px;text-wrap:balance">Every agent needs a role, a scope, a capability and an accountable path to production.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="How It Works.dc.html" style="font-size:15px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:13px 24px;border-radius:7px" style-hover="background:oklch(84% 0.09 200)">See how a change flows →</a>
+      <a href="Docs.dc.html" style="font-size:15px;font-weight:500;border:1px solid #2A3340;color:#E7ECF1;padding:13px 24px;border-radius:7px" style-hover="border-color:#4A5563">Read the docs</a>
+    </div>
+  </div>
+</section>
+<footer style="border-top:1px solid #141A22;padding:36px 32px;background:#080A0D">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:#5A6675">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-weight:700;color:#8C97A5">ARAH Harness</span><span>· Governed human-agent engineering, rooted in the repository.</span></div>
+    <div style="display:flex;gap:20px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+      <a href="https://github.com/sraphaz/arah-harness" style="color:#5A6675" style-hover="color:#E7ECF1">GitHub</a>
+      <a href="https://github.com/sraphaz/arah-harness/releases" style="color:#5A6675" style-hover="color:#E7ECF1">Releases</a>
+      <a href="https://github.com/sraphaz/arah-harness/blob/main/CONTRIBUTING.md" style="color:#5A6675" style-hover="color:#E7ECF1">Contributing</a>
+    </div>
+  </div>
+</footer>
+</div>
+</x-dc>
+</body>
+</html>

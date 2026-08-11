@@ -1,0 +1,61 @@
+# Exemplo válido de contracts/execution-evidence 1.0.0
+schema_version: "1.0.0"
+evidence_id: 01J4YBC1GK9R5W0XZE4T7CUQA8
+request_id: 01J4YAZ0FJ8Q4V9WYD3S6BTPZ7
+correlation_id: 01J4YAY7Q2M3N4P5R6S7T8V9W0
+project_id: iautos
+demand_id: dmd-2026-iautos-llm-real
+spec_id: spec-iautos-ia-31
+task_id: 01J4YB05H3N6P7Q8R9S0T1V2W3
+run_id: 01J4YB0FJ4P8Q9R0S1T2V3W4X5
+outcome: completed
+produced_by: "agent:composer@2.5"
+produced_at: "2026-08-11T17:42:10Z"
+kernel:
+  arah_harness_version: "0.5.0"
+  profile: standard-product
+evidence:
+  files:
+    - path: src/services/llm-provider.ts
+      change: added
+    - path: src/routes/analyze.ts
+      change: modified
+    - path: tests/contract/analyze.spec.ts
+      change: added
+  tests:
+    suite_ref: https://github.com/sraphaz/iautos/actions/runs/123456789
+    passed: 148
+    failed: 0
+    skipped: 2
+    coverage: 71.4
+  evals:
+    provider: native
+    report_ref: docs/_meta/evals/2026-08-11-analyze.yaml
+    passed: 12
+    failed: 0
+    regressions: []
+  security:
+    scans:
+      - tool: gitleaks
+        critical: 0
+        high: 0
+        report_ref: https://github.com/sraphaz/iautos/actions/runs/123456790
+  policies:
+    evaluated: 4
+    violations: []
+  pr:
+    number: 210
+    url: https://github.com/sraphaz/iautos/pull/210
+    state: open
+    merged_by: null
+  commits:
+    - 4f2c1a9e8b7d6c5a4f3e2d1c0b9a8f7e6d5c4b3a
+  evidence_graph_ref: docs/_meta/runs/01J4YB0FJ4P8Q9R0S1T2V3W4X5/evidence-graph.json
+economy:
+  tokens_in: 182000
+  tokens_out: 24500
+  cost_usd: 3.87
+  wall_time_s: 1260.5
+  turns: 18
+  first_pass_accepted: true
+notes: Fallback validado manualmente com o provider desligado.

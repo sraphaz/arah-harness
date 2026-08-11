@@ -14,3 +14,9 @@ scope:
 guardrails:
   no_merge: true
   consult_only: true
+
+execution_role:
+  can_route: false
+  can_execute: false
+  can_consult: true
+  can_review: false

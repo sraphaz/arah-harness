@@ -1,0 +1,60 @@
+id: arah-state-model
+title: Estado quente × evidência fria, arquivo-por-evento, scrubbing
+status: active
+owner: harness
+version: 1
+updated_at: 2026-07-19
+covers:
+  - scripts/agents/arah-event-io.ps1
+  - scripts/agents/signal-bus.ps1
+  - scripts/agents/record-agent-event.ps1
+  - scripts/agents/compact-state.ps1
+  - scripts/agents/migrate-state.ps1
+  - scripts/agents/install-hooks.ps1
+  - cli/arah.ps1
+  - schemas/arah-harness/signal.schema.yaml
+  - schemas/arah-harness/audit-event.schema.yaml
+  - capabilities.yaml
+  - docs/STATE_MODEL.md
+  - docs/SIGNAL_COMPATIBILITY.md
+  - docs/backlog/H-harness-improvements.md
+
+description: |
+  Separa estado operacional quente (.arah/local/) de evidência fria versionável,
+  escreve arquivo-por-evento com ULID, compacta periodicamente, redige secrets
+  antes do disco, e expõe migrate-state / compact / hooks na CLI.
+
+acceptance:
+  - id: AC-01
+    when: signal-bus emite um sinal
+    then: cria .arah/local/bus/pending/<ULID>.json com campo v e sem secrets em claro
+    status: covered
+    covered_by: scripts/agents/signal-bus.ps1
+
+  - id: AC-02
+    when: record-agent-event registra uma ação
+    then: cria .arah/local/audit/pending/<ULID>.json com details scrubbed
+    status: covered
+    covered_by: scripts/agents/record-agent-event.ps1
+
+  - id: AC-03
+    when: operador executa arah compact
+    then: pending vira archive/YYYY-MM.jsonl e pending é esvaziado
+    status: covered
+    covered_by: scripts/agents/compact-state.ps1
+
+  - id: AC-04
+    when: operador executa arah migrate-state com JSONL legado
+    then: eventos migram para pending e summary frio em docs/_meta/runs/
+    status: covered
+    covered_by: scripts/agents/migrate-state.ps1
+
+  - id: AC-05
+    when: install -Minimal
+    then: organism.enabled=false e upgrade path documentado
+    status: covered
+    covered_by: cli/init.ps1
+
+harness:
+  commands:
+    - powershell -File ./scripts/self-test.ps1

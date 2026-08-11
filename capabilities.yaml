@@ -1,0 +1,120 @@
+# capabilities.yaml — fonte única de status de capacidades do ARAH Harness
+# Consumido pelo site (W-07) e por docs. Não duplicar status em outros arquivos.
+version: 1
+updated_at: 2026-08-11
+harness_version: "0.5.0"
+
+available:
+  - id: agents-skills-manifests
+    name: Agentes, skills e manifests
+    notes: YAML validado + coreografia por paths
+  - id: gates-ci
+    name: Gates e CI
+    notes: Policy as code local e em PR
+  - id: domain-sync
+    name: Domain sync
+    notes: Domínios em arah.config.yaml → agents
+  - id: techorganism-discover
+    name: Discover
+    notes: docs/_meta/discovery.proposed.yaml
+  - id: techorganism-organism
+    name: Organism bootstrap + signal bus
+    notes: Manifest + sinais tipados (v=1)
+  - id: techorganism-evolve
+    name: Evolve
+    notes: Propostas a partir de evidência
+  - id: techorganism-regenerate
+    name: Regenerate
+    notes: Homeostase / update de kernel
+  - id: audit-hot-cold
+    name: Estado quente × evidência fria
+    notes: .arah/local/ + docs/_meta/runs/
+  - id: file-per-event
+    name: Arquivo-por-evento + compact
+    notes: ULID pending → archive JSONL
+  - id: secret-scrubbing
+    name: Scrubbing de secrets
+    notes: Antes de persistir bus/audit
+  - id: hooks-pre-commit
+    name: Pre-commit hooks
+    notes: arah hooks install
+  - id: install-minimal
+    name: Install mínimo
+    notes: manifests + gates sem organismo
+  - id: live-session-extension
+    name: ARAH Live Session (IDE)
+    notes: Telemetria Cursor/VS Code
+
+experimental:
+  - id: harness-update-check
+    name: Harness update notifications
+    notes: GitHub Releases + scheduled issue / Renovate pin
+  - id: autonomous-release
+    name: Autonomous tag + GitHub Release
+    notes: cut-release.ps1 on main — humano mergeia VERSION, Action publica
+  - id: execution-control
+    name: Execution Control Protocol
+    notes: contratos de tarefa, executor primário, done|blocked
+  - id: arah-core-go
+    name: arah-core (Go)
+    notes: H-13 — internal/core + task CLI; inspirado em rafaelnicolett/kern (hexagonal)
+  - id: json-command-envelope
+    name: Envelope JSON estável de CLI/MCP
+    notes: H-14 — ok/code/trace_id/remediation + dry-run + diff + idempotent
+  - id: mcp-harness-surface
+    name: MCP serve do harness
+    notes: H-17 — arah mcp serve; task + timeline + evidence; dry_run nas mutações
+  - id: state-store-sqlite
+    name: StateStore local (SQLite WAL)
+    notes: H-16 — .arah/local/runtime.db WAL + YAML mirror; schema Up/Down (v2)
+  - id: evidence-graph
+    name: Evidence Graph determinístico
+    notes: H-18 — arah evidence graph; schemas→arestas
+  - id: conformance-suite
+    name: Conformance suite do harness
+    notes: H-20 partial — internal/conformance (dry-run, error codes, create CLI↔MCP); fixtures amplas TBD
+  - id: session-telemetry
+    name: Session telemetry rica
+    notes: .cursor/arah-live diagnostics
+  - id: agent-graph-export
+    name: Agent graph export
+    notes: JSON + Mermaid derivados
+  - id: portable-cli-go
+    name: CLI binária portátil (Go)
+    notes: cmd/arah — doctor/sync-check/version/task/evidence/mcp; PS ainda canônico para organism
+  - id: live-console
+    name: ARAH Live Console
+    notes: live/arah-live + website/console (mock fallback)
+  - id: knowledge-graph-graphify
+    name: Knowledge Graph (Graphify)
+    notes: Adapter opcional code-only; sibling do Agent Graph — docs/architecture/GRAPHIFY.md
+  - id: generated-kernel-package
+    name: Kernel como artefato gerado
+    notes: H-15 mergeado (PRs #19/#22) — sync/verify + go:embed zip + arah kernel install; CI kernel-integrity
+  - id: runtime-cohesion-0.5
+    name: Runtime Cohesion (v0.5)
+    notes: ADR-002 — fundação mergeada (PRs #16–#23); estabilização MCP/Evidence Graph/conformance em PRs #24–#26
+
+planned:
+  - id: run-timeline
+    name: Timeline unificada por task/run
+    notes: H-19 — correlacionadores amplos + OTel opcional (EventStore base já existe)
+  - id: arahd-daemon
+    name: Daemon arahd
+    notes: H-08 / P2 pós-0.5 — Watch + batch + WebSocket
+  - id: live-console-packaging
+    name: Empacotamento arah-live
+    notes: C-10 — binário / npx + AuthZ
+  - id: product-site
+    name: Site de produto + docs MDX
+    notes: Épico W — MDX filesystem / FlexSearch build
+  - id: semantic-discovery
+    name: Discovery semântico
+    notes: Monorepos — após KnowledgeProvider; Graphify como adapter
+  - id: knowledge-graph-console
+    name: Knowledge Graph no Live Console
+    notes: C-12 dual-pane Agent ∪ Knowledge
+
+# Removido do escopo (ADR-003 — fronteira Kernel × Control Plane):
+# org-control-plane (agregador multi-repo) é responsabilidade do Surya Labs
+# Workspace. O kernel expõe dados de UM repo; nunca agrega portfólio.

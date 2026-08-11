@@ -33,18 +33,35 @@ function Parse-ChoreographyRules {
                 if ($chunk -notmatch '^(\S+)') { continue }
                 $aid = $Matches[1].Trim()
                 $type = if ($chunk -match '(?m)^        type:\s+(\S+)') { $Matches[1] } else { 'operational' }
+                $role = if ($chunk -match '(?m)^        role:\s+(\S+)') { $Matches[1] } else { $null }
                 $autonomy = @()
                 if ($chunk -match '(?m)^        autonomy:\s*\[(.+)\]') {
                     $autonomy = $Matches[1] -split ',' | ForEach-Object { $_.Trim() }
+                } elseif ($chunk -match '(?ms)^        autonomy:\s*\r?\n((?:\s+-\s+[^\r\n]+\r?\n?)+)') {
+                    $autonomy = [regex]::Matches($Matches[1], '^\s+-\s+(\S+)', 'Multiline') |
+                        ForEach-Object { $_.Groups[1].Value.Trim() }
                 }
                 $skills = @()
                 if ($chunk -match '(?m)^        skills:\s*\[(.+)\]') {
                     $skills = $Matches[1] -split ',' | ForEach-Object { $_.Trim() }
                 }
-                $agents += @{ id = $aid; type = $type; autonomy = @($autonomy); skills = @($skills) }
+                $agents += @{ id = $aid; type = $type; role = $role; autonomy = @($autonomy); skills = @($skills) }
             }
         }
-        $rules += @{ id = $ruleId; when = $when; paths = @($paths); agents = @($agents) }
+        $primaryExecutor = $null
+        if ($block -match '(?ms)^    execution:\s*\r?\n(.*?)(?=^    [a-z]|\z)') {
+            $ex = $Matches[1]
+            if ($ex -match '(?m)^\s+primary_executor:\s+(\S+)') {
+                $primaryExecutor = $Matches[1].Trim()
+            }
+        }
+        $rules += @{
+            id = $ruleId
+            when = $when
+            paths = @($paths)
+            agents = @($agents)
+            primary_executor = $primaryExecutor
+        }
     }
     return $rules
 }

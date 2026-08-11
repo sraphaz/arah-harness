@@ -1,0 +1,56 @@
+# Publicação autônoma: após merge em main, garante tag vX.Y.Z + GitHub Release
+# a partir de VERSION (idempotente). Tags manuais v*.*.* também publicam.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      force_version:
+        description: 'Override VERSION (e.g. 0.4.1). Empty = read VERSION file.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arah-release
+  cancel-in-progress: false
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.force_version }}" ]; then
+            VER="${{ inputs.force_version }}"
+          elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VER="${GITHUB_REF_NAME#v}"
+          else
+            VER="$(tr -d '[:space:]' < VERSION)"
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Cut tag + GitHub Release
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          $script = Join-Path $PWD 'scripts/agents/cut-release.ps1'
+          if (-not (Test-Path $script)) { throw 'cut-release.ps1 missing' }
+          & $script -Version '${{ steps.ver.outputs.version }}' -FailIfChangelogMissing
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

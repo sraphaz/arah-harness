@@ -1,0 +1,31 @@
+# Baseline de segurança do próprio kernel (plano J §8 item 4 / plano S PR-5):
+# varredura de secrets com gitleaks em push/PR + varredura semanal do histórico.
+# GitHub secret scanning + push protection são configuração de repositório
+# (Settings → Code security) — ato manual do dono, documentado no PR.
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+
+# pull-requests: read — gitleaks-action consulta a API de pulls/commits em
+# eventos pull_request para delimitar o range do scan.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan for secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

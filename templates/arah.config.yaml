@@ -4,9 +4,9 @@
 version: 1
 harness:
   source: sraphaz/arah-harness
-  version: "0.2.0"
+  version: "{{HARNESS_VERSION}}"
   repository: https://github.com/sraphaz/arah-harness
-  release: v0.2.0
+  release: v{{HARNESS_VERSION}}
 
 project:
   name: "{{PROJECT_NAME}}"
@@ -45,3 +45,35 @@ specialists: []
 #   path: packages/ai-orchestrator/agents
 #   choreography: choreography.yaml
 #   autonomy: autonomy.yaml
+
+# Harness update notifications — GitHub Releases + scheduled issue (see docs/UPDATE_NOTIFICATIONS.md)
+update_check:
+  enabled: true
+  repository: sraphaz/arah-harness
+  notify:
+    issue: true
+    label: arah-harness-update
+
+# Knowledge Graph (Graphify) — opcional; sibling do Agent Graph
+# Install CLI: uv tool install graphifyy  ·  Docs: docs/architecture/GRAPHIFY.md
+knowledge_graph:
+  enabled: false
+  provider: graphify
+  default_mode: code-only
+
+# Execution Control Protocol — terminalidade (intenção → um executor → done|blocked)
+execution_control:
+  enabled: true
+  terminal_states:
+    - done
+    - blocked
+  limits:
+    max_handoffs: 2
+    max_consultations: 2
+    max_analysis_cycles: 1
+  behavior:
+    require_primary_executor: true
+    forbid_consultant_to_consultant_handoff: true
+    require_completion_evidence: true
+    require_blocking_reason: true
+    prevent_reroute_after_execution_started: true

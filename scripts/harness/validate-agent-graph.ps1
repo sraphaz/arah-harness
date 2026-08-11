@@ -5,7 +5,7 @@
   ./validate-agent-graph.ps1 -Target ../meu-repo
 #>
 param(
-  [Parameter(Mandatory = $true)] [string] $Target,
+  [string] $Target = (Get-Location).Path,
   [switch]$Strict
 )
 

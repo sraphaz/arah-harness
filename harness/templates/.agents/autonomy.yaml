@@ -1,5 +1,6 @@
 # Autonomy levels — ARAH Harness
 version: "1.0"
+updated: 2026-07-19
 
 levels:
   observe:
@@ -13,32 +14,42 @@ levels:
     description: Suggest handoff and options — orchestrator
   activate:
     rank: 3
-    description: Write manifests, specs, docs in scope
-  invoke_skill:
+    description: Produce or update preparatory artifacts in scope
+  execute_change:
     rank: 4
+    description: Edit product/repo files in scope and produce completion evidence
+  invoke_skill:
+    rank: 5
     description: Run skills/scripts (run-tests, spec-validate, etc.)
   side_effect:
-    rank: 5
+    rank: 6
     description: Release, deploy hooks, external registry
   public:
-    rank: 6
+    rank: 7
     description: Public release — always requires explicit human gate
 
 agent_defaults:
   orchestrator: route
   planner: activate
   spec-steward: invoke_skill
+  solutions-architect: execute_change
+  backend: execute_change
+  frontend: execute_change
+  docs-steward: execute_change
   pr-steward: activate
+  qa: invoke_skill
+  security: consult
   architecture-documenter: consult
   clean-craft-advisor: consult
   test-architect: consult
 
 human_gates:
   spec_before_work:
-    required_before: [invoke_skill, side_effect]
+    required_before: [execute_change, invoke_skill, side_effect]
+    skip_for_work_class: [trivial]
     approval_stage: spec_before_work
   proposal_before_implementation:
-    required_before: [activate, invoke_skill]
+    required_before: [activate, execute_change, invoke_skill]
     approval_stage: proposal_before_implementation
   handoff_acceptance:
     required_before: [side_effect]
@@ -48,6 +59,9 @@ actions:
   - session.read
   - domain.consult
   - skill.invoke
+  - execute.change
   - pr.comment
   - human.gate.approved
   - human.gate.denied
+  - execution.complete
+  - execution.block

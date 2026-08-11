@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arah.dev/schemas/console/gate-run.schema.json",
+  "title": "ARAH Gate Run",
+  "type": "object",
+  "required": ["slug", "name", "status"],
+  "properties": {
+    "slug": { "type": "string" },
+    "name": { "type": "string" },
+    "status": { "type": "string", "enum": ["ok", "fail", "pending", "unknown"] },
+    "duration": { "type": "string" },
+    "summary": { "type": "string" },
+    "ts": { "type": "string", "format": "date-time" }
+  }
+}

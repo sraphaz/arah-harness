@@ -1,16 +1,31 @@
 # OBSERVABILITY — ARAH Harness
 
-**Versão**: 1.0 · **Data**: 2026-07-06
+**Versão**: 1.1 · **Data**: 2026-07-17
 
 ## Camadas de observabilidade
 
 | Camada | Local | Conteúdo |
 |--------|-------|----------|
-| Auditoria | `.arah/audit/events.jsonl` | Eventos de agente (append-only) |
-| Resumo | `.arah/observability/summary.yaml` | Contadores agregados |
+| Auditoria (quente) | `.arah/local/audit/` | Eventos arquivo-por-evento + archive |
+| Sinais (quente) | `.arah/local/bus/` | Barramento tipado |
+| Scorecard | `.arah/observability/summary.yaml` | Economy Intelligence (`metrics-summary`) |
+| Digest | `docs/_meta/metrics.digest.md` | Resumo humano opcional (`-Digest`) |
+| Evidência fria | `docs/_meta/runs/*/summary.json` | Resumos versionáveis |
 | Live (Cursor) | `.cursor/arah-live/diagnostics.jsonl` | Diagnósticos de sessão |
 | Sessões | `.cursor/arah-live/sessions/*.diagnostics.jsonl` | Traces por conversa |
-| Agent Graph | `docs/_meta/agent-graph.generated.json` | Grafo exportável |
+| Agent Graph | `docs/_meta/agent-graph.generated.json` | Grafo de colaboração (agentes/skills/gates) |
+| Knowledge Graph | `docs/_meta/knowledge-graph.manifest.yaml` + `graphify-out/` | Corpus via Graphify (opcional) |
+| Capacidades | `capabilities.yaml` | Status available/experimental/planned |
+
+## Economy Intelligence
+
+```powershell
+powershell -File cli/arah.ps1 metrics rollup
+powershell -File cli/arah.ps1 metrics report
+```
+
+Agrega audit + signals + live → rates, semaphore (`productive|neutral|expensive|insufficient_data`) e `roi_hints`.  
+Guia completo: [ECONOMY.md](ECONOMY.md).
 
 ## Telemetria de sessão
 
@@ -39,6 +54,15 @@ Eventos espelhados em `.cursor/arah-live/events.jsonl`.
 
 Artefato: `docs/_meta/agent-graph.generated.json` — nós (agentes, skills, rules, gates) e arestas.
 
+### Knowledge Graph (Graphify) — opcional
+
+```powershell
+./cli/arah.ps1 knowledge-graph          # code-only se CLI presente; senão skip
+./cli/arah.ps1 knowledge-graph status
+```
+
+Sibling do Agent Graph — ver [`docs/architecture/GRAPHIFY.md`](architecture/GRAPHIFY.md).
+
 ## Coreografia observável
 
 ```powershell
@@ -57,6 +81,7 @@ Workflow `.github/workflows/agents-validate.yml` roda:
 
 ## Privacidade
 
-Diagnósticos locais em `.cursor/arah-live/` — não commitar por padrão (ver `.gitignore`).
+Diagnósticos locais em `.cursor/arah-live/` e `.arah/local/` — não commitar (ver `.gitignore`).  
+Payloads de bus/audit passam por scrubbing de secrets antes da persistência.
 
-Ver também: [LIVE_SESSION.md](LIVE_SESSION.md), [AUDIT.md](AUDIT.md).
+Ver também: [LIVE_SESSION.md](LIVE_SESSION.md), [AUDIT.md](AUDIT.md), [STATE_MODEL.md](STATE_MODEL.md).

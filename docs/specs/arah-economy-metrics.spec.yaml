@@ -1,0 +1,76 @@
+id: arah-economy-metrics
+title: Economy Intelligence — métricas, scorecard e eficiência do harness
+status: active
+owner: spec-steward
+version: 1
+updated_at: 2026-07-17
+covers:
+  - cli/arah.ps1
+  - scripts/agents/metrics-rollup.ps1
+  - scripts/agents/record-agent-event.ps1
+  - scripts/agents/evolve-harness.ps1
+  - scripts/agents/regenerate-harness.ps1
+  - kernel/scripts/agents/metrics-rollup.ps1
+  - kernel/scripts/agents/record-agent-event.ps1
+  - kernel/scripts/agents/evolve-harness.ps1
+  - kernel/scripts/agents/regenerate-harness.ps1
+  - schemas/arah-harness/metrics-summary.schema.yaml
+  - schemas/arah-harness/audit-event.schema.yaml
+  - schemas/arah-harness/evolution.schema.yaml
+  - schemas/arah-harness/harness-model.schema.yaml
+  - .skills/metrics-rollup.skill.yaml
+  - kernel/.skills/metrics-rollup.skill.yaml
+  - docs/OBSERVABILITY.md
+  - docs/AUDIT.md
+  - docs/METHOD.md
+  - docs/TECHORGANISM.md
+  - docs/ECONOMY.md
+
+description: |
+  Camada Economy Intelligence do ARAH: transforma ledgers (audit, live, signals)
+  em scorecard de eficiência — para o humano saber se o harness "vale a pena"
+  e para o TechOrganism evoluir com heurísticas de custo/fricção.
+
+  M1: rollup de turns/tools/blocked/proposals + `arah metrics report` (proxies).
+  M2: campos opcionais de tokens/custo no audit-event.
+  M3: evolve consome eficiência; digest humano versionável.
+
+  Princípio: append local → rollup → score transparente → evolve propõe → humano aplica.
+  Sem swarm de métricas, sem auto-merge por score.
+
+acceptance:
+  - id: AC-01
+    when: operador executa arah metrics rollup com ledger de auditoria presente
+    then: gera .arah/observability/summary.yaml no schema arah-harness/metrics-summary com totais, rates e semaphore
+    status: covered
+    covered_by: scripts/agents/metrics-rollup.ps1
+
+  - id: AC-02
+    when: operador executa arah metrics report
+    then: imprime scorecard legível (totais, blocked_rate, semaphore, roi_hints) sem exigir tokens reais
+    status: covered
+    covered_by: scripts/agents/metrics-rollup.ps1
+
+  - id: AC-03
+    when: record-agent-event recebe tokens_in/tokens_out/cost_usd opcionais
+    then: o evento JSONL inclui esses campos e permanece válido sem eles (backward compatible)
+    status: covered
+    covered_by: scripts/agents/record-agent-event.ps1
+
+  - id: AC-04
+    when: evolve roda após rollup com blocked_rate elevado ou hints de economia
+    then: evolution.proposed.yaml pode incluir propostas kind economy|workflow com evidence de métricas
+    status: covered
+    covered_by: scripts/agents/evolve-harness.ps1
+
+  - id: AC-05
+    when: self-test do harness executa
+    then: metrics rollup e report passam e summary.yaml contém schema metrics-summary
+    status: covered
+    covered_by: scripts/self-test.ps1
+
+harness:
+  commands:
+    - powershell -File ./scripts/self-test.ps1
+    - powershell -File ./cli/arah.ps1 metrics rollup -Target .
+    - powershell -File ./cli/arah.ps1 metrics report -Target .

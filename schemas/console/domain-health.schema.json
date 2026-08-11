@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arah.dev/schemas/console/domain-health.schema.json",
+  "title": "ARAH Domain / Territory Health",
+  "type": "object",
+  "required": ["id", "name", "path"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "path": { "type": "string" },
+    "health": { "type": "string", "enum": ["ok", "warn", "bad", "unknown"] },
+    "agents": { "type": "integer" },
+    "signals_24h": { "type": "integer" },
+    "autonomy": { "type": "string" }
+  }
+}

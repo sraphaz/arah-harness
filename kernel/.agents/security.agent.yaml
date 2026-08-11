@@ -1,6 +1,11 @@
 id: security
 name: Security Agent
 description: Auditoria de dependências, secrets e compliance.
+execution_role:
+  can_route: false
+  can_execute: false
+  can_consult: true
+  can_review: true
 triggers:
   - pull_request:opened
   - schedule

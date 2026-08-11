@@ -1,35 +1,154 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  ARAH Harness CLI — init, update, doctor, sync-check, domain sync, export-graph
+  ARAH Harness CLI — init, update, doctor, discover, organism, evolve, metrics, regenerate, compact, migrate-state, hooks, task, release, assess-repo, vision, backlog, slice
 #>
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('init', 'install', 'update', 'doctor', 'sync-check', 'domain', 'export-graph', 'validate-runtime', 'help')]
+    [ValidateSet(
+        'init', 'install', 'update', 'doctor', 'sync-check', 'domain',
+        'export-graph', 'knowledge-graph', 'validate-runtime', 'discover', 'organism',
+        'evolve', 'metrics', 'regenerate', 'compact', 'migrate-state', 'hooks',
+        'task', 'update-check', 'release', 'assess-repo', 'bootstrap-vision', 'vision', 'backlog', 'slice', 'help'
+    )]
     [string]$Command = 'help',
+
     [Parameter(Position = 1)]
-    [ValidateSet('sync')]
+    [ValidateSet(
+        'sync', 'bootstrap', 'status', 'signal', 'rollup', 'report', 'install',
+        'create', 'validate', 'complete', 'block', 'update', 'plan', 'cut', 'code-only', 'full', ''
+    )]
     [string]$SubCommand = '',
+
     [string]$Target = '',
     [string]$ProjectName = '',
     [switch]$Force,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$Apply,
+    [switch]$Notify,
+    [switch]$FailIfOutdated,
+    [string]$LatestVersion = '',
+    [switch]$UpdateKernel,
+    [switch]$ApplyDiscovery,
+    [switch]$SkipDoctor,
+    [switch]$IncludeKnowledgeGraph,
+    [switch]$Require,
+    [switch]$Minimal,
+    [switch]$Digest,
+    [int]$Last = 500,
+    [ValidateSet('all', 'bus', 'audit', '')]
+    [string]$Kind = '',
+    [int]$RetainDays = 90,
+
+    # signal-bus passthrough (SignalTo avoids -To/-Topic prefix ambiguity)
+    [string]$From = '',
+    [string]$SignalTo = '*',
+    [ValidateSet('attract', 'consult', 'propose', 'acknowledge', 'coalesce', 'evolve', 'status', '')]
+    [string]$SignalType = '',
+    [string]$Topic = 'general',
+    [string]$Payload = '',
+
+    # Execution Control Protocol (arah task …)
+    [string]$Objective = '',
+    [string]$Area = 'backend',
+    [ValidateSet('trivial', 'standard', 'architectural', 'release', '')]
+    [string]$Class = '',
+    [string]$TaskId = '',
+    [string]$Evidence = '',
+    [string]$Reason = '',
+
+    # assess-repo / bootstrap-vision / vision update / backlog sync (experimental)
+    [string]$OutDir = '',
+    [string]$Agents = '',
+    [switch]$IncludeSpecialists,
+    [switch]$SkipIndex,
+    [switch]$Refresh,
+    [switch]$BacklogOnly,
+
+    # slice plan (experimental — composite slice compose)
+    [string]$SliceId = '',
+    [string]$Suggestions = '',
+    [string]$SuggestionsFile = '',
+    [string]$VisionDir = '',
+    [string]$ProductBacklog = '',
+    [string]$Executor = '',
+    [string]$Consultants = '',
+    [string]$Title = ''
 )
 
+$ErrorActionPreference = 'Stop'
 $CliDir = $PSScriptRoot
 $HarnessRoot = Split-Path $CliDir -Parent
 $targetPath = if ($Target) { $Target } else { (Get-Location).Path }
+if (Test-Path -LiteralPath $targetPath) {
+    $targetPath = (Resolve-Path -LiteralPath $targetPath).Path
+}
+
+function Get-TargetScript {
+    param([string]$Rel)
+    $parts = $Rel -split '[\\/]+'
+    $path = $targetPath
+    foreach ($p in $parts) {
+        if ($p) { $path = Join-Path $path $p }
+    }
+    if (-not (Test-Path -LiteralPath $path)) {
+        # Fall back to harness root scripts (for compact/migrate before/without full install)
+        $fallback = $HarnessRoot
+        foreach ($p in $parts) {
+            if ($p) { $fallback = Join-Path $fallback $p }
+        }
+        if (Test-Path -LiteralPath $fallback) { return $fallback }
+        Write-Error "$Rel not found — run arah init/update first"
+        exit 1
+    }
+    return $path
+}
+
+function Invoke-TargetScript {
+    param(
+        [string]$ScriptPath,
+        [object[]]$ScriptArgs = @()
+    )
+    Push-Location $targetPath
+    try {
+        # Convert CLI-style (-Name value / -Switch) arrays into a hashtable splat.
+        # Array splatting alone binds positionally and breaks ValidateSet parameters.
+        if ($ScriptArgs.Count -eq 0) {
+            & $ScriptPath
+        } else {
+            $ht = @{}
+            for ($i = 0; $i -lt $ScriptArgs.Count; $i++) {
+                $a = [string]$ScriptArgs[$i]
+                if ($a -match '^-(.+)$') {
+                    $name = $Matches[1]
+                    $next = if ($i + 1 -lt $ScriptArgs.Count) { $ScriptArgs[$i + 1] } else { $null }
+                    if ($null -eq $next -or ([string]$next -match '^-')) {
+                        $ht[$name] = $true
+                    } else {
+                        $ht[$name] = $next
+                        $i++
+                    }
+                }
+            }
+            & $ScriptPath @ht
+        }
+        if (-not $?) { exit 1 }
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    } finally {
+        Pop-Location
+    }
+}
 
 switch ($Command) {
     'init' {
-        $args = @{ Target = $targetPath; Force = $Force }
-        if ($ProjectName) { $args.ProjectName = $ProjectName }
-        & (Join-Path $CliDir 'init.ps1') @args
+        $splat = @{ Target = $targetPath; Force = $Force; Minimal = $Minimal }
+        if ($ProjectName) { $splat.ProjectName = $ProjectName }
+        & (Join-Path $CliDir 'init.ps1') @splat
     }
     'install' {
-        $args = @{ Target = $targetPath; Force = $Force }
-        if ($ProjectName) { $args.ProjectName = $ProjectName }
-        & (Join-Path $CliDir 'install.ps1') @args
+        $splat = @{ Target = $targetPath; Force = $Force; Minimal = $Minimal }
+        if ($ProjectName) { $splat.ProjectName = $ProjectName }
+        & (Join-Path $CliDir 'install.ps1') @splat
     }
     'update' {
         & (Join-Path $CliDir 'update.ps1') -Target $targetPath -Force:$Force
@@ -45,43 +164,313 @@ switch ($Command) {
             Write-Error "Use: arah domain sync"
             exit 1
         }
-        $script = Join-Path $targetPath 'scripts/agents/domain-sync.ps1'
-        if (-not (Test-Path $script)) {
-            Write-Error "domain-sync not found — run arah init first"
-            exit 1
-        }
-        & $script @($(if ($DryRun) { '-DryRun' }))
+        $script = Get-TargetScript 'scripts/agents/domain-sync.ps1'
+        $invokeArgs = @()
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
     }
     'export-graph' {
-        $script = Join-Path $targetPath 'scripts/agents/export-agent-graph.ps1'
-        if (-not (Test-Path $script)) {
-            Write-Error "export-agent-graph not found — run arah init first"
-            exit 1
+        $script = Get-TargetScript 'scripts/agents/export-agent-graph.ps1'
+        Invoke-TargetScript -ScriptPath $script
+    }
+    'knowledge-graph' {
+        $script = Get-TargetScript 'scripts/agents/graphify-knowledge-graph.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'graphify-knowledge-graph.ps1'
         }
-        Push-Location $targetPath
-        try { & $script } finally { Pop-Location }
+        $mode = 'code-only'
+        if ($SubCommand -eq 'status') { $mode = 'status' }
+        elseif ($SubCommand -eq 'full') { $mode = 'full' }
+        elseif ($SubCommand -eq 'code-only') { $mode = 'code-only' }
+        $splat = @{ Target = $targetPath; Mode = $mode }
+        if ($Require) { $splat.Require = $true }
+        if ($Force) { $splat.Force = $true }
+        if ($DryRun) { $splat.DryRun = $true }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     'validate-runtime' {
-        $script = Join-Path $targetPath 'scripts/harness/validate-solution-choreography.ps1'
-        if (-not (Test-Path $script)) {
-            Write-Error "validate-solution-choreography not found — run arah update"
+        $script = Get-TargetScript 'scripts/harness/validate-solution-choreography.ps1'
+        Invoke-TargetScript -ScriptPath $script
+    }
+    'discover' {
+        $script = Get-TargetScript 'scripts/agents/discover-repo.ps1'
+        $invokeArgs = @()
+        if ($Apply) { $invokeArgs += '-Apply' }
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+    }
+    'organism' {
+        switch ($SubCommand) {
+            'bootstrap' {
+                $script = Get-TargetScript 'scripts/agents/organism-bootstrap.ps1'
+                $invokeArgs = @()
+                if ($Force) { $invokeArgs += '-Force' }
+                if ($DryRun) { $invokeArgs += '-DryRun' }
+                Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+            }
+            'status' {
+                $manifest = Join-Path (Join-Path $targetPath 'docs') (Join-Path '_meta' 'organism.manifest.yaml')
+                $state = Join-Path (Join-Path $targetPath '.arah') (Join-Path 'organism' 'state.json')
+                if (Test-Path -LiteralPath $state) { Get-Content -LiteralPath $state }
+                elseif (Test-Path -LiteralPath $manifest) {
+                    Write-Host "organism: manifest present → $manifest"
+                    Get-Content -LiteralPath $manifest | Select-Object -First 40
+                }
+                else {
+                    Write-Host 'organism: not bootstrapped — run arah organism bootstrap'
+                    exit 1
+                }
+            }
+            'signal' {
+                $script = Get-TargetScript 'scripts/agents/signal-bus.ps1'
+                if (-not $From -or -not $SignalType) {
+                    Write-Error 'Use: arah organism signal -From <cell> -SignalType <attract|consult|propose|...> [-SignalTo ...] [-Topic ...] [-Payload json]'
+                    exit 1
+                }
+                $signalArgs = @('-From', $From, '-SignalTo', $SignalTo, '-SignalType', $SignalType, '-Topic', $Topic)
+                if ($Payload) { $signalArgs += @('-Payload', $Payload) }
+                Invoke-TargetScript -ScriptPath $script -ScriptArgs $signalArgs
+            }
+            default {
+                Write-Error 'Use: arah organism bootstrap|status|signal'
+                exit 1
+            }
+        }
+    }
+    'evolve' {
+        $script = Get-TargetScript 'scripts/agents/evolve-harness.ps1'
+        $invokeArgs = @()
+        if ($Apply) { $invokeArgs += '-Apply' }
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+    }
+    'metrics' {
+        $script = Get-TargetScript 'scripts/agents/metrics-rollup.ps1'
+        $mode = switch ($SubCommand) {
+            'report' { 'report' }
+            'rollup' { 'rollup' }
+            default { '' }
+        }
+        if (-not $mode) {
+            Write-Error 'Use: arah metrics rollup|report [-Last N] [-Digest]'
             exit 1
         }
+        # Hashtable splat: array @('-Mode', ...) binds incorrectly to ValidateSet params
+        $splat = @{ Mode = $mode; Last = $Last }
+        if ($Digest) { $splat.Digest = $true }
+        if ($DryRun) { $splat.DryRun = $true }
         Push-Location $targetPath
-        try { & $script } finally { Pop-Location }
+        try {
+            & $script @splat
+            if (-not $?) { exit 1 }
+            if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        } finally {
+            Pop-Location
+        }
+    }
+    'regenerate' {
+        & (Join-Path $CliDir 'regenerate.ps1') -Target $targetPath -Force:$Force `
+            -UpdateKernel:$UpdateKernel -ApplyDiscovery:$ApplyDiscovery `
+            -SkipDoctor:$SkipDoctor -IncludeKnowledgeGraph:$IncludeKnowledgeGraph `
+            -DryRun:$DryRun
+    }
+    'compact' {
+        $script = Get-TargetScript 'scripts/agents/compact-state.ps1'
+        $k = if ($Kind) { $Kind } else { 'all' }
+        $invokeArgs = @('-Kind', $k, '-RetainDays', $RetainDays)
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+    }
+    'migrate-state' {
+        $script = Get-TargetScript 'scripts/agents/migrate-state.ps1'
+        $invokeArgs = @()
+        if ($DryRun) { $invokeArgs += '-DryRun' }
+        Invoke-TargetScript -ScriptPath $script -ScriptArgs $invokeArgs
+    }
+    'hooks' {
+        if ($SubCommand -ne 'install') {
+            Write-Error 'Use: arah hooks install [-Target path] [-Force]'
+            exit 1
+        }
+        $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'install-hooks.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Get-TargetScript 'scripts/agents/install-hooks.ps1'
+        }
+        $hookSplat = @{ Target = $targetPath }
+        if ($Force) { $hookSplat.Force = $true }
+        & $script @hookSplat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    'task' {
+        $script = Get-TargetScript 'scripts/agents/task-control.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'task-control.ps1'
+        }
+        $action = $SubCommand
+        if (-not $action) {
+            Write-Error 'Use: arah task create|status|validate|complete|block'
+            exit 10
+        }
+        $splat = @{ Action = $action; RepoRoot = $targetPath }
+        if ($TaskId) { $splat.TaskId = $TaskId }
+        if ($Objective) { $splat.Objective = $Objective }
+        if ($Area) { $splat.Area = $Area }
+        if ($Class) { $splat.Class = $Class }
+        if ($Evidence) { $splat.Evidence = $Evidence }
+        if ($Reason) { $splat.Reason = $Reason }
+        Push-Location $targetPath
+        try {
+            & $script @splat
+            if (-not $?) { exit 1 }
+            if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        } finally {
+            Pop-Location
+        }
+    }
+    'release' {
+        if ($SubCommand -ne 'cut') {
+            Write-Error 'Use: arah release cut [-DryRun]'
+            exit 10
+        }
+        $script = Get-TargetScript 'scripts/agents/cut-release.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'cut-release.ps1'
+        }
+        $splat = @{ RepoRoot = $targetPath }
+        if ($DryRun) { $splat.DryRun = $true }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    'update-check' {
+        $script = Get-TargetScript 'scripts/agents/check-harness-update.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'check-harness-update.ps1'
+        }
+        $splat = @{ Target = $targetPath }
+        if ($Notify) { $splat.Notify = $true }
+        if ($FailIfOutdated) { $splat.FailIfOutdated = $true }
+        if ($LatestVersion) { $splat.LatestVersion = $LatestVersion }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    { $_ -in @('assess-repo', 'bootstrap-vision', 'vision', 'backlog') } {
+        # Experimental: per-agent opinion / As-Is / Gaps / action plan / backlog / memory
+        if ($Command -eq 'vision' -and $SubCommand -ne 'update') {
+            Write-Error 'Use: arah vision update [-Target path] [-Agents qa,backend] [-OutDir …]'
+            exit 1
+        }
+        if ($Command -eq 'backlog' -and $SubCommand -ne 'sync') {
+            Write-Error 'Use: arah backlog sync [-Target path] [-Agents qa,backend] [-OutDir …]'
+            exit 1
+        }
+        $script = Get-TargetScript 'scripts/agents/assess-repo.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'assess-repo.ps1'
+        }
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'kernel') 'scripts\agents') 'assess-repo.ps1'
+        }
+        $splat = @{ RepoRoot = $targetPath }
+        if ($OutDir) { $splat.OutDir = $OutDir }
+        if ($Agents) { $splat.Agents = $Agents }
+        if ($Force) { $splat.Force = $true }
+        if ($DryRun) { $splat.DryRun = $true }
+        if ($IncludeSpecialists) { $splat.IncludeSpecialists = $true }
+        if ($SkipIndex) { $splat.SkipIndex = $true }
+        # vision update / backlog sync / -Refresh → merge backlog (preserve done)
+        if ($Refresh -or $Command -eq 'vision' -or $Command -eq 'backlog') {
+            $splat.Refresh = $true
+        }
+        if ($BacklogOnly -or $Command -eq 'backlog') {
+            $splat.BacklogOnly = $true
+        }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    'slice' {
+        # Experimental: compose product ∩ agent-BL ∩ user suggestions → slice-plans/
+        if ($SubCommand -ne 'plan') {
+            Write-Error 'Use: arah slice plan -SliceId E1-S4 [-Suggestions "…"] [-VisionDir docs/_arah/visions] [-OutDir docs/_arah/slice-plans]'
+            exit 1
+        }
+        if (-not $SliceId) {
+            Write-Error 'Use: arah slice plan -SliceId <E1-Sx> …'
+            exit 1
+        }
+        $script = Get-TargetScript 'scripts/agents/slice-compose.ps1'
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'scripts') 'agents') 'slice-compose.ps1'
+        }
+        if (-not (Test-Path -LiteralPath $script)) {
+            $script = Join-Path (Join-Path (Join-Path $HarnessRoot 'kernel') 'scripts\agents') 'slice-compose.ps1'
+        }
+        $splat = @{
+            RepoRoot = $targetPath
+            SliceId  = $SliceId
+        }
+        if ($OutDir) { $splat.OutDir = $OutDir }
+        if ($VisionDir) { $splat.VisionDir = $VisionDir }
+        if ($ProductBacklog) { $splat.ProductBacklog = $ProductBacklog }
+        if ($Suggestions) { $splat.Suggestions = $Suggestions }
+        if ($SuggestionsFile) { $splat.SuggestionsFile = $SuggestionsFile }
+        if ($Agents) { $splat.Agents = $Agents }
+        if ($Executor) { $splat.Executor = $Executor }
+        if ($Consultants) { $splat.Consultants = $Consultants }
+        if ($Title) { $splat.Title = $Title }
+        if ($Force) { $splat.Force = $true }
+        if ($DryRun) { $splat.DryRun = $true }
+        & $script @splat
+        if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     default {
         Write-Host @"
-ARAH Harness CLI
+ARAH Harness CLI — TechOrganism
 
-  powershell -File cli/arah.ps1 install [-Target path] [-ProjectName name] [-Force]
-  powershell -File cli/arah.ps1 init [-Target path] [-ProjectName name] [-Force]
+  powershell -File cli/arah.ps1 install [-Target path] [-ProjectName name] [-Force] [-Minimal]
+  powershell -File cli/arah.ps1 init [-Target path] [-ProjectName name] [-Force] [-Minimal]
   powershell -File cli/arah.ps1 update [-Target path] [-Force]
   powershell -File cli/arah.ps1 doctor [-Target path]
   powershell -File cli/arah.ps1 sync-check [-Target path]
   powershell -File cli/arah.ps1 domain sync [-Target path] [-DryRun]
   powershell -File cli/arah.ps1 export-graph [-Target path]
+  powershell -File cli/arah.ps1 knowledge-graph [status|code-only|full] [-Target path] [-Require] [-DryRun]
   powershell -File cli/arah.ps1 validate-runtime [-Target path]
+
+  # TechOrganism
+  powershell -File cli/arah.ps1 discover [-Target path] [-Apply] [-DryRun]
+  powershell -File cli/arah.ps1 organism bootstrap [-Target path] [-Force]
+  powershell -File cli/arah.ps1 organism status [-Target path]
+  powershell -File cli/arah.ps1 organism signal -From cell -SignalType attract|consult|propose|... [-SignalTo ...] [-Topic ...]
+  powershell -File cli/arah.ps1 evolve [-Target path] [-Apply] [-DryRun]
+  powershell -File cli/arah.ps1 metrics rollup [-Target path] [-Last N] [-Digest]
+  powershell -File cli/arah.ps1 metrics report [-Target path] [-Last N] [-Digest]
+  powershell -File cli/arah.ps1 regenerate [-Target path] [-UpdateKernel] [-Force] [-ApplyDiscovery] [-IncludeKnowledgeGraph]
+
+  # State model (hot/cold)
+  powershell -File cli/arah.ps1 compact [-Target path] [-Kind all|bus|audit] [-RetainDays 90] [-DryRun]
+  powershell -File cli/arah.ps1 migrate-state [-Target path] [-DryRun]
+  powershell -File cli/arah.ps1 hooks install [-Target path] [-Force]
+
+  # Execution Control Protocol
+  powershell -File cli/arah.ps1 task create -Objective "…" [-Area backend] [-Class standard|trivial|architectural|release]
+  powershell -File cli/arah.ps1 task status -TaskId task-…
+  powershell -File cli/arah.ps1 task validate -TaskId task-…
+  powershell -File cli/arah.ps1 task complete -TaskId task-… -Evidence "…"
+  powershell -File cli/arah.ps1 task block -TaskId task-… -Reason "…"
+
+  # Harness update notifications (GitHub Releases)
+  powershell -File cli/arah.ps1 update-check [-FailIfOutdated] [-Notify] [-LatestVersion X.Y.Z]
+  powershell -File cli/arah.ps1 release cut [-DryRun]
+
+  # Experimental — repo visions (opinion / As-Is / Gaps / action plan / backlog / memory)
+  powershell -File cli/arah.ps1 assess-repo [-Target path] [-OutDir .arah/visions] [-Agents qa,backend] [-Force] [-Refresh] [-DryRun]
+  powershell -File cli/arah.ps1 bootstrap-vision   # alias de assess-repo
+  powershell -File cli/arah.ps1 vision update [-Target path] [-Agents qa,backend]   # Refresh + merge backlog
+  powershell -File cli/arah.ps1 backlog sync [-Target path] [-Agents qa,backend]    # merge backlog only
+
+  # Experimental — composite slice compose (product ∩ agent-BL ∩ user)
+  powershell -File cli/arah.ps1 slice plan -SliceId E1-S4 [-Suggestions "…"] [-VisionDir docs/_arah/visions] [-OutDir docs/_arah/slice-plans] [-Executor backend] [-Force] [-DryRun]
 "@
     }
 }

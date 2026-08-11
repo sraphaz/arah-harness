@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Instala o kernel ARAH em um repositório-alvo.
@@ -13,14 +13,18 @@ param(
     [string]$Target = (Get-Location).Path,
     [string]$ProjectName = '',
     [switch]$Force,
-    [switch]$KernelOnly
+    [switch]$KernelOnly,
+    [switch]$Minimal
 )
 
 $ErrorActionPreference = 'Stop'
 $HarnessRoot = Split-Path $PSScriptRoot -Parent
 $KernelRoot = Join-Path $HarnessRoot 'kernel'
 $TemplatesRoot = Join-Path $HarnessRoot 'templates'
-$Version = '0.2.2'
+$VersionFile = Join-Path $HarnessRoot 'VERSION'
+$Version = if (Test-Path -LiteralPath $VersionFile) {
+    (Get-Content -LiteralPath $VersionFile -Raw).Trim()
+} else { '0.4.0' }
 
 if (-not (Test-Path $KernelRoot)) {
     Write-Error "Kernel not found at $KernelRoot"
@@ -32,11 +36,25 @@ if (-not $ProjectName) {
     $ProjectName = Split-Path $Target -Leaf
 }
 
-Write-Host "ARAH init → $Target (project: $ProjectName)"
+# Self-hosted: harness root == target (this repo). Skip tree copies that would
+# overwrite a path with itself or regress local overlays with the distributable kernel.
+$SelfHosted = [string]::Equals(
+    ($HarnessRoot -replace '[\\/]+$', ''),
+    ($Target -replace '[\\/]+$', ''),
+    [System.StringComparison]::OrdinalIgnoreCase
+)
+
+Write-Host "ARAH init → $Target (project: $ProjectName)$(if ($SelfHosted) { ' [self-hosted]' })"
 
 function Copy-Tree {
     param([string]$From, [string]$To, [switch]$Overwrite)
     if (-not (Test-Path $From)) { return }
+    $fromFull = (Resolve-Path -LiteralPath $From).Path
+    $toFull = if (Test-Path -LiteralPath $To) { (Resolve-Path -LiteralPath $To).Path } else { $To }
+    if ([string]::Equals($fromFull, $toFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Write-Host "  skip (same path): $From"
+        return
+    }
     Get-ChildItem $From -Recurse -File | ForEach-Object {
         $rel = $_.FullName.Substring($From.Length).TrimStart('\', '/')
         $dest = Join-Path $To $rel
@@ -45,17 +63,43 @@ function Copy-Tree {
         if ((Test-Path $dest) -and -not $Overwrite) {
             Write-Host "  skip (exists): $rel"
         } else {
+            $srcResolved = $_.FullName
+            $destResolved = if (Test-Path -LiteralPath $dest) { (Resolve-Path -LiteralPath $dest).Path } else { $null }
+            if ($destResolved -and [string]::Equals($srcResolved, $destResolved, [System.StringComparison]::OrdinalIgnoreCase)) {
+                Write-Host "  skip (same file): $rel"
+                return
+            }
             Copy-Item $_.FullName $dest -Force
             Write-Host "  installed: $rel"
         }
     }
 }
 
-# Kernel → target repo root
-Copy-Tree -From (Join-Path $KernelRoot '.agents') -To (Join-Path $Target '.agents') -Overwrite:$Force
-Copy-Tree -From (Join-Path $KernelRoot '.skills') -To (Join-Path $Target '.skills') -Overwrite:$Force
-Copy-Tree -From (Join-Path $KernelRoot '.cursor') -To (Join-Path $Target '.cursor') -Overwrite:$Force
-Copy-Tree -From (Join-Path $KernelRoot 'scripts') -To (Join-Path $Target 'scripts') -Overwrite:$Force
+if ($SelfHosted) {
+    Write-Host "  preserve: kernel overlays (.agents/.skills/.cursor/scripts) — pin-only update"
+} else {
+    # Kernel → target repo root
+    Copy-Tree -From (Join-Path $KernelRoot '.agents') -To (Join-Path $Target '.agents') -Overwrite:$Force
+    Copy-Tree -From (Join-Path $KernelRoot '.skills') -To (Join-Path $Target '.skills') -Overwrite:$Force
+    Copy-Tree -From (Join-Path $KernelRoot '.cursor') -To (Join-Path $Target '.cursor') -Overwrite:$Force
+    Copy-Tree -From (Join-Path $KernelRoot 'scripts') -To (Join-Path $Target 'scripts') -Overwrite:$Force
+
+    # Schemas (Execution Control + harness contracts) — optional but required for validators
+    $schemasFrom = Join-Path $HarnessRoot 'schemas/arah-harness'
+    $schemasTo = Join-Path $Target 'schemas/arah-harness'
+    if (Test-Path -LiteralPath $schemasFrom) {
+        Copy-Tree -From $schemasFrom -To $schemasTo -Overwrite:$Force
+    }
+}
+
+# Execution ledger dirs (hot state; gitignored via .arah/local/)
+foreach ($sub in @('active', 'completed', 'blocked')) {
+    $d = Join-Path $Target ".arah/local/execution/$sub"
+    if (-not (Test-Path -LiteralPath $d)) {
+        New-Item -ItemType Directory -Path $d -Force | Out-Null
+        Write-Host "  installed: .arah/local/execution/$sub/"
+    }
+}
 
 # Templates
 $configTpl = Join-Path $TemplatesRoot 'arah.config.yaml'
@@ -65,6 +109,7 @@ if ($KernelOnly) {
 } elseif (-not (Test-Path $configDest) -or $Force) {
     $cfg = Get-Content $configTpl -Raw
     $cfg = $cfg -replace '\{\{PROJECT_NAME\}\}', $ProjectName
+    $cfg = $cfg -replace '\{\{HARNESS_VERSION\}\}', $Version
     Set-Content -Path $configDest -Value $cfg -Encoding UTF8
     Write-Host "  installed: arah.config.yaml"
 }
@@ -107,26 +152,129 @@ foreach ($sub in @('domain', 'specialists')) {
     }
 }
 
-# GitHub workflow
-$wfTpl = Join-Path $TemplatesRoot 'github/workflows/agents-validate.yml'
-$wfDest = Join-Path $Target '.github/workflows/agents-validate.yml'
-if ((Test-Path $wfTpl) -and ((-not (Test-Path $wfDest)) -or $Force)) {
-    $wfDir = Split-Path $wfDest -Parent
-    if (-not (Test-Path $wfDir)) { New-Item -ItemType Directory -Path $wfDir -Force | Out-Null }
-    Copy-Item $wfTpl $wfDest -Force
-    Write-Host "  installed: .github/workflows/agents-validate.yml"
+# GitHub workflows (validate + harness update notify)
+$wfDir = Join-Path $Target '.github/workflows'
+if (-not (Test-Path $wfDir)) { New-Item -ItemType Directory -Path $wfDir -Force | Out-Null }
+foreach ($wfName in @('agents-validate.yml', 'harness-update-check.yml')) {
+    $wfTpl = Join-Path $TemplatesRoot "github/workflows/$wfName"
+    $wfDest = Join-Path $wfDir $wfName
+    if ((Test-Path $wfTpl) -and ((-not (Test-Path $wfDest)) -or $Force)) {
+        Copy-Item $wfTpl $wfDest -Force
+        Write-Host "  installed: .github/workflows/$wfName"
+    }
 }
 
 # Pin file
+$mode = if ($Minimal) { 'minimal' } else { 'full' }
 $pin = @"
 harness: arah-harness
 version: $Version
 installed: $(Get-Date -Format 'yyyy-MM-dd')
+mode: $mode
 "@
 Set-Content -Path (Join-Path $Target '.arah-version') -Value $pin -Encoding UTF8
 
+# Ensure .gitignore covers hot state (.arah/local/)
+$giPath = Join-Path $Target '.gitignore'
+$giBlock = @"
+
+# ARAH hot state (do not version)
+.arah/local/
+.arah/audit/
+.arah/observability/
+.arah/bus/
+.arah/organism/
+.cursor/arah-live/
+"@
+if (Test-Path -LiteralPath $giPath) {
+    $giRaw = Get-Content -LiteralPath $giPath -Raw
+    if ($giRaw -notmatch '(?m)^\s*\.arah/local/') {
+        Add-Content -LiteralPath $giPath -Value $giBlock -Encoding UTF8
+        Write-Host "  updated: .gitignore (ARAH hot state)"
+    }
+} else {
+    Set-Content -LiteralPath $giPath -Value $giBlock.TrimStart() -Encoding UTF8
+    Write-Host "  installed: .gitignore"
+}
+
+# Migrate execution_control into existing arah.config.yaml (preserve customizations)
+if (-not $KernelOnly) {
+    $cfgPath = Join-Path $Target 'arah.config.yaml'
+    if (Test-Path -LiteralPath $cfgPath) {
+        $cfgRaw = Get-Content -LiteralPath $cfgPath -Raw
+        if ($cfgRaw -notmatch '(?m)^execution_control:') {
+            $cfgRaw = $cfgRaw.TrimEnd() + @"
+
+
+# Execution Control Protocol (added by arah init/update — safe defaults)
+execution_control:
+  enabled: true
+  terminal_states:
+    - done
+    - blocked
+  limits:
+    max_handoffs: 2
+    max_consultations: 2
+    max_analysis_cycles: 1
+  behavior:
+    require_primary_executor: true
+    forbid_consultant_to_consultant_handoff: true
+    require_completion_evidence: true
+    require_blocking_reason: true
+    prevent_reroute_after_execution_started: true
+"@
+            Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
+            Write-Host "  migrated: arah.config.yaml (+execution_control)"
+        }
+        $cfgRaw = Get-Content -LiteralPath $cfgPath -Raw
+        if ($cfgRaw -notmatch '(?m)^update_check:') {
+            $cfgRaw = $cfgRaw.TrimEnd() + @"
+
+
+# Harness update notifications (GitHub Releases + scheduled issue)
+update_check:
+  enabled: true
+  repository: sraphaz/arah-harness
+  notify:
+    issue: true
+    label: arah-harness-update
+"@
+            Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
+            Write-Host "  migrated: arah.config.yaml (+update_check)"
+        }
+    }
+}
+
+# Minimal mode: annotate config — organism optional; upgrade path documented
+if ($Minimal -and -not $KernelOnly) {
+    $cfgPath = Join-Path $Target 'arah.config.yaml'
+    if (Test-Path -LiteralPath $cfgPath) {
+        $cfgRaw = Get-Content -LiteralPath $cfgPath -Raw
+        if ($cfgRaw -notmatch '(?m)^organism:') {
+            $cfgRaw = $cfgRaw.TrimEnd() + @"
+
+# Minimal install — manifests + gates only. Upgrade: remove this block and run
+#   arah regenerate -UpdateKernel
+# then arah discover && arah organism bootstrap
+organism:
+  enabled: false
+  mode: minimal
+"@
+            Set-Content -LiteralPath $cfgPath -Value $cfgRaw -Encoding UTF8
+            Write-Host "  annotated: arah.config.yaml (organism.enabled=false)"
+        }
+    }
+}
+
 Write-Host ""
-Write-Host "ARAH init complete. Next:"
-Write-Host "  1. Edit arah.config.yaml (tests, domains)"
-Write-Host "  2. powershell -File path/to/arah-harness/cli/arah.ps1 domain sync"
-Write-Host "  3. ./scripts/agents/validate-manifests.ps1 && arah export-graph"
+Write-Host "ARAH init complete (mode=$mode). Next:"
+if ($Minimal) {
+    Write-Host "  1. Edit arah.config.yaml (tests, domains)"
+    Write-Host "  2. powershell -File path/to/arah-harness/cli/arah.ps1 domain sync"
+    Write-Host "  3. powershell -File path/to/arah-harness/cli/arah.ps1 hooks install"
+    Write-Host "  4. Upgrade path: arah regenerate -UpdateKernel && arah discover && arah organism bootstrap"
+} else {
+    Write-Host "  1. Edit arah.config.yaml (tests, domains)"
+    Write-Host "  2. powershell -File path/to/arah-harness/cli/arah.ps1 domain sync"
+    Write-Host "  3. ./scripts/agents/validate-manifests.ps1 && arah export-graph"
+}

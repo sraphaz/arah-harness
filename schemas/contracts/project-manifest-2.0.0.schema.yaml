@@ -1,0 +1,62 @@
+# schema: contracts/project-manifest
+# version: 2.0.0
+# Contrato da federação Surya (doc I §2). JSON Schema draft 2020-12 em YAML.
+# Evolui o project-manifest v0.1.0 do Surya Labs Workspace. Instâncias v0.1.0
+# seguem validando contra o schema legado v0.1.0 (mantido no Workspace) durante
+# a convivência; migrar para v2 = atualizar schema_version para "2.0.0" — os
+# demais campos novos são opcionais (engineering_profile/risk_tier/arah_harness
+# exigidos por política — não por schema — para repos ativos).
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sraphaz.github.io/contracts/project-manifest/2.0.0"
+title: ProjectManifest
+type: object
+required: [schema_version, id, name, status]
+additionalProperties: false
+properties:
+  schema_version: { const: "2.0.0" }
+  id:             { type: string, pattern: "^[a-z0-9][a-z0-9-]*$", description: "project_id" }
+  name:           { type: string }
+  status:         { enum: [active, dormant, archived, scaffold] }
+  repository:
+    type: object
+    required: [remote]
+    properties:
+      remote:         { type: string, description: "ex.: sraphaz/iautos" }
+      default_branch: { type: string, default: main }
+      visibility:     { enum: [public, private] }
+  # --- novos no v2 (obrigatórios p/ repos ativos ao fim da Wave 1) ---
+  engineering_profile:
+    enum: [minimal, tooling, standard-product, high-risk-agentic, control-plane]
+  risk_tier:
+    enum: [baixo, medio, alto, critico]
+  arah_harness:
+    type: object
+    description: "Pin do Engineering Kernel; null = não instalado (deve ser exceção justificada)"
+    properties:
+      version:    { type: [string, "null"], description: "pin em arah.config.yaml do repo" }
+      profile:    { type: string, description: "profile do kernel aplicado" }
+      exception:  { type: [string, "null"], description: "ADR que justifica não instalar" }
+  # --- opcionais ---
+  demands:
+    type: array
+    items: { type: string, description: "demand_id" }
+  owners:
+    type: array
+    items: { type: string, description: "actor_id" }
+  contracts_supported:
+    type: array
+    description: "Contratos que o repo emite/consome, com versão"
+    items:
+      type: object
+      required: [contract, version]
+      properties:
+        contract: { enum: [execution-request, execution-evidence, canonical-event, sky-package] }
+        version:  { type: string }
+        role:     { enum: [emits, consumes] }
+  health:
+    type: object
+    description: "Ponteiros, não valores — valores vivem em scorecards (N)"
+    properties:
+      scorecard_ref: { type: string }
+      last_assessed: { type: string, format: date }
+  risk_notes: { type: string }

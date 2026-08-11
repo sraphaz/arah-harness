@@ -23,5 +23,8 @@ Comandos de teste são resolvidos via `arah.config.yaml` quando aplicável.
 | address-bot-review | Endereça bots |
 | respond-bot-review | Responde bots |
 | next-phase | Avança fila de fases |
+| discover-repo | Observa stack/domínio e propõe células |
+| evolve-harness | Self-learning → propostas de evolução |
+| regenerate-harness | Homeostase completa no consumidor |
 
 Execução: `./scripts/agents/invoke-skill.ps1 -Skill run-tests -Area backend`

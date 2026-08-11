@@ -1,6 +1,11 @@
 id: planner
 name: Planner
 description: Converte backlog em issues, specs e fila de fases priorizada.
+execution_role:
+  can_route: false
+  can_execute: true
+  can_consult: true
+  can_review: false
 triggers:
   - manual
   - issue:opened

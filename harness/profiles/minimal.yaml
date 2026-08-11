@@ -28,10 +28,11 @@ model:
     diagnostics: .cursor/arah-live/diagnostics.jsonl
     session_traces: .cursor/arah-live/sessions/
     metrics_summary: .arah/observability/summary.yaml
+    metrics_digest: docs/_meta/metrics.digest.md
     agent_graph: docs/_meta/agent-graph.generated.json
   audit:
     event_schema: arah-harness/audit-event
-    ledger_path: .arah/audit/events.jsonl
+    ledger_path: .arah/local/audit/
     retention_policy: local_dev
     record_script: scripts/agents/record-agent-event.ps1
 

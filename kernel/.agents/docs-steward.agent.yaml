@@ -1,6 +1,11 @@
 id: docs-steward
 name: Docs Steward
 description: Taxonomia, índices, sync-docs e consistência documental.
+execution_role:
+  can_route: false
+  can_execute: true
+  can_consult: true
+  can_review: false
 triggers:
   - pull_request:opened
   - manual

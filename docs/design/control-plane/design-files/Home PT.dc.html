@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARAH Harness — Engenharia humano-agente governada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#0A0C0F;color:#E7ECF1;font-family:'Schibsted Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E7ECF1;text-decoration:none}
+a:hover{color:oklch(80% 0.09 200)}
+*{box-sizing:border-box}
+::selection{background:oklch(70% 0.09 200 / .35)}
+@keyframes flowDot{0%{top:0;opacity:0}4%{opacity:1}96%{opacity:1}100%{top:calc(100% - 8px);opacity:0}}
+@keyframes stagePulse{0%,100%{border-color:#1E2630;box-shadow:none}50%{border-color:oklch(75% 0.09 200 / .6);box-shadow:0 0 24px oklch(75% 0.09 200 / .12)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0A0C0F">
+<nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:28px;padding:10px 32px;min-height:64px;row-gap:6px;flex-wrap:wrap;background:rgba(10,12,15,.82);backdrop-filter:blur(14px);border-bottom:1px solid #161C24">
+  <a href="Home PT.dc.html" style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.02em">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><line x1="3" y1="19" x2="11" y2="11" stroke="oklch(78% 0.09 200)" stroke-width="1.6"></line><line x1="11" y1="3" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><line x1="19" y1="19" x2="11" y2="11" stroke="#5A6675" stroke-width="1.6"></line><circle cx="11" cy="11" r="3" fill="oklch(78% 0.09 200)"></circle><circle cx="3" cy="19" r="2" fill="#3A4553"></circle><circle cx="19" cy="19" r="2" fill="#3A4553"></circle><circle cx="11" cy="3" r="2" fill="#3A4553"></circle></svg>
+    <span>ARAH Harness</span>
+  </a>
+  <div style="display:flex;gap:22px;font-size:14px;color:#9AA5B1;margin-left:12px;flex:1;flex-wrap:wrap">
+    <a href="Home PT.dc.html" style="color:#E7ECF1">Produto</a>
+    <a href="Architecture PT.dc.html" style="color:#9AA5B1">Arquitetura</a>
+    <a href="How It Works PT.dc.html" style="color:#9AA5B1">Como Funciona</a>
+    <a href="TechOrganism PT.dc.html" style="color:#9AA5B1">TechOrganism</a>
+    <a href="Use Cases PT.dc.html" style="color:#9AA5B1">Casos de Uso</a>
+    <a href="Docs PT.dc.html" style="color:#9AA5B1">Documentação</a>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center"><div style="display:flex;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #232B36;border-radius:7px;padding:2px"><a href="Home.dc.html" style="padding:4px 9px;border-radius:5px;color:#5A6675">EN</a><span style="padding:4px 9px;border-radius:5px;background:#1E2630;color:#E7ECF1">PT</span></div>
+    <a href="https://github.com/sraphaz/arah-harness" style="font-size:13.5px;font-family:'IBM Plex Mono',monospace;color:#9AA5B1;border:1px solid #232B36;padding:7px 14px;border-radius:6px;white-space:nowrap" style-hover="border-color:#3A4553;color:#E7ECF1">Ver no GitHub</a>
+    <a href="Docs PT.dc.html" style="font-size:13.5px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:8px 16px;border-radius:6px" style-hover="background:oklch(84% 0.09 200)">Começar</a>
+  </div>
+</nav>
+
+<header style="max-width:1200px;margin:0 auto;padding:96px 32px 80px;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:64px;align-items:center">
+  <div style="animation:fadeUp .6s ease both">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:oklch(78% 0.09 200);margin-bottom:22px">Harness repo-first · Código aberto</div>
+    <h1 style="font-size:clamp(34px,5.5vw,56px);line-height:1.08;font-weight:700;letter-spacing:-.02em;margin:0 0 24px;text-wrap:balance">Engenharia humano-agente governada, enraizada no repositório.</h1>
+    <p style="font-size:19px;line-height:1.6;color:#9AA5B1;margin:0 0 36px;max-width:560px;text-wrap:pretty">O ARAH Harness transforma seu repositório na fonte de verdade operacional para agentes, skills, políticas, validação e autoridade humana.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <a href="Docs PT.dc.html" style="font-size:15px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:13px 24px;border-radius:7px" style-hover="background:oklch(84% 0.09 200)">Começar</a>
+      <a href="Architecture PT.dc.html" style="font-size:15px;font-weight:500;border:1px solid #2A3340;color:#E7ECF1;padding:13px 24px;border-radius:7px" style-hover="border-color:#4A5563">Explorar a Arquitetura</a>
+      <a href="https://github.com/sraphaz/arah-harness" style="font-size:15px;font-family:'IBM Plex Mono',monospace;color:#9AA5B1;padding:13px 12px" style-hover="color:#E7ECF1">Ver no GitHub →</a>
+    </div>
+  </div>
+  <div style="position:relative;border:1px solid #1A212B;border-radius:14px;background:linear-gradient(180deg,#0D1117,#0A0D11);padding:28px 32px;animation:fadeUp .6s .15s ease both">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#5A6675;margin-bottom:18px">Uma mudança governada</div>
+    <div style="position:relative;display:flex;flex-direction:column;gap:10px">
+      <div style="position:absolute;left:11px;top:14px;bottom:14px;width:2px;background:#1E2630">
+        <div style="position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:oklch(80% 0.11 200);box-shadow:0 0 12px oklch(80% 0.11 200 / .8);animation:flowDot 7s linear infinite"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;padding:10px 14px 10px 0"><span style="width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;position:relative;z-index:1;background:#0B0E12">01</span><div style="flex:1;border:1px solid #1E2630;border-radius:8px;padding:9px 14px;font-size:14px;animation:stagePulse 7s 0s infinite"><span style="font-weight:600">Intenção Humana</span> <span style="color:#5A6675;font-size:12.5px;font-family:'IBM Plex Mono',monospace;margin-left:8px">objetivo · critérios</span></div></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:0 14px 0 0"><span style="width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;position:relative;z-index:1;background:#0B0E12">02</span><div style="flex:1;border:1px solid #1E2630;border-radius:8px;padding:9px 14px;font-size:14px;animation:stagePulse 7s 1s infinite"><span style="font-weight:600">Contexto do Repositório</span> <span style="color:#5A6675;font-size:12.5px;font-family:'IBM Plex Mono',monospace;margin-left:8px">domínios · paths</span></div></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:0 14px 0 0"><span style="width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(78% 0.09 200);position:relative;z-index:1;background:#0B0E12">03</span><div style="flex:1;border:1px solid oklch(75% 0.09 200 / .35);border-radius:8px;padding:9px 14px;font-size:14px;background:oklch(75% 0.09 200 / .05);animation:stagePulse 7s 2s infinite"><span style="font-weight:600;color:oklch(84% 0.07 200)">ARAH Harness</span> <span style="color:#5A6675;font-size:12.5px;font-family:'IBM Plex Mono',monospace;margin-left:8px">coreografia</span></div></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:0 14px 0 0"><span style="width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;position:relative;z-index:1;background:#0B0E12">04</span><div style="flex:1;border:1px solid #1E2630;border-radius:8px;padding:9px 14px;font-size:14px;animation:stagePulse 7s 3s infinite"><span style="font-weight:600">Agentes + Skills + Políticas</span></div></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:0 14px 0 0"><span style="width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;position:relative;z-index:1;background:#0B0E12">05</span><div style="flex:1;border:1px solid #1E2630;border-radius:8px;padding:9px 14px;font-size:14px;animation:stagePulse 7s 4.2s infinite"><span style="font-weight:600">Gates + Evidências</span> <span style="color:#5A6675;font-size:12.5px;font-family:'IBM Plex Mono',monospace;margin-left:8px">validado</span></div></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:0 14px 0 0"><span style="width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;position:relative;z-index:1;background:#0B0E12">06</span><div style="flex:1;border:1px solid #1E2630;border-radius:8px;padding:9px 14px;font-size:14px;animation:stagePulse 7s 5.2s infinite"><span style="font-weight:600">Pull Request</span></div></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:0 14px 0 0"><span style="width:24px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(78% 0.09 80);position:relative;z-index:1;background:#0B0E12">07</span><div style="flex:1;border:1px solid oklch(75% 0.09 80 / .35);border-radius:8px;padding:9px 14px;font-size:14px;background:oklch(75% 0.09 80 / .05);animation:stagePulse 7s 6.2s infinite"><span style="font-weight:600;color:oklch(84% 0.07 80)">Seleção Humana</span> <span style="color:#5A6675;font-size:12.5px;font-family:'IBM Plex Mono',monospace;margin-left:8px">revisão · merge</span></div></div>
+    </div>
+  </div>
+</header>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:56px;align-items:start">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">A transformação</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 20px;text-wrap:balance">A engenharia de software está se tornando engenharia humano-agente</h2>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0 0 28px;text-wrap:pretty">O trabalho deixou de ser apenas escrever código. É coordenar humanos, agentes, modelos, ferramentas, políticas, contexto, validação e memória persistente — como um único sistema de engenharia.</p>
+      <blockquote style="margin:0;padding:20px 24px;border-left:2px solid oklch(78% 0.09 200);background:#0E1319;border-radius:0 10px 10px 0;font-size:19px;line-height:1.5;font-weight:500;color:#DDE4EB">O futuro da engenharia de software não é autônomo. É coordenado.</blockquote>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:52px">
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;font-size:14.5px"><span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px;display:block;margin-bottom:6px">COORDENAR</span><span>Humanos</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;font-size:14.5px"><span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px;display:block;margin-bottom:6px">COORDENAR</span><span>Agentes</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;font-size:14.5px"><span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px;display:block;margin-bottom:6px">COORDENAR</span><span>Modelos</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;font-size:14.5px"><span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px;display:block;margin-bottom:6px">COORDENAR</span><span>Ferramentas</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;font-size:14.5px"><span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px;display:block;margin-bottom:6px">GOVERNAR</span><span>Políticas</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;font-size:14.5px"><span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px;display:block;margin-bottom:6px">GOVERNAR</span><span>Validação</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;font-size:14.5px"><span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px;display:block;margin-bottom:6px">PRESERVAR</span><span>Contexto</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:16px 18px;font-size:14.5px"><span style="color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:11px;display:block;margin-bottom:6px">PRESERVAR</span><span>Memória persistente</span></div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:720px;margin-bottom:56px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">O problema</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 18px;text-wrap:balance">Gerar código não é o problema mais difícil</h2>
+      <p style="font-size:18px;line-height:1.6;color:#9AA5B1;margin:0;text-wrap:pretty">O mais difícil é coordenar inteligência sem perder contexto, autoridade e responsabilidade.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px">
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:22px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(72% 0.11 30);margin-bottom:12px">P·01</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Agentes sem contexto organizacional</div><div style="font-size:13.5px;line-height:1.55;color:#8C97A5">Modelos leem código localmente, mas não conhecem responsabilidades, arquitetura, fronteiras de domínio nem critérios de decisão.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:22px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(72% 0.11 30);margin-bottom:12px">P·02</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Prompts efêmeros</div><div style="font-size:13.5px;line-height:1.55;color:#8C97A5">O conhecimento produzido em sessões de IA desaparece quando a conversa termina ou a ferramenta muda.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:22px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(72% 0.11 30);margin-bottom:12px">P·03</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Autonomia sem responsabilidade</div><div style="font-size:13.5px;line-height:1.55;color:#8C97A5">Agentes executam mudanças sem autoridade explícita, escopo, caminho de aprovação ou evidência.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:22px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(72% 0.11 30);margin-bottom:12px">P·04</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Conhecimento preso a fornecedores</div><div style="font-size:13.5px;line-height:1.55;color:#8C97A5">Contexto e workflows ficam presos em copilotos, plataformas proprietárias e runtimes específicos.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:22px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(72% 0.11 30);margin-bottom:12px">P·05</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Políticas apenas documentais</div><div style="font-size:13.5px;line-height:1.55;color:#8C97A5">Regras vivem em wikis e PDFs, sem forma executável que um agente seja obrigado a obedecer.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:22px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(72% 0.11 30);margin-bottom:12px">P·06</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Multiagente sem coordenação</div><div style="font-size:13.5px;line-height:1.55;color:#8C97A5">Múltiplos agentes atuam no mesmo repositório sem papéis, fronteiras ou sinais compartilhados.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:22px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(72% 0.11 30);margin-bottom:12px">P·07</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Ausência de evidências</div><div style="font-size:13.5px;line-height:1.55;color:#8C97A5">Mudanças chegam sem artefatos que provem o que foi validado, por quem, sob qual política.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:22px;background:#0D1117"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:oklch(72% 0.11 30);margin-bottom:12px">P·08</div><div style="font-size:15.5px;font-weight:600;margin-bottom:8px">Contexto perdido entre sessões</div><div style="font-size:13.5px;line-height:1.55;color:#8C97A5">Cada nova sessão começa do zero: decisões, restrições e histórico precisam ser reexplicados.</div></div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:720px;margin-bottom:56px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">A inversão</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 18px">O repositório governa o agente.</h2>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0;text-wrap:pretty">O agente não recebe autoridade irrestrita. O repositório fornece papel, contexto, escopo, capacidades, políticas, validações e caminhos de aprovação.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px">
+      <div style="border:1px solid #1E2630;border-radius:12px;padding:28px;background:#0D1117">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8C97A5;margin-bottom:20px">Agent-first</div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:14.5px;font-family:'IBM Plex Mono',monospace">
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:8px 13px">Prompt</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:8px 13px">Agente</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:8px 13px">Ferramentas</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:8px 13px">Mudança de código</span>
+        </div>
+        <p style="font-size:13.5px;line-height:1.6;color:#7B8694;margin:22px 0 0">A autoridade nasce da conversa. O contexto vive na sessão. Nada persiste.</p>
+      </div>
+      <div style="border:1px solid oklch(75% 0.09 200 / .35);border-radius:12px;padding:28px;background:linear-gradient(180deg,oklch(75% 0.09 200 / .06),transparent)">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:oklch(80% 0.08 200);margin-bottom:20px">Repository-first · ARAH</div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13.5px;font-family:'IBM Plex Mono',monospace">
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:7px 11px">Intenção humana</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:7px 11px">Contexto do repo</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:7px 11px">Domínio</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid oklch(75% 0.09 200 / .5);border-radius:7px;padding:7px 11px;color:oklch(84% 0.07 200)">Agentes</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid oklch(75% 0.09 200 / .5);border-radius:7px;padding:7px 11px;color:oklch(84% 0.07 200)">Skills</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:7px 11px">Gates</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:7px 11px">Evidências</span><span style="color:#5A6675">→</span>
+          <span style="border:1px solid oklch(75% 0.09 80 / .5);border-radius:7px;padding:7px 11px;color:oklch(84% 0.07 80)">Pull request</span>
+        </div>
+        <p style="font-size:13.5px;line-height:1.6;color:#9AA5B1;margin:22px 0 0">Autoridade, escopo e validação são contratos versionados no repositório. Tudo persiste.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<section style="border-top:1px solid #141A22;padding:100px 32px">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:760px;margin-bottom:48px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">O que é</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 18px">Uma camada operacional, instalada no seu repositório</h2>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0;text-wrap:pretty">ARAH Harness é um harness repo-first para governança, coordenação e evolução da engenharia de software realizada por humanos e agentes de IA. Ele instala e mantém uma camada operacional versionada dentro do repositório. Selecione um componente para inspecioná-lo.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ harnessParts }}" as="part" hint-placeholder-count="6">
+          <button onClick="{{ part.select }}" style="text-align:left;display:flex;align-items:center;gap:12px;border:1px solid {{ part.borderColor }};background:{{ part.bg }};color:#E7ECF1;border-radius:8px;padding:11px 14px;font-size:14px;font-family:'Schibsted Grotesk',sans-serif;cursor:pointer" style-hover="border-color:#3A4553">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;width:22px">{{ part.num }}</span>
+            <span style="flex:1">{{ part.name }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:{{ part.stageColor }}">{{ part.stage }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;padding:32px;position:sticky;top:84px;min-height:420px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:oklch(78% 0.09 200);margin-bottom:10px">{{ sel.stage }} · {{ sel.file }}</div>
+        <h3 style="font-size:26px;font-weight:700;margin:0 0 14px">{{ sel.name }}</h3>
+        <p style="font-size:15.5px;line-height:1.65;color:#B7C0CB;margin:0 0 22px;text-wrap:pretty">{{ sel.definition }}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px">
+          <div style="border:1px solid #1A212B;border-radius:9px;padding:16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;margin-bottom:8px">FUNÇÃO</div><div style="font-size:13.5px;line-height:1.6;color:#9AA5B1">{{ sel.role }}</div></div>
+          <div style="border:1px solid #1A212B;border-radius:9px;padding:16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;margin-bottom:8px">MATURIDADE</div><div style="font-size:13.5px;line-height:1.6;color:#9AA5B1">{{ sel.maturity }}</div></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:#5A6675;margin-bottom:8px">EXEMPLO</div>
+        <pre style="margin:0;background:#080A0D;border:1px solid #1A212B;border-radius:9px;padding:18px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.6;color:#A9C7D2;overflow:auto;white-space:pre-wrap">{{ sel.example }}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:720px;margin-bottom:48px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Arquitetura em camadas</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 18px">Uma camada de autoridade entre os ambientes e o repositório</h2>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0">Selecione uma camada para inspecionar o que vive nela. Detalhes completos na <a href="Architecture PT.dc.html" style="color:oklch(80% 0.09 200);border-bottom:1px solid oklch(80% 0.09 200 / .4)">página de Arquitetura</a>.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ layers }}" as="ly" hint-placeholder-count="5">
+          <button onClick="{{ ly.select }}" style="text-align:left;border:1px solid {{ ly.border }};background:{{ ly.bg }};border-radius:10px;padding:18px 22px;cursor:pointer;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap" style-hover="border-color:#3A4553">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675;width:26px">C{{ ly.num }}</span>
+            <span style="font-size:17px;font-weight:600;color:{{ ly.titleColor }};min-width:170px">{{ ly.name }}</span>
+            <span style="font-size:13px;color:#7B8694;font-family:'IBM Plex Mono',monospace">{{ ly.items }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;padding:28px;min-height:300px;position:sticky;top:84px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:oklch(78% 0.09 200);margin-bottom:10px">Camada {{ selLayer.num }}</div>
+        <h3 style="font-size:22px;font-weight:700;margin:0 0 12px">{{ selLayer.name }}</h3>
+        <p style="font-size:14.5px;line-height:1.65;color:#9AA5B1;margin:0 0 18px">{{ selLayer.detail }}</p>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:2;color:#A9C7D2">{{ selLayer.itemsLong }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:720px;margin-bottom:52px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Princípios</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0">Oito compromissos que o harness torna executáveis</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px">
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-size:16px;font-weight:600;margin-bottom:10px;color:oklch(84% 0.07 200)">Repo-first</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">O repositório é a fonte de verdade operacional.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-size:16px;font-weight:600;margin-bottom:10px;color:oklch(84% 0.07 200)">Humano no comando</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">A responsabilidade e o merge permanecem humanos.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-size:16px;font-weight:600;margin-bottom:10px;color:oklch(84% 0.07 200)">Agência governada</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">Cada agente tem papel, escopo e autonomia explícitos.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-size:16px;font-weight:600;margin-bottom:10px;color:oklch(84% 0.07 200)">Spec antes do código</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">Mudanças relevantes começam por intenção e critérios verificáveis.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-size:16px;font-weight:600;margin-bottom:10px;color:oklch(84% 0.07 200)">Contexto sob demanda</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">Cada agente recebe o contexto adequado à sua função.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-size:16px;font-weight:600;margin-bottom:10px;color:oklch(84% 0.07 200)">Evidência antes da confiança</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">A confiança é sustentada por validações e artefatos.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-size:16px;font-weight:600;margin-bottom:10px;color:oklch(84% 0.07 200)">Inteligência persistente</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">O conhecimento sobrevive a sessões, ferramentas e modelos.</div></div>
+      <div style="border:1px solid #1E2630;border-radius:10px;padding:24px;background:#0D1117"><div style="font-size:16px;font-weight:600;margin-bottom:10px;color:oklch(84% 0.07 200)">Evolução por seleção</div><div style="font-size:13.5px;line-height:1.6;color:#8C97A5">O sistema propõe; humanos selecionam.</div></div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:48px">
+      <div style="max-width:680px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Ciclo de vida</div>
+        <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0">Doze operações, da instalação à regeneração</h2>
+      </div>
+      <a href="How It Works PT.dc.html" style="font-size:14.5px;font-weight:600;color:oklch(80% 0.09 200);border:1px solid oklch(75% 0.09 200 / .4);border-radius:7px;padding:11px 20px;white-space:nowrap" style-hover="background:oklch(75% 0.09 200 / .08)">Abrir o passo a passo interativo →</a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;font-family:'IBM Plex Mono',monospace">
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">01</span><span>Instalar</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">02</span><span>Descobrir</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">03</span><span>Configurar</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">04</span><span>Sincronizar</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">05</span><span>Coreografar</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">06</span><span>Executar</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">07</span><span>Validar</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">08</span><span>Sinalizar</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">09</span><span>Auditar</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">10</span><span>Evoluir</span></div>
+      <div style="border:1px solid oklch(75% 0.09 80 / .4);border-radius:9px;padding:14px;font-size:13px;color:oklch(84% 0.07 80)"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">11</span><span>Revisão Humana</span></div>
+      <div style="border:1px solid #1E2630;border-radius:9px;padding:14px;font-size:13px"><span style="color:#5A6675;display:block;font-size:10.5px;margin-bottom:6px">12</span><span>Regenerar</span></div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:720px;margin-bottom:48px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Mapa de capacidades</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0">Oito áreas de capacidade</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(106px,1fr));gap:8px;margin-bottom:16px">
+      <sc-for list="{{ areas }}" as="a" hint-placeholder-count="8">
+        <button onClick="{{ a.select }}" style="border:1px solid {{ a.border }};background:{{ a.bg }};color:{{ a.color }};border-radius:8px;padding:14px 8px;font-size:14px;font-weight:600;font-family:'Schibsted Grotesk',sans-serif;cursor:pointer" style-hover="border-color:#3A4553">{{ a.name }}</button>
+      </sc-for>
+    </div>
+    <div style="border:1px solid #1E2630;border-radius:12px;background:#0D1117;padding:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px;align-items:start">
+      <div>
+        <h3 style="font-size:24px;font-weight:700;margin:0 0 10px;color:oklch(84% 0.07 200)">{{ selArea.name }}</h3>
+        <p style="font-size:14.5px;line-height:1.6;color:#9AA5B1;margin:0">{{ selArea.desc }}</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <sc-for list="{{ selArea.caps }}" as="c" hint-placeholder-count="5">
+          <span style="border:1px solid #2A3340;border-radius:7px;padding:10px 16px;font-size:13.5px;font-family:'IBM Plex Mono',monospace;color:#B7C0CB">{{ c }}</span>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+<section style="border-top:1px solid #141A22;padding:100px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:760px;margin-bottom:48px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Posicionamento</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 18px">Uma categoria diferente, não um substituto</h2>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0;text-wrap:pretty">O ARAH pode governar como essas ferramentas participam do repositório. Ele não precisa substituí-las.</p>
+    </div>
+    <div style="border:1px solid #1E2630;border-radius:12px;overflow:auto;background:#0D1117">
+      <div style="display:grid;grid-template-columns:230px repeat(6,1fr);min-width:960px;font-size:12.5px">
+        <div style="padding:14px 18px;border-bottom:1px solid #1A212B;color:#5A6675;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em">DIMENSÃO</div>
+        <div style="padding:14px 10px;border-bottom:1px solid #1A212B;color:#8C97A5;text-align:center">Copilotos de código</div>
+        <div style="padding:14px 10px;border-bottom:1px solid #1A212B;color:#8C97A5;text-align:center">Frameworks multiagente</div>
+        <div style="padding:14px 10px;border-bottom:1px solid #1A212B;color:#8C97A5;text-align:center">Kits spec-driven</div>
+        <div style="padding:14px 10px;border-bottom:1px solid #1A212B;color:#8C97A5;text-align:center">Plataformas CI/CD</div>
+        <div style="padding:14px 10px;border-bottom:1px solid #1A212B;color:#8C97A5;text-align:center">Observabilidade de agentes</div>
+        <div style="padding:14px 10px;border-bottom:1px solid #1A212B;color:oklch(84% 0.07 200);text-align:center;font-weight:600;background:oklch(75% 0.09 200 / .05)">ARAH Harness</div>
+        <sc-for list="{{ matrix }}" as="row" hint-placeholder-count="6">
+          <div style="display:contents">
+            <div style="padding:11px 18px;border-bottom:1px solid #141A22;color:#B7C0CB">{{ row.dim }}</div>
+            <div style="padding:11px;border-bottom:1px solid #141A22;text-align:center;color:{{ row.c0 }}">{{ row.v0 }}</div>
+            <div style="padding:11px;border-bottom:1px solid #141A22;text-align:center;color:{{ row.c1 }}">{{ row.v1 }}</div>
+            <div style="padding:11px;border-bottom:1px solid #141A22;text-align:center;color:{{ row.c2 }}">{{ row.v2 }}</div>
+            <div style="padding:11px;border-bottom:1px solid #141A22;text-align:center;color:{{ row.c3 }}">{{ row.v3 }}</div>
+            <div style="padding:11px;border-bottom:1px solid #141A22;text-align:center;color:{{ row.c4 }}">{{ row.v4 }}</div>
+            <div style="padding:11px;border-bottom:1px solid #141A22;text-align:center;color:oklch(78% 0.1 160);background:oklch(75% 0.09 200 / .05)">{{ row.v5 }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px">
+  <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:56px;align-items:start">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Escopo</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 24px">O que o ARAH não é</h2>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0 0 24px">O ARAH é uma camada repo-first de governança e coordenação da engenharia entre humanos e agentes. Ele não é:</p>
+      <blockquote style="margin:0;padding:20px 24px;border-left:2px solid oklch(78% 0.09 80);background:#0E1319;border-radius:0 10px 10px 0;font-size:17px;line-height:1.55;font-weight:500;color:#DDE4EB">Autonomia sem governança não escala.</blockquote>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:56px">
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Um modelo de linguagem</span></div>
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Um chatbot</span></div>
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Um copiloto de código</span></div>
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Apenas um framework de prompts</span></div>
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Apenas um runtime multiagente</span></div>
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Uma plataforma de CI/CD</span></div>
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Um substituto do GitHub</span></div>
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Auto-merge irrestrito</span></div>
+      <div style="border:1px solid #241C1C;border-radius:8px;padding:14px 16px;font-size:14px;color:#B7C0CB;grid-column:1 / -1"><span style="color:oklch(72% 0.11 30);font-family:'IBM Plex Mono',monospace;margin-right:10px">✕</span><span>Uma promessa de desenvolvimento de software sem humanos</span></div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:100px 32px;background:#0B0E12">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="max-width:720px;margin-bottom:48px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Estado das capacidades</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 18px">O que existe hoje, o que vem a seguir</h2>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0">O site distingue capacidade entregue de visão. O produto também.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(295px,1fr));gap:14px;align-items:start">
+      <div style="border:1px solid oklch(70% 0.1 160 / .35);border-radius:12px;padding:26px;background:#0D1117">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px"><span style="width:9px;height:9px;border-radius:50%;background:oklch(75% 0.1 160)"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;color:oklch(78% 0.09 160)">DISPONÍVEL</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#B7C0CB">
+          <span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">instalação do kernel</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">CLI</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">configuração</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">manifests de agentes</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">skills</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">coreografia por paths</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">sincronização de domínios</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">discovery do repositório</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">signal bus</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">grafo de agentes</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">eventos de auditoria</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">gates executáveis</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">doctor</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">sync-check</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">propostas de evolução</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">regeneração</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">integração com CI</span>
+        </div>
+      </div>
+      <div style="border:1px solid oklch(75% 0.09 80 / .3);border-radius:12px;padding:26px;background:#0D1117">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px"><span style="width:9px;height:9px;border-radius:50%;background:oklch(78% 0.09 80)"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;color:oklch(80% 0.08 80)">EXPERIMENTAL</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#B7C0CB">
+          <span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">ARAH Live</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">telemetria ampliada</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">especialistas estendidos</span><span style="border:1px solid #232B36;border-radius:6px;padding:6px 10px">análise de evolução aprofundada</span>
+        </div>
+      </div>
+      <div style="border:1px solid #232B36;border-radius:12px;padding:26px;background:#0D1117">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px"><span style="width:9px;height:9px;border-radius:50%;background:#5A6675"></span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;color:#8C97A5">PLANEJADO</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#8C97A5">
+          <span style="border:1px solid #1E2630;border-radius:6px;padding:6px 10px">governança organizacional</span><span style="border:1px solid #1E2630;border-radius:6px;padding:6px 10px">controle multirrepositório</span><span style="border:1px solid #1E2630;border-radius:6px;padding:6px 10px">scoring de agentes e skills</span><span style="border:1px solid #1E2630;border-radius:6px;padding:6px 10px">discovery semântico</span><span style="border:1px solid #1E2630;border-radius:6px;padding:6px 10px">policy engine corporativo</span><span style="border:1px solid #1E2630;border-radius:6px;padding:6px 10px">analytics</span><span style="border:1px solid #1E2630;border-radius:6px;padding:6px 10px">registro compartilhado de skills</span><span style="border:1px solid #1E2630;border-radius:6px;padding:6px 10px">studio visual</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="quickstart" style="border-top:1px solid #141A22;padding:100px 32px">
+  <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:56px;align-items:start">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5A6675;margin-bottom:16px">Início rápido</div>
+      <h2 style="font-size:clamp(28px,4.2vw,38px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 20px">Instale em um repositório existente</h2>
+      <p style="font-size:16.5px;line-height:1.65;color:#9AA5B1;margin:0 0 28px;text-wrap:pretty">Três comandos para instalar o kernel e uma superfície de CLI enxuta para descobrir, sincronizar, validar e evoluir. Guia completo na <a href="Docs PT.dc.html" style="color:oklch(80% 0.09 200);border-bottom:1px solid oklch(80% 0.09 200 / .4)">documentação</a>.</p>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:2.2;color:#A9C7D2;border:1px solid #1A212B;border-radius:10px;padding:18px 22px;background:#0D1117">
+        <div>arah doctor</div><div>arah discover</div><div>arah domain sync</div><div>arah export-graph</div><div>arah evolve</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="border:1px solid #1A212B;border-radius:10px;background:#080A0D;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #141A22"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">1 · CLONAR O HARNESS</span><button onClick="{{ copy1 }}" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C97A5;background:none;border:1px solid #232B36;border-radius:5px;padding:4px 10px;cursor:pointer" style-hover="color:#E7ECF1;border-color:#3A4553">{{ label1 }}</button></div>
+        <pre style="margin:0;padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#A9C7D2;overflow:auto">git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\arah-harness</pre>
+      </div>
+      <div style="border:1px solid #1A212B;border-radius:10px;background:#080A0D;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #141A22"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">2 · INSTALAR NO SEU PROJETO</span><button onClick="{{ copy2 }}" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C97A5;background:none;border:1px solid #232B36;border-radius:5px;padding:4px 10px;cursor:pointer" style-hover="color:#E7ECF1;border-color:#3A4553">{{ label2 }}</button></div>
+        <pre style="margin:0;padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#A9C7D2;overflow:auto">cd C:\path\to\your-project
+
+powershell -ExecutionPolicy Bypass `
+  -File $env:USERPROFILE\arah-harness\cli\arah.ps1 `
+  install `
+  -ProjectName "my-project"</pre>
+      </div>
+      <div style="border:1px solid #1A212B;border-radius:10px;background:#080A0D;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #141A22"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A6675">3 · REGENERAR / ATUALIZAR</span><button onClick="{{ copy3 }}" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8C97A5;background:none;border:1px solid #232B36;border-radius:5px;padding:4px 10px;cursor:pointer" style-hover="color:#E7ECF1;border-color:#3A4553">{{ label3 }}</button></div>
+        <pre style="margin:0;padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#A9C7D2;overflow:auto">powershell -File `
+  $env:USERPROFILE\arah-harness\cli\arah.ps1 `
+  regenerate `
+  -Target . `
+  -UpdateKernel</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="border-top:1px solid #141A22;padding:110px 32px 90px;background:linear-gradient(180deg,#0B0E12,#080A0D);text-align:center">
+  <div style="max-width:760px;margin:0 auto">
+    <h2 style="font-size:clamp(30px,4.5vw,42px);line-height:1.15;font-weight:700;letter-spacing:-.015em;margin:0 0 18px;text-wrap:balance">Agentes propõem. Humanos selecionam. O repositório lembra.</h2>
+    <p style="font-size:17px;line-height:1.6;color:#9AA5B1;margin:0 0 36px;text-wrap:pretty">Seu contexto de engenharia deve pertencer ao seu repositório, não a um fornecedor de modelo.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="https://github.com/sraphaz/arah-harness" style="font-size:15px;font-weight:600;background:oklch(78% 0.09 200);color:#0A0C0F;padding:13px 24px;border-radius:7px" style-hover="background:oklch(84% 0.09 200)">Ver Repositório</a>
+      <a href="Docs PT.dc.html" style="font-size:15px;font-weight:500;border:1px solid #2A3340;color:#E7ECF1;padding:13px 24px;border-radius:7px" style-hover="border-color:#4A5563">Ler a Documentação</a>
+      <a href="https://github.com/sraphaz/arah-harness/issues" style="font-size:15px;font-weight:500;border:1px solid #2A3340;color:#E7ECF1;padding:13px 24px;border-radius:7px" style-hover="border-color:#4A5563">Abrir uma Issue</a>
+    </div>
+  </div>
+</section>
+<footer style="border-top:1px solid #141A22;padding:36px 32px;background:#080A0D">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;color:#5A6675">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-weight:700;color:#8C97A5">ARAH Harness</span><span>· Engenharia humano-agente governada, enraizada no repositório.</span></div>
+    <div style="display:flex;gap:20px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+      <a href="https://github.com/sraphaz/arah-harness" style="color:#5A6675" style-hover="color:#E7ECF1">GitHub</a>
+      <a href="https://github.com/sraphaz/arah-harness/releases" style="color:#5A6675" style-hover="color:#E7ECF1">Releases</a>
+      <a href="https://github.com/sraphaz/arah-harness/blob/main/CHANGELOG.md" style="color:#5A6675" style-hover="color:#E7ECF1">Changelog</a>
+      <a href="https://github.com/sraphaz/arah-harness/blob/main/CONTRIBUTING.md" style="color:#5A6675" style-hover="color:#E7ECF1">Contribuir</a>
+      <a href="https://github.com/sraphaz/arah-harness/blob/main/LICENSE" style="color:#5A6675" style-hover="color:#E7ECF1">Licença</a>
+    </div>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { part: 0, layer: 2, area: 0, copied: '' };
+  mkCopy(key, text) {
+    return () => {
+      navigator.clipboard.writeText(text);
+      this.setState({ copied: key });
+      clearTimeout(this._ct); this._ct = setTimeout(() => this.setState({ copied: '' }), 1500);
+    };
+  }
+  renderCopyLabel(key) { return this.state.copied === key ? 'Copiado ✓' : 'Copiar'; }
+  parts = [
+    {name:'Manifests de agentes', file:'.agents/*.yaml', stage:'DISPONÍVEL', definition:'Contratos versionados que declaram cada agente: papel, escopo, paths permitidos, skills, nível de autonomia e regras de escalonamento.', role:'Define quem é um agente e o que ele pode tocar antes de qualquer modelo ser invocado.', maturity:'Disponível — validado por gates executáveis a cada mudança.', example:'# .agents/backend-payments.yaml\nrole: operational\ndomains: [payments]\npaths: ["backend/payments/**"]\nskills: [refactor, test-first]\nautonomy: propose-only'},
+    {name:'Skills', file:'.skills/*', stage:'DISPONÍVEL', definition:'Procedimentos determinísticos e executáveis que um agente está autorizado a rodar — não prompts livres.', role:'Transforma "como fazemos as coisas aqui" em unidades de capacidade versionadas e testáveis.', maturity:'Disponível — validada por manifest, invocada pela coreografia.', example:'# .skills/test-first/skill.yaml\nname: test-first\ninputs: [spec]\nsteps:\n  - generate failing test\n  - implement\n  - run gates'},
+    {name:'Domínios', file:'docs/_meta/domains.yaml', stage:'DISPONÍVEL', definition:'Áreas explícitas do repositório com responsabilidades, paths, referências e validações.', role:'Dá aos agentes o mapa organizacional que os humanos carregam na cabeça.', maturity:'Disponível — proposto pelo discovery, sincronizado via domain sync.', example:'payments:\n  paths: ["backend/payments/**"]\n  owners: [platform-team]\n  advisors: [payments-specialist]\n  gates: [spec, security]'},
+    {name:'Especialistas', file:'.agents/advisors/*', stage:'DISPONÍVEL', definition:'Agentes consultivos vinculados a um domínio, consultados pelos agentes operacionais antes de mudanças.', role:'Codifica o julgamento de domínio: restrições, invariantes, critérios de decisão.', maturity:'Disponível — especialistas estendidos são experimentais.', example:'# consultado automaticamente quando\n# a coreografia casa com o domínio\narah organism signal \\\n  --type consultation.request \\\n  --domain payments'},
+    {name:'Coreografia por paths', file:'harness/choreography.yaml', stage:'DISPONÍVEL', definition:'Seleção de agentes e skills conforme os arquivos e áreas afetados por uma mudança.', role:'Roteia o trabalho: um diff em backend/payments/** ativa os agentes de pagamentos, suas skills e gates.', maturity:'Disponível — mecanismo central de coordenação.', example:'match: "backend/payments/**"\nactivate:\n  agents: [backend-payments]\n  advisors: [payments-specialist]\n  gates: [spec, security, build]'},
+    {name:'Políticas de autonomia', file:'arah.config.yaml', stage:'DISPONÍVEL', definition:'Níveis de autonomia declarados por agente e por path: o que pode ser proposto, executado ou precisa escalar.', role:'Substitui confiança implícita por autoridade explícita e versionada.', maturity:'Disponível — aplicada na coreografia e nos gates.', example:'autonomy:\n  default: propose-only\n  overrides:\n    - paths: ["docs/**"]\n      level: execute-with-audit'},
+    {name:'Gates executáveis', file:'scripts/gates/*', stage:'DISPONÍVEL', definition:'Validações que rodam como código: manifests, specs, docs, grafo, segurança, dependências, build.', role:'Torna a política aplicável — uma mudança que falha em um gate não chega a pull request.', maturity:'Disponível — roda localmente e no CI.', example:'$ arah sync-check\n✓ manifests válidos\n✓ specs satisfeitas\n✓ grafo consistente\n✗ segurança: secret no diff\ngate falhou → mudança bloqueada'},
+    {name:'Signal bus', file:'.arah/bus/', stage:'DISPONÍVEL', definition:'Eventos persistentes, tipados e append-only para comunicação entre agentes e células.', role:'Permite que agentes coordenem entre sessões e ferramentas sem dividir uma janela de chat.', maturity:'Disponível — telemetria ampliada é experimental.', example:'{"type":"consultation.answer",\n "from":"payments-specialist",\n "to":"backend-payments",\n "ts":"2026-07-18T14:02:11Z",\n "body":{"verdict":"approve-with-spec"}}'},
+    {name:'Ledger de auditoria', file:'.arah/audit/', stage:'DISPONÍVEL', definition:'Registro append-only de ações, resultados, decisões de autonomia e eventos de sessão.', role:'Responde: o que aconteceu, por qual agente, sob qual política, com qual evidência.', maturity:'Disponível — alimenta a análise de evolução.', example:'2026-07-18 14:03 agent=backend-payments\naction=skill.test-first result=pass\nautonomy=propose-only gates=4/4\nevidence=.arah/audit/run-8f31/'},
+    {name:'Grafo de agentes', file:'docs/_meta/graph.json', stage:'DISPONÍVEL', definition:'Representação auditável das relações entre agentes, skills, domínios e responsabilidades.', role:'Torna o sistema inteiro inspecionável — e validável como gate.', maturity:'Disponível — studio visual é planejado.', example:'$ arah export-graph\nnodes: 14 agents · 22 skills · 6 domains\nedges: 61\n→ docs/_meta/graph.json'},
+    {name:'Discovery', file:'docs/_meta/discovery.*', stage:'DISPONÍVEL', definition:'Inspeção de stack, frameworks, estrutura e diretórios para propor domínios e especialistas.', role:'Inicializa a governança a partir do que o repositório já é.', maturity:'Disponível — discovery semântico é planejado.', example:'$ arah discover\nstack: node20 + pnpm + nest\ncandidatos: payments, catalog, infra\n→ docs/_meta/discovery.proposed.yaml'},
+    {name:'Evolução', file:'docs/_meta/evolution/*', stage:'DISPONÍVEL', definition:'Análise de ledger, sinais e telemetria para propor melhorias no sistema — sempre sob seleção humana.', role:'O harness melhora do mesmo jeito que o código muda: por propostas revisadas.', maturity:'Disponível — análise aprofundada é experimental.', example:'$ arah evolve\nproposta: dividir o domínio "backend"\nevidência: 78% dos sinais em payments\n→ PR #142 (aguardando revisão humana)'},
+    {name:'Regeneração', file:'cli/arah.ps1 regenerate', stage:'DISPONÍVEL', definition:'Atualiza o kernel, reexecuta o discovery, sincroniza domínios, regenera grafos e valida a instalação.', role:'Homeostase: mantém o harness instalado consistente enquanto o repositório evolui.', maturity:'Disponível — inclui checagens de drift.', example:'$ arah regenerate --update-kernel\nkernel 1.4.2 → 1.5.0\ndiscovery reexecutado · domínios sincronizados\ngrafo regenerado · instalação válida'}
+  ];
+  layersData = [
+    {name:'Intenção Humana', items:'objetivos · decisões · aprovação · merge', detail:'Onde a autoridade nasce e para onde ela retorna. Humanos definem objetivos, decidem direção, revisam propostas e detêm a autoridade de merge.', itemsLong:'objetivos · decisões arquiteturais · revisões · aprovação · merge'},
+    {name:'Ambientes de IA', items:'Claude Code · Cursor · Copilot · locais', detail:'As ferramentas onde os modelos rodam. O ARAH não as substitui — ele governa como elas participam do repositório.', itemsLong:'Claude Code · Cursor · GitHub Copilot · Codex · modelos locais · agentes próprios'},
+    {name:'ARAH Harness', items:'agentes · skills · gates · sinais', detail:'A camada de governança e coordenação: contratos versionados que definem quem pode agir, onde, com quais capacidades, sob qual validação.', itemsLong:'agentes · skills · coreografia · políticas · gates · sinais · grafo · auditoria · evolução'},
+    {name:'Repositório', items:'código · domínio · specs · CI', detail:'A fonte de verdade operacional: tudo o que o harness sabe e aplica vive aqui, versionado e portável.', itemsLong:'código · arquitetura · domínio · especificações · documentação · testes · infraestrutura · CI'},
+    {name:'Entrega', items:'pull request · revisão · deploy', detail:'Mudanças só chegam à produção pelo caminho humano: pull request, revisão, merge, deployment.', itemsLong:'pull request · revisão · merge · deployment'}
+  ];
+  areasData = [
+    {name:'Descobrir', desc:'O harness observa o que o repositório já é antes de propor estrutura.', caps:['detecção de stack','detecção de frameworks','estrutura do repositório','candidatos a domínio','candidatos a especialista']},
+    {name:'Modelar', desc:'O que foi descoberto vira contratos explícitos e versionados.', caps:['domínios','agentes','especialistas','schemas','grafo']},
+    {name:'Coordenar', desc:'O trabalho é roteado para os agentes e capacidades certos pelos paths que ele toca.', caps:['coreografia por paths','skills','sinais','consulta entre agentes']},
+    {name:'Executar', desc:'Agentes agem por procedimentos determinísticos e autorizados.', caps:['agentes operacionais','skills determinísticas','CLI','hooks']},
+    {name:'Validar', desc:'Toda mudança relevante passa por gates executáveis antes da revisão.', caps:['manifests','specs','grafo','documentação','segurança','dependências','build']},
+    {name:'Observar', desc:'Tudo o que acontece é registrado e inspecionável.', caps:['ledger de auditoria','eventos ao vivo','telemetria de sessão','grafo de agentes']},
+    {name:'Governar', desc:'A autoridade é explícita, e o merge permanece humano.', caps:['autonomia','gates humanos','pull requests','autoridade de merge','policy as code']},
+    {name:'Evoluir', desc:'O sistema propõe melhorias a partir de evidências; humanos selecionam.', caps:['propostas de evolução','regeneração','checagens de drift','atualizações de kernel','homeostase']}
+  ];
+  matrixData = [
+    ['Repo-first',0,0,1,0,0],['Agnóstico a modelo',0,2,2,2,1],['Contexto persistente',0,1,1,0,0],
+    ['Manifests de agentes',0,1,0,0,0],['Skills executáveis',0,1,0,0,0],['Coreografia por paths',0,0,0,1,0],
+    ['Especialistas de domínio',0,0,0,0,0],['Políticas de autonomia',0,1,0,0,0],['Gates executáveis',0,0,1,2,0],
+    ['Signal bus',0,1,0,0,1],['Ledger de auditoria',0,0,0,1,2],['Grafo de agentes',0,1,0,0,1],
+    ['Merge humano',1,0,1,2,0],['Propostas de evolução',0,0,0,0,0]
+  ];
+  renderVals() {
+    const i = this.state.part, accent = 'oklch(75% 0.09 200 / .5)';
+    const mark = v => v === 2 ? '●' : v === 1 ? '◐' : '—';
+    const mcol = v => v === 2 ? '#8C97A5' : v === 1 ? '#6B7684' : '#3A4553';
+    return {
+      harnessParts: this.parts.map((p, idx) => ({
+        name: p.name, stage: p.stage, num: String(idx + 1).padStart(2, '0'),
+        stageColor: 'oklch(75% 0.1 160)',
+        borderColor: idx === i ? accent : '#1E2630',
+        bg: idx === i ? 'oklch(75% 0.09 200 / .07)' : 'transparent',
+        select: () => this.setState({ part: idx })
+      })),
+      sel: this.parts[i],
+      layers: this.layersData.map((l, idx) => ({
+        name: l.name, items: l.items, num: idx + 1,
+        border: idx === this.state.layer ? 'oklch(75% 0.09 200 / .5)' : '#1E2630',
+        bg: idx === this.state.layer ? 'oklch(75% 0.09 200 / .07)' : '#0D1117',
+        titleColor: idx === this.state.layer ? 'oklch(84% 0.07 200)' : '#E7ECF1',
+        select: () => this.setState({ layer: idx })
+      })),
+      selLayer: Object.assign({ num: this.state.layer + 1 }, this.layersData[this.state.layer]),
+      areas: this.areasData.map((a, idx) => ({
+        name: a.name,
+        border: idx === this.state.area ? 'oklch(75% 0.09 200 / .5)' : '#1E2630',
+        bg: idx === this.state.area ? 'oklch(75% 0.09 200 / .08)' : '#0D1117',
+        color: idx === this.state.area ? 'oklch(84% 0.07 200)' : '#B7C0CB',
+        select: () => this.setState({ area: idx })
+      })),
+      selArea: this.areasData[this.state.area],
+      matrix: this.matrixData.map(r => ({
+        dim: r[0],
+        v0: mark(r[1]), c0: mcol(r[1]), v1: mark(r[2]), c1: mcol(r[2]),
+        v2: mark(r[3]), c2: mcol(r[3]), v3: mark(r[4]), c3: mcol(r[4]),
+        v4: mark(r[5]), c4: mcol(r[5]), v5: '●'
+      })),
+      copy1: this.mkCopy('copy1', 'git clone https://github.com/sraphaz/arah-harness.git $env:USERPROFILE\\arah-harness'),
+      copy2: this.mkCopy('copy2', 'powershell -ExecutionPolicy Bypass -File $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 install -ProjectName "my-project"'),
+      copy3: this.mkCopy('copy3', 'powershell -File $env:USERPROFILE\\arah-harness\\cli\\arah.ps1 regenerate -Target . -UpdateKernel'),
+      label1: this.renderCopyLabel('copy1'),
+      label2: this.renderCopyLabel('copy2'),
+      label3: this.renderCopyLabel('copy3')
+    };
+  }
+}
+</script>
+</body>
+</html>

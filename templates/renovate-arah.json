@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "ARAH Harness — Renovate regex manager for .arah-version (optional consumer config)",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^\\.arah-version$"],
+      "matchStrings": [
+        "version:\\s*[\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\"']?"
+      ],
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "sraphaz/arah-harness",
+      "extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["sraphaz/arah-harness"],
+      "commitMessageTopic": "ARAH Harness",
+      "labels": ["arah-harness-update", "dependencies"],
+      "prBodyNotes": [
+        "Após o merge do pin, rode `arah update -Force` (ou `regenerate -UpdateKernel`) a partir do tag correspondente e abra PR com o diff do kernel."
+      ]
+    }
+  ]
+}
