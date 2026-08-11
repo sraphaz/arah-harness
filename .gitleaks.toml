@@ -1,0 +1,11 @@
+# Config do gitleaks (usada pelo job Security em .github/workflows/security.yml).
+# Mantém todas as regras padrão; allowlist estreita apenas para a fixture
+# deliberada do self-test de scrubbing de segredos (scripts/self-test.ps1),
+# que precisa existir no repo — e no histórico — para o teste ter o que scrubbar.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixture fake do teste de secret scrubbing — não é um segredo real"
+regexes = ['''SUPERSECRETVALUE12345''']
