@@ -15,7 +15,7 @@ if ($Paths.Count -eq 0) {
 
 foreach ($p in $Paths) {
   $n = $p.ToLowerInvariant()
-  if ($n -match '\\src\\|\/src\/|/cmake|\.cpp$|\.h$|\.hpp$|cmakelists') {
+  if ($n -match '(^|[\\/])cmake([\\/]|$)|\.cpp$|\.h$|\.hpp$|(^|[\\/])cmakelists\.txt$') {
     $needsCpp = $true
   }
   if ($n -match '\.lua$|\.otui$|\.xml$|\.otml$') {

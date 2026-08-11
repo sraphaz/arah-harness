@@ -28,18 +28,24 @@ function Ensure-Dir([string]$path) {
   }
 }
 
-function Copy-OverlayTree([string]$src, [string]$dst) {
+function Copy-OverlayTree([string]$src, [string]$dst, [string]$root = "") {
   if (-not (Test-Path -LiteralPath $src)) {
     throw "Overlay incompleto: $src"
+  }
+  if ([string]::IsNullOrWhiteSpace($root)) {
+    $root = $src
   }
   Ensure-Dir $dst
   Get-ChildItem -LiteralPath $src -Force | ForEach-Object {
     $destItem = Join-Path $dst $_.Name
+    $relativePath = $_.FullName.Substring($root.Length).TrimStart('\', '/')
     if ($_.PSIsContainer) {
       Ensure-Dir $destItem
-      Copy-OverlayTree $_.FullName $destItem
+      Copy-OverlayTree $_.FullName $destItem $root
     } else {
-      Copy-Item -LiteralPath $_.FullName -Destination $destItem -Force
+      if ($relativePath -ne "AGENTS.md") {
+        Copy-Item -LiteralPath $_.FullName -Destination $destItem -Force
+      }
     }
   }
 }
@@ -57,6 +63,12 @@ if (-not (Test-Path -LiteralPath $Target)) {
 }
 
 Write-Step "Target = $Target"
+$AgentsTarget = Join-Path $Target "AGENTS.md"
+$HadAgentsBeforeInstall = Test-Path -LiteralPath $AgentsTarget
+$AgentsBeforeInstall = $null
+if ($HadAgentsBeforeInstall) {
+  $AgentsBeforeInstall = Get-Content -LiteralPath $AgentsTarget -Raw -Encoding UTF8
+}
 
 # --- Harness ---
 if ([string]::IsNullOrWhiteSpace($HarnessPath)) {
@@ -88,21 +100,22 @@ $ArahCli = Join-Path $HarnessPath "cli\arah.ps1"
 # --- arah install (brownfield) ---
 Write-Step "arah install (kernel + templates; nao sobrescreve AGENTS.md existente)"
 & powershell -ExecutionPolicy Bypass -File $ArahCli install -Target $Target -ProjectName "alchemia-hotserver"
+if ($LASTEXITCODE -ne 0) {
+  throw "arah install falhou com exit code $LASTEXITCODE"
+}
 
 # --- Overlay Alchemia ---
 Write-Step "Aplicando overlay Alchemia"
-Copy-OverlayTree $Overlay $Target
+Copy-OverlayTree $Overlay $Target $Overlay
 
 # --- AGENTS.md merge ---
 Write-Step "Mesclando AGENTS.md"
-$AgentsTarget = Join-Path $Target "AGENTS.md"
 $AgentsPack = Join-Path $Overlay "AGENTS.md"
 $CodexBackup = Join-Path $Target "coisas do codex\backups"
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
-if (Test-Path -LiteralPath $AgentsTarget) {
-  $existing = Get-Content -LiteralPath $AgentsTarget -Raw -Encoding UTF8
-  if ($existing -notmatch "ARAH Harness") {
+if ($HadAgentsBeforeInstall) {
+  if ($AgentsBeforeInstall -notmatch "ARAH Harness") {
     if (Test-Path -LiteralPath (Join-Path $Target "coisas do codex")) {
       Ensure-Dir $CodexBackup
       Copy-Item -LiteralPath $AgentsTarget -Destination (Join-Path $CodexBackup "AGENTS.md.$Stamp.bak") -Force
