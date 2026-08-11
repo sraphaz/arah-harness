@@ -1,9 +1,9 @@
 module github.com/sraphaz/arah-harness/live
 
-go 1.22
+go 1.23
 
 require (
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/websocket v1.5.3
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.33.1
