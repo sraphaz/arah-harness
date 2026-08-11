@@ -11,6 +11,8 @@ on:
       - 'scripts/harness/**'
       - 'docs/specs/**'
       - 'docs/_meta/**'
+      - 'schemas/**'
+      - 'docs/schemas/**'
   push:
     branches: [main]
     paths:
@@ -22,6 +24,8 @@ on:
       - 'scripts/harness/**'
       - 'docs/specs/**'
       - 'docs/_meta/**'
+      - 'schemas/**'
+      - 'docs/schemas/**'
 
 permissions:
   contents: read
@@ -49,6 +53,47 @@ jobs:
       - name: Validate Agent Graph
         shell: pwsh
         run: ./scripts/harness/validate-agent-graph.ps1 -Target .
+      # Regressão issue #40: coreografia com agentes type: domain deve produzir
+      # nó 'domains' não-vazio no grafo exportado.
+      - name: Domain agents exported (issue 40)
+        shell: pwsh
+        run: |
+          $declared = (Select-String -Path .agents/choreography*.yaml -Pattern '^\s+type:\s*domain\s*$').Count
+          $graph = Get-Content docs/_meta/agent-graph.generated.json -Raw | ConvertFrom-Json
+          Write-Host "domain declarations in choreography: $declared"
+          Write-Host "domains node in exported graph: $($graph.stats.domains)"
+          if ($declared -gt 0 -and $graph.stats.domains -eq 0) {
+            Write-Error 'choreography declares domain agents but exported graph has empty domains node'
+            exit 1
+          }
+
+  schemas-yaml-parse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Parse published schemas as standard YAML
+        run: |
+          python3 - <<'EOF'
+          import glob, sys, yaml
+          failed = []
+          files = sorted(
+              glob.glob('schemas/**/*.yaml', recursive=True)
+              + glob.glob('docs/schemas/**/*.yaml', recursive=True)
+          )
+          for path in files:
+              try:
+                  with open(path, encoding='utf-8') as fh:
+                      list(yaml.safe_load_all(fh))
+              except yaml.YAMLError as exc:
+                  failed.append(path)
+                  print(f'FAIL {path}: {exc}')
+          if failed:
+              print(f'{len(failed)} schema file(s) are not parseable as YAML')
+              sys.exit(1)
+          print(f'all {len(files)} schema files parse as YAML')
+          EOF
 
   harness-sync-check:
     runs-on: ubuntu-latest
