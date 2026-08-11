@@ -2,7 +2,7 @@
 
 Guia premium para adicionar o kernel ARAH a **qualquer repositório** — greenfield ou brownfield — e ativar a dimensão TechOrganism.
 
-**Upstream:** [sraphaz/arah-harness](https://github.com/sraphaz/arah-harness) · **Release:** **v0.3.0**
+**Upstream:** [sraphaz/arah-harness](https://github.com/sraphaz/arah-harness) · **Release:** **v0.5.0**
 
 ---
 
@@ -35,7 +35,7 @@ powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 organism bootstrap -Target 
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 hooks install -Target .
 ```
 
-Ative o organismo (recomendado na v0.3):
+Ative o organismo (recomendado desde a v0.3):
 
 ```powershell
 $env:ARAH_HARNESS_PATH = "$env:USERPROFILE\arah-harness"
@@ -88,9 +88,9 @@ powershell -ExecutionPolicy Bypass -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 ins
 ```yaml
 harness:
   source: sraphaz/arah-harness
-  version: "0.3.0"
+  version: "0.5.0"
   repository: https://github.com/sraphaz/arah-harness
-  release: v0.3.0
+  release: v0.5.0
 
 project:
   name: meu-projeto
@@ -150,7 +150,7 @@ powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 doctor -Target .
 
 ```powershell
 git add .agents .skills scripts .cursor arah.config.yaml .arah-version .github AGENTS.md docs
-git commit -m "chore: bootstrap ARAH Harness v0.3.1"
+git commit -m "chore: bootstrap ARAH Harness v0.5.0"
 ```
 
 ---
@@ -169,7 +169,7 @@ git commit -m "chore: bootstrap ARAH Harness v0.3.1"
 | Instalar pre-commit hooks | `arah hooks install` |
 
 ```powershell
-# Receber v0.3+ em consumidor existente
+# Receber a versão atual em consumidor existente
 git -C $env:ARAH_HARNESS_PATH pull
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 regenerate `
   -Target . -UpdateKernel -Force

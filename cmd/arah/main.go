@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	arahharness "github.com/sraphaz/arah-harness"
 	"github.com/sraphaz/arah-harness/internal/adapters/choreography"
 	"github.com/sraphaz/arah-harness/internal/adapters/sqlitestore"
 	"github.com/sraphaz/arah-harness/internal/core"
@@ -16,8 +17,8 @@ import (
 	arahmcp "github.com/sraphaz/arah-harness/internal/mcp"
 )
 
-// Version tracks runtime cohesion work (0.5 foundation on 0.4.4 tree).
-const Version = "0.5.0-dev"
+// Version vem do arquivo VERSION na raiz (fonte única), via go:embed.
+var Version = arahharness.Version
 
 func main() {
 	if len(os.Args) < 2 {

@@ -40,7 +40,7 @@ Módulo raiz `github.com/sraphaz/arah-harness` · binário [`cmd/arah`](../cmd/a
 |---------|-------|
 | `arah doctor -target [--json]` | Checks mínimos de layout |
 | `arah sync-check -target [--json]` | Drift vs `.arah-version` / graph |
-| `arah version [--json]` | `0.5.0-dev` |
+| `arah version [--json]` | versão do arquivo `VERSION` (fonte única, ex.: `0.5.0`) |
 | `arah task create\|status\|complete\|block\|timeline` | Execution Control via `internal/core` + SQLite |
 | `arah evidence graph` | Evidence Graph determinístico (H-18) |
 | `arah mcp serve` | MCP stdio — ver [mcp-tool-contract.md](architecture/mcp-tool-contract.md) |

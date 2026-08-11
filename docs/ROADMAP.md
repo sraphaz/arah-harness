@@ -1,13 +1,13 @@
 # Roadmap — arah-harness
 
-## Now · v0.4.4
+## Shipped · v0.4.4
 
 - Execution Control, TechOrganism, Economy, Graphify (fase 0), Slice Compose
 - CLI Go fase 1 (H-07): `doctor` / `sync-check` / `version`
 - Estado quente × frio; arquivo-por-evento; capabilities.yaml
 - Site / Live Console em andamento (`docs/backlog/`)
 
-## Next · v0.5 — Runtime Cohesion
+## Now · v0.5 — Runtime Cohesion
 
 **Norte da minor:** coesão do runtime, não mais features agentic.  
 ADR: [`docs/adr/002-runtime-cohesion-0.5.md`](adr/002-runtime-cohesion-0.5.md) ·  

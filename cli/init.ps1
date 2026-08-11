@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Instala o kernel ARAH em um repositório-alvo.
@@ -109,6 +109,7 @@ if ($KernelOnly) {
 } elseif (-not (Test-Path $configDest) -or $Force) {
     $cfg = Get-Content $configTpl -Raw
     $cfg = $cfg -replace '\{\{PROJECT_NAME\}\}', $ProjectName
+    $cfg = $cfg -replace '\{\{HARNESS_VERSION\}\}', $Version
     Set-Content -Path $configDest -Value $cfg -Encoding UTF8
     Write-Host "  installed: arah.config.yaml"
 }
