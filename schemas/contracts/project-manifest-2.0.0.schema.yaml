@@ -1,9 +1,11 @@
 # schema: contracts/project-manifest
 # version: 2.0.0
 # Contrato da federação Surya (doc I §2). JSON Schema draft 2020-12 em YAML.
-# Evolui o project-manifest v0.1.0 do Surya Labs Workspace: instâncias v0.1.0
-# continuam válidas (novos campos opcionais; engineering_profile/risk_tier/
-# arah_harness exigidos por política — não por schema — para repos ativos).
+# Evolui o project-manifest v0.1.0 do Surya Labs Workspace. Instâncias v0.1.0
+# seguem validando contra o schema legado v0.1.0 (mantido no Workspace) durante
+# a convivência; migrar para v2 = atualizar schema_version para "2.0.0" — os
+# demais campos novos são opcionais (engineering_profile/risk_tier/arah_harness
+# exigidos por política — não por schema — para repos ativos).
 $schema: "https://json-schema.org/draft/2020-12/schema"
 $id: "https://sraphaz.github.io/contracts/project-manifest/2.0.0"
 title: ProjectManifest

@@ -49,8 +49,7 @@ jobs:
           set -euo pipefail
           for schema in schemas/contracts/*.schema.yaml; do
             name=$(basename "$schema" .schema.yaml)   # ex.: execution-request-1.0.0
-            contract=${name%-*.*.*}                   # ex.: execution-request
-            example="schemas/contracts/examples/${contract}.example.yaml"
-            test -f "$example" || { echo "missing example for $contract"; exit 1; }
+            example="schemas/contracts/examples/${name}.example.yaml"
+            test -f "$example" || { echo "missing example for $name"; exit 1; }
             check-jsonschema --schemafile "$schema" "$example"
           done

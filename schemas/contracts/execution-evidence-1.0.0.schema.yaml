@@ -79,7 +79,7 @@ properties:
         properties:
           number: { type: [integer, "null"] }
           url:    { type: [string, "null"] }
-          state:  { enum: [open, merged, closed, "null"] }
+          state:  { enum: [open, merged, closed, null] }
           merged_by: { type: [string, "null"], description: "actor_id humano — merge é sempre humano em arquitetura crítica" }
       commits:
         type: array
@@ -96,3 +96,12 @@ properties:
       turns:        { type: [integer, "null"] }
       first_pass_accepted: { type: [boolean, "null"] }
   notes: { type: [string, "null"] }
+allOf:
+  # Execução concluída exige ao menos um campo probatório em evidence.
+  - if:
+      properties:
+        outcome: { const: completed }
+      required: [outcome]
+    then:
+      properties:
+        evidence: { minProperties: 1 }

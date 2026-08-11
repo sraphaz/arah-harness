@@ -42,7 +42,7 @@ Local (requer Python):
 
 ```bash
 pip install check-jsonschema
-check-jsonschema --schemafile schemas/contracts/project-manifest-2.0.0.schema.yaml schemas/contracts/examples/project-manifest.example.yaml
+check-jsonschema --schemafile schemas/contracts/project-manifest-2.0.0.schema.yaml schemas/contracts/examples/project-manifest-2.0.0.example.yaml
 ```
 
 Em CI: job `contracts-validate` em `.github/workflows/ci.yml` valida todos os
