@@ -114,6 +114,7 @@ planned:
   - id: knowledge-graph-console
     name: Knowledge Graph no Live Console
     notes: C-12 dual-pane Agent ∪ Knowledge
-  - id: org-control-plane
-    name: Control plane multi-repo
-    notes: Agregador org-level — somente após contratos 0.5 estáveis
+
+# Removido do escopo (ADR-003 — fronteira Kernel × Control Plane):
+# org-control-plane (agregador multi-repo) é responsabilidade do Surya Labs
+# Workspace. O kernel expõe dados de UM repo; nunca agrega portfólio.
