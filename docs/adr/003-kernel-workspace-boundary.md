@@ -46,7 +46,8 @@ Adotar a **opção A**. O ARAH Harness **nunca agrega múltiplos repositórios**
 
 1. **O kernel expõe; o Workspace agrega.** O ARAH Harness publica dados de UM repo —
    `doctor`, Evidence Graph, timeline, ExecutionEvidence, OTLP (futuro) — em contratos
-   versionados (`schemas/contracts/`). Qualquer visão de portfólio, agregação org-level,
+   versionados (`schemas/contracts/`, diretório introduzido pelo pacote de contratos da
+   federação — PR #29). Qualquer visão de portfólio, agregação org-level,
    governança multi-repo e roteamento de demandas é responsabilidade do
    **Surya Labs Workspace** (Control Plane do portfólio).
 2. **`org-control-plane` é removido** de `capabilities.yaml` (planned) e do
