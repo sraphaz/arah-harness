@@ -34,3 +34,22 @@ jobs:
           test "$agents" -ge 10
           test "$skills" -ge 15
           echo "kernel OK: $agents agents, $skills skills (verify green)"
+
+  contracts-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install check-jsonschema
+        run: pip install check-jsonschema
+      - name: Validate contract examples against schemas
+        run: |
+          set -euo pipefail
+          for schema in schemas/contracts/*.schema.yaml; do
+            name=$(basename "$schema" .schema.yaml)   # ex.: execution-request-1.0.0
+            example="schemas/contracts/examples/${name}.example.yaml"
+            test -f "$example" || { echo "missing example for $name"; exit 1; }
+            check-jsonschema --schemafile "$schema" "$example"
+          done

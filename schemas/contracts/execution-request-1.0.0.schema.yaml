@@ -1,0 +1,63 @@
+# schema: contracts/execution-request
+# version: 1.0.0
+# Contrato da federação Surya (doc I §3). Emitido pelo Workspace; consumido
+# pelo ARAH Harness no repo alvo. Transporte inicial: Git como fila
+# (arquivo commitado no Workspace + issue/dispatch no repo alvo).
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sraphaz.github.io/contracts/execution-request/1.0.0"
+title: ExecutionRequest
+type: object
+required: [schema_version, request_id, correlation_id, project_id, demand_id,
+           requested_by, approved_by, target, intent, constraints]
+additionalProperties: false
+properties:
+  schema_version: { const: "1.0.0" }
+  request_id:     { type: string, description: "ULID" }
+  correlation_id: { type: string }
+  project_id:     { type: string }
+  demand_id:      { type: string }
+  spec_id:        { type: [string, "null"] }
+  requested_by:   { type: string, description: "actor_id (pode ser agent:*)" }
+  approved_by:
+    type: object
+    description: "Gate humano OBRIGATÓRIO — request sem aprovação humana é inválida"
+    required: [actor_id, decision_ref, decided_at]
+    properties:
+      actor_id:     { type: string, pattern: "^github:" }
+      decision_ref: { type: string, description: "entrada no approval ledger do Workspace" }
+      decided_at:   { type: string, format: date-time }
+  target:
+    type: object
+    required: [repository]
+    properties:
+      repository:  { type: string }
+      base_branch: { type: string, default: main }
+  intent:
+    type: object
+    required: [summary, acceptance_criteria]
+    properties:
+      summary:             { type: string }
+      acceptance_criteria: { type: array, minItems: 1, items: { type: string } }
+      sky_package_ref:     { type: [string, "null"], description: "pacote de shaping que fundamenta" }
+  constraints:
+    type: object
+    required: [risk_tier, autonomy_ceiling]
+    properties:
+      risk_tier:        { enum: [baixo, medio, alto, critico] }
+      autonomy_ceiling:
+        enum: [plan-only, implement-pr, implement-merge-low-risk]
+        description: "Nunca inclui merge de arquitetura crítica, deploy high-risk ou mutação financeira/live"
+      forbidden:
+        type: array
+        items: { type: string }
+        description: "ex.: ['live_trading', 'production_deploy', 'financial_policy']"
+      budget:
+        type: object
+        properties:
+          max_cost_usd: { type: number }
+          max_turns:    { type: integer }
+      deadline: { type: [string, "null"], format: date }
+  status:
+    enum: [pending, accepted, in_progress, completed, failed, cancelled]
+    default: pending
+  created_at: { type: string, format: date-time }
