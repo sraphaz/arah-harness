@@ -87,6 +87,3 @@ planned:
   - id: knowledge-graph-console
     name: Knowledge Graph no Live Console
     notes: C-12 dual-pane Agent ∪ Knowledge
-  - id: org-control-plane
-    name: Control plane multi-repo
-    notes: Agregador org-level (longo prazo)

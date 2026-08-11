@@ -1,6 +1,11 @@
-# Design — ARAH Control Plane
+# Design — ARAH Control Plane (arquivo histórico)
 
 Handoff de design para o site de produto, portal de docs e Live Console.
+
+> **Arquivado como referência histórica ([ADR-003](../../adr/003-kernel-workspace-boundary.md)):**
+> os protótipos que assumem agregação multi-repo/org-level estão fora do escopo do
+> kernel. Se alguma dessas features avançar, avança no Surya Labs Workspace.
+> Site (W) e console single-repo (C) permanecem válidos como referência de design.
 
 | Artefato | Uso |
 |----------|-----|
