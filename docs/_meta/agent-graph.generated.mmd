@@ -39,8 +39,8 @@ flowchart LR
     agent_kernel{{"kernel"}}
     agent_test_architect{{"test-architect"}}
   end
-  rule_architecture_docs --> agent_architecture_documenter
-  rule_architecture_docs --> agent_clean_craft_advisor
+  rule_architecture_docs -. consulta .-> agent_architecture_documenter
+  rule_architecture_docs -. consulta .-> agent_clean_craft_advisor
   rule_architecture_docs --> agent_solutions_architect
   rule_biocomponent_meta --> agent_docs_steward
   rule_biocomponent_meta --> agent_orchestrator
@@ -49,14 +49,14 @@ flowchart LR
   rule_craft_backend --> agent_backend
   rule_craft_backend --> agent_solutions_architect
   rule_craft_frontend --> agent_frontend
-  rule_domain_cli --> agent_cli
-  rule_domain_extension_live --> agent_extension_live
-  rule_domain_kernel --> agent_kernel
+  rule_domain_cli -. consulta .-> agent_cli
+  rule_domain_extension_live -. consulta .-> agent_extension_live
+  rule_domain_kernel -. consulta .-> agent_kernel
   rule_economy_intelligence --> agent_docs_steward
   rule_economy_intelligence --> agent_orchestrator
   rule_economy_intelligence --> agent_spec_steward
   rule_harness_arah_sdlc --> agent_docs_steward
-  rule_harness_arah_sdlc --> agent_extension_live
+  rule_harness_arah_sdlc -. consulta .-> agent_extension_live
   rule_harness_arah_sdlc --> agent_release
   rule_harness_cli --> agent_release
   rule_harness_docs --> agent_docs_steward
@@ -65,14 +65,14 @@ flowchart LR
   rule_harness_kernel --> agent_docs_steward
   rule_harness_kernel --> agent_release
   rule_infra_deploy --> agent_release
-  rule_pr_always --> agent_clean_craft_advisor
+  rule_pr_always -. consulta .-> agent_clean_craft_advisor
   rule_pr_always --> agent_pr_steward
   rule_pr_always --> agent_qa
   rule_pr_always --> agent_security
-  rule_pr_always --> agent_test_architect
+  rule_pr_always -. consulta .-> agent_test_architect
   rule_specs_sdd --> agent_spec_steward
   rule_testing_strategy --> agent_qa
-  rule_testing_strategy --> agent_test_architect
+  rule_testing_strategy -. consulta .-> agent_test_architect
   subgraph REVIEW["Pipeline de revisão (termina em humano)"]
     gate_ci["ci"]
     gate_qa["qa"]
