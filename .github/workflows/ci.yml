@@ -13,7 +13,7 @@ jobs:
   self-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: ARAH Harness self-test
         shell: pwsh
         run: ./scripts/self-test.ps1
@@ -21,7 +21,7 @@ jobs:
   kernel-integrity:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -38,7 +38,7 @@ jobs:
   contracts-validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
