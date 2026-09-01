@@ -8,11 +8,11 @@
 
   Publicar exige aprovação humana identificável (fail-closed):
   - CI legítimo: release.yml roda após merge humano em main (refs/heads/main)
-    ou push humano de tag v*.*.* (refs/tags/v*); esses contextos do GitHub
-    Actions são a aprovação. A flag -ApprovedVia ci-main-merge torna isso
-    explícito e é validada contra o contexto real (recusada fora dele).
-  - Fora do CI: o gate release_approval de check-autonomy.ps1
-    (.arah/approvals.yaml) precisa estar aprovado.
+    ou push humano de tag v*.*.* (refs/tags/v*) e passa -ApprovedVia
+    ci-main-merge explicitamente; a flag é validada contra o contexto real
+    do GitHub Actions (recusada fora dele).
+  - Sem essa flag (mesmo dentro do CI): o gate release_approval de
+    check-autonomy.ps1 (.arah/approvals.yaml) precisa estar aprovado.
 
   Exit: 0 ok/already · 1 error/blocked · 2 skipped (prerelease/invalid) · 10 usage
 .EXAMPLE
@@ -198,7 +198,10 @@ if ($DryRun) {
 
 # --- gate de aprovação humana (fail-closed) ---
 # Único bypass legítimo: workflow de release no GitHub Actions em main
-# (merge humano) ou em tag v* (push humano de tag) — os gatilhos do release.yml.
+# (merge humano) ou em tag v* (push humano de tag) — os gatilhos do release.yml —
+# E pedindo o bypass explicitamente via -ApprovedVia ci-main-merge. Contexto CI
+# SEM a flag não é aprovação: qualquer outro workflow de main/tag com token
+# poderia publicar por acidente — segue exigindo release_approval do ledger.
 $ciReleaseContext = ($env:GITHUB_ACTIONS -eq 'true' -and
     ($env:GITHUB_REF -eq 'refs/heads/main' -or $env:GITHUB_REF -like 'refs/tags/v*'))
 if ($ApprovedVia -eq 'ci-main-merge') {
@@ -206,9 +209,6 @@ if ($ApprovedVia -eq 'ci-main-merge') {
         Write-Error 'cut-release: -ApprovedVia ci-main-merge is only valid inside GitHub Actions on refs/heads/main or refs/tags/v*'
         exit 1
     }
-    $result.approved_via = 'ci-main-merge'
-} elseif ($ciReleaseContext) {
-    # release.yml existente (sem a flag) continua funcionando: contexto CI verificado.
     $result.approved_via = 'ci-main-merge'
 } else {
     $gateScript = Join-Path $PSScriptRoot 'check-autonomy.ps1'

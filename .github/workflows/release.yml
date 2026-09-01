@@ -52,5 +52,7 @@ jobs:
         run: |
           $script = Join-Path $PWD 'scripts/agents/cut-release.ps1'
           if (-not (Test-Path $script)) { throw 'cut-release.ps1 missing' }
-          & $script -Version '${{ steps.ver.outputs.version }}' -FailIfChangelogMissing
+          # -ApprovedVia ci-main-merge: bypass do ledger é explícito e validado
+          # contra o contexto real (GITHUB_ACTIONS + refs/heads/main ou refs/tags/v*).
+          & $script -Version '${{ steps.ver.outputs.version }}' -FailIfChangelogMissing -ApprovedVia ci-main-merge
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

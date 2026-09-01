@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-08-11T13:50:47Z",
+  "generated_at": "2026-09-01T16:46:09Z",
   "files": {
     ".agents/README.md": "6df58203d110cbd417d87c081161329584168da526d9959a901e0992f591bbab",
     ".agents/agent-graph.schema.yaml": "ee506d1f877693c7dfcdbe26f3d284facc0446f1b84bc0eb65f7f18d29427c24",
@@ -73,7 +73,7 @@
     "scripts/agents/compact-state.ps1": "560934a9a165523c72ba94aabbb273ebced54129430ed2fbafe6cb9932d6105a",
     "scripts/agents/config-parser.ps1": "11b312559f174d069885a374222ef9940df0969555796adc8ac64c38e7216ae9",
     "scripts/agents/craft-review-check.ps1": "c7bdc5c4a5c05c64bade7d8b006c949fa6dbec624fc11e4f6bd165e2a348a7ad",
-    "scripts/agents/cut-release.ps1": "cb80316212f59f3c9094bef53b07d623428462adee1629dc02254451bb3be35e",
+    "scripts/agents/cut-release.ps1": "7f8cd35680ba8103c4238d838e139978381db3ecb01b9886ef0d060117c657bb",
     "scripts/agents/demo-live-session.ps1": "021350de3f2acb82fd12ccf9913053b4cd4d41a141e0262d8784b6d23e5ed7a5",
     "scripts/agents/discover-repo.ps1": "4810b1caffaf2396e9fdbb3b92879a8e0ebef218434aed6ab226f6daa39a1ad5",
     "scripts/agents/domain-autoreview.ps1": "e644843c2460b1cbe839c8a02574987bb15bc327d46273351e387029e1488631",
