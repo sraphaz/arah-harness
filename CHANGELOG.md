@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Supply chain do release** — `release.yml` ganha job `artifacts`: binários do CLI
+  `arah` para linux/darwin (amd64+arm64) e windows (amd64) com `CGO_ENABLED=0`,
+  `SHA256SUMS.txt`, assinatura keyless Cosign/Sigstore (OIDC, sem chave privada),
+  SBOM CycloneDX (Trivy) e attestation de provenance SLSA
+  (`actions/attest-build-provenance`) — tudo anexado ao GitHub Release; dry-run via
+  `workflow_dispatch` (builda + assina sem publicar); guia de verificação em
+  `docs/INSTALL.md`
+
 ## [0.5.0] - 2026-08-11
 
 Release "Runtime Cohesion": runtime Go `arah-core` (PRs [#16](https://github.com/sraphaz/arah-harness/pull/16)–[#23](https://github.com/sraphaz/arah-harness/pull/23)).
