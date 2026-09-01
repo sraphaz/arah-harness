@@ -4,6 +4,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-01
+
+Release de hardening de governança + primeira publicação com o pipeline de
+supply chain (PRs [#39](https://github.com/sraphaz/arah-harness/pull/39) e
+[#41](https://github.com/sraphaz/arah-harness/pull/41)).
+
 ### Added
 
 - **Supply chain do release** — `release.yml` ganha job `artifacts`: binários do CLI
@@ -12,7 +18,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
   SBOM CycloneDX (Trivy) e attestation de provenance SLSA
   (`actions/attest-build-provenance`) — tudo anexado ao GitHub Release; dry-run via
   `workflow_dispatch` (builda + assina sem publicar); guia de verificação em
-  `docs/INSTALL.md`
+  `docs/INSTALL.md` — PR #39
+- **Job de parse YAML dos schemas** — CI valida que todos os schemas publicados
+  (`schemas/arah-harness/` e `docs/schemas/`) parseiam como YAML — PR #41
+
+### Fixed
+
+- **Gate humano de release (fail-closed)** — `cut-release.ps1` só publica com
+  aprovação humana identificável: bypass explícito `-ApprovedVia ci-main-merge`
+  validado contra o contexto real do GitHub Actions (main/tag v*), ou gate
+  `release_approval` aprovado no ledger `.arah/approvals.yaml`; sem gate, recusa — PR #41
+- **invoke-skill com falhas visíveis** — chamada de skill alinhada, sem binding
+  error; falhas de invocação deixam de ser engolidas e aparecem no resultado — PR #41
+- **Schemas YAML válidos** — schemas publicados corrigidos para parsear como YAML
+  (port do fix Hawk#38) — PR #41
+- **export-agent-graph: domínios kind/type 0→6** — o grafo gerado volta a
+  classificar os 6 domínios de kind/type (antes exportava 0) — PR #41
 
 ## [0.5.0] - 2026-08-11
 
