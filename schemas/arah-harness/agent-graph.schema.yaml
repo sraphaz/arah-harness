@@ -8,12 +8,14 @@ version: 0.1.0
 fields:
   version:    {type: string, required: true}
   nodes:
-    type: list, required: true
+    type: list
+    required: true
     item:
       id:     {type: string}                    # agent id (de .agents/) ou 'human:<papel>'
-      kind:   {type: enum[agent, human]}
+      kind:   {type: "enum[agent, human]"}
   edges:
-    type: list, required: true
+    type: list
+    required: true
     item:
       from:      {type: string, required: true}
       to:        {type: string, required: true}

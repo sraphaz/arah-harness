@@ -7,11 +7,11 @@ version: 0.1.0
 fields:
   id:          {type: string, required: true}          # ex.: no-direct-main
   name:        {type: string, required: true}
-  severity:    {type: enum[block, warn], required: true}
-  applies_to:  {type: enum[all, agents_only, humans_only], default: all}
+  severity:    {type: "enum[block, warn]", required: true}
+  applies_to:  {type: "enum[all, agents_only, humans_only]", default: all}
   rule:        {type: string, required: true}          # descrição executável da regra
   remedy:      {type: string, required: true}          # o que fazer quando falha
-  profile_min: {type: enum[minimal, consulting, product, enterprise, open-source]}  # menor profile que inclui
+  profile_min: {type: "enum[minimal, consulting, product, enterprise, open-source]"}  # menor profile que inclui
 
 validations_expected:
   - "severity=block exige remedy"

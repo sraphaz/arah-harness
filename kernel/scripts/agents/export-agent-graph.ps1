@@ -141,7 +141,8 @@ $paths = @($pathMap.GetEnumerator() | Sort-Object Name | ForEach-Object {
 $domainMap = @{}
 foreach ($rule in $rules) {
     foreach ($a in $rule.agents) {
-        if ($a.kind -eq 'domain') {
+        # choreography-parser expõe o campo como 'type' (não 'kind') — issue #40
+        if ($a.type -eq 'domain') {
             if (-not $domainMap.ContainsKey($a.id)) { $domainMap[$a.id] = @() }
             if ($domainMap[$a.id] -notcontains $rule.id) { $domainMap[$a.id] += $rule.id }
         }
@@ -254,7 +255,7 @@ function Add-Edge {
 foreach ($rule in $rules) {
     foreach ($p in $rule.paths) { Add-Edge "path:$p" "rule:$($rule.id)" 'matches_rule' }
     foreach ($a in $rule.agents) {
-        if ($a.kind -eq 'domain') {
+        if ($a.type -eq 'domain') {
             Add-Edge "rule:$($rule.id)" "agent:$($a.id)" 'consults_domain_agent'
         } else {
             Add-Edge "rule:$($rule.id)" "agent:$($a.id)" 'activates_agent'

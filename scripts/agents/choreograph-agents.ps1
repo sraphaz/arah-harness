@@ -120,13 +120,24 @@ if ($ExecuteAutonomy -and $skillRuns.Count -gt 0) {
     try {
         foreach ($sr in ($skillRuns | Select-Object -Property agent, skill, rule -Unique)) {
             try {
-                & (Join-Path $ScriptDir 'invoke-skill.ps1') -Skill $sr.skill -ChangedFiles $files | Out-Host
-                $executedSkills += @{ skill = $sr.skill; agent = $sr.agent; ok = $true }
+                # invoke-skill.ps1 aceita apenas -Skill e -Area; não repassar outros argumentos.
+                & (Join-Path $ScriptDir 'invoke-skill.ps1') -Skill $sr.skill | Out-Host
+                if ($LASTEXITCODE -ne 0) {
+                    $executedSkills += @{ skill = $sr.skill; agent = $sr.agent; ok = $false; error = "exit code $LASTEXITCODE" }
+                } else {
+                    $executedSkills += @{ skill = $sr.skill; agent = $sr.agent; ok = $true }
+                }
             } catch {
                 $executedSkills += @{ skill = $sr.skill; agent = $sr.agent; ok = $false; error = $_.Exception.Message }
             }
         }
     } finally { Pop-Location }
+}
+
+$failedSkills = @($executedSkills | Where-Object { -not $_.ok })
+if ($failedSkills.Count -gt 0) {
+    $summary = ($failedSkills | ForEach-Object { "$($_.skill) ($($_.agent)): $($_.error)" }) -join '; '
+    Write-Warning "choreograph-agents: $($failedSkills.Count)/$($executedSkills.Count) skill invocation(s) failed — $summary"
 }
 
 $result = [ordered]@{
@@ -140,4 +151,7 @@ $result = [ordered]@{
 }
 
 if ($Json) { $result | ConvertTo-Json -Depth 6 } else { $result | ConvertTo-Json -Depth 6 }
+
+# Falha de invocação não pode ser silenciosa: se toda skill agendada falhou, sai com erro.
+if ($executedSkills.Count -gt 0 -and $failedSkills.Count -eq $executedSkills.Count) { exit 1 }
 exit 0
