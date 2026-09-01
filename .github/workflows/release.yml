@@ -148,7 +148,7 @@ jobs:
       # SBOM do módulo Go raiz (o que os binários embarcam). skip-dirs exclui
       # módulos/lockfiles que não fazem parte dos artefatos publicados.
       - name: SBOM (CycloneDX via Trivy)
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         env:
           TRIVY_SKIP_DIRS: website,extension,live,dist
         with:
@@ -165,7 +165,7 @@ jobs:
           cat SHA256SUMS.txt
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v4
+        uses: sigstore/cosign-installer@v4.1.2
 
       # Keyless: certificado efêmero Fulcio ligado à identidade OIDC deste
       # workflow, registrado no Rekor — nenhuma chave privada gerenciada.
