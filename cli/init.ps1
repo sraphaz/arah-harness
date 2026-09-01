@@ -164,15 +164,23 @@ foreach ($wfName in @('agents-validate.yml', 'harness-update-check.yml')) {
     }
 }
 
-# Pin file
+# Pin file — `arah update` (init -KernelOnly) não deve reescrever o modo
+# instalado: sem preservação, um consumidor `mode: minimal` era rebaixado a
+# `full` a cada update (reportado na adoção do Hawk). Fora do update, o
+# comportamento é o de sempre: -Minimal decide.
 $mode = if ($Minimal) { 'minimal' } else { 'full' }
+$pinPath = Join-Path $Target '.arah-version'
+if ($KernelOnly -and -not $Minimal -and (Test-Path -LiteralPath $pinPath)) {
+    $prevPin = Get-Content -LiteralPath $pinPath -Raw
+    if ($prevPin -match '(?m)^mode:\s*(\S+)') { $mode = $Matches[1] }
+}
 $pin = @"
 harness: arah-harness
 version: $Version
 installed: $(Get-Date -Format 'yyyy-MM-dd')
 mode: $mode
 "@
-Set-Content -Path (Join-Path $Target '.arah-version') -Value $pin -Encoding UTF8
+Set-Content -Path $pinPath -Value $pin -Encoding UTF8
 
 # Ensure .gitignore covers hot state (.arah/local/)
 $giPath = Join-Path $Target '.gitignore'
