@@ -1,0 +1,90 @@
+# schema: contracts/execution-request
+# version: 1.1.0
+# Contrato da federação Surya (doc I §3). Emitido pelo Workspace; consumido
+# pelo ARAH Harness no repo alvo. Transporte inicial: Git como fila
+# (arquivo commitado no Workspace + issue/dispatch no repo alvo).
+#
+# 1.1.0 (aditiva sobre 1.0.0 — ADR-004):
+#   - status ganha `dispatched`: o sinal de transporte foi publicado no repo
+#     alvo. Transição válida: pending → dispatched, efetuada EXCLUSIVAMENTE
+#     pelo Control Plane (Surya Labs Workspace) após gate humano assinado
+#     (`execution_request_approved`, Workspace ADR-0011/WS-16). Os demais
+#     status (accepted → in_progress → …) seguem pertencendo ao executor.
+#   - objeto opcional `dispatch`: referência ao sinal publicado (issue no
+#     repo alvo) e metadados mínimos de auditoria do transporte.
+# Documentos 1.0.0 continuam válidos contra o schema 1.0.0 (imutável).
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sraphaz.github.io/contracts/execution-request/1.1.0"
+title: ExecutionRequest
+type: object
+required: [schema_version, request_id, correlation_id, project_id, demand_id,
+           requested_by, approved_by, target, intent, constraints]
+additionalProperties: false
+properties:
+  schema_version: { const: "1.1.0" }
+  request_id:     { type: string, description: "ULID" }
+  correlation_id: { type: string }
+  project_id:     { type: string }
+  demand_id:      { type: string }
+  spec_id:        { type: [string, "null"] }
+  requested_by:   { type: string, description: "actor_id (pode ser agent:*)" }
+  approved_by:
+    type: object
+    description: "Gate humano OBRIGATÓRIO — request sem aprovação humana é inválida"
+    required: [actor_id, decision_ref, decided_at]
+    properties:
+      actor_id:     { type: string, pattern: "^github:" }
+      decision_ref: { type: string, description: "entrada no approval ledger do Workspace" }
+      decided_at:   { type: string, format: date-time }
+  target:
+    type: object
+    required: [repository]
+    properties:
+      repository:  { type: string }
+      base_branch: { type: string, default: main }
+  intent:
+    type: object
+    required: [summary, acceptance_criteria]
+    properties:
+      summary:             { type: string }
+      acceptance_criteria: { type: array, minItems: 1, items: { type: string } }
+      sky_package_ref:     { type: [string, "null"], description: "pacote de shaping que fundamenta" }
+  constraints:
+    type: object
+    required: [risk_tier, autonomy_ceiling]
+    properties:
+      risk_tier:        { enum: [baixo, medio, alto, critico] }
+      autonomy_ceiling:
+        enum: [plan-only, implement-pr, implement-merge-low-risk]
+        description: "Nunca inclui merge de arquitetura crítica, deploy high-risk ou mutação financeira/live"
+      forbidden:
+        type: array
+        items: { type: string }
+        description: "ex.: ['live_trading', 'production_deploy', 'financial_policy']"
+      budget:
+        type: object
+        properties:
+          max_cost_usd: { type: number }
+          max_turns:    { type: integer }
+      deadline: { type: [string, "null"], format: date }
+  status:
+    enum: [pending, dispatched, accepted, in_progress, completed, failed, cancelled]
+    default: pending
+    description: >-
+      pending → dispatched: sinal de transporte publicado no repo alvo;
+      transição efetuada apenas pelo Control Plane (Workspace), após gate
+      humano assinado. dispatched → accepted em diante: ciclo de vida do
+      executor (ARAH Harness no repo alvo).
+  dispatch:
+    type: object
+    description: >-
+      Registro do sinal de transporte (novo em 1.1.0; opcional — presente
+      quando status=dispatched). Espelha o essencial do registro de dispatch
+      do Workspace (ADR-0011): fase 1 = issue no repo alvo.
+    required: [issue_url, dispatched_at]
+    properties:
+      issue_url:     { type: string, description: "URL da issue de dispatch no repo alvo" }
+      issue_number:  { type: [integer, "null"], description: "Número da issue (null se o transporte não o reportou)" }
+      dispatched_by: { type: string, description: "actor_id que executou o dispatch (github:* — gate humano)" }
+      dispatched_at: { type: string, format: date-time }
+  created_at: { type: string, format: date-time }

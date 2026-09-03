@@ -7,7 +7,7 @@ Formato: **JSON Schema draft 2020-12 escrito em YAML** (doc I do programa de evo
 | Contrato | Arquivo | Versão | Emitido por | Consumido por |
 |---|---|---|---|---|
 | ProjectManifest | `project-manifest-2.0.0.schema.yaml` | 2.0.0 | Surya Labs Workspace | todos |
-| ExecutionRequest | `execution-request-1.0.0.schema.yaml` | 1.0.0 | Workspace | ARAH Harness (repo alvo) |
+| ExecutionRequest | `execution-request-1.1.0.schema.yaml` | 1.1.0 (1.0.0 vigente) | Workspace | ARAH Harness (repo alvo) |
 | ExecutionEvidence | `execution-evidence-1.0.0.schema.yaml` | 1.0.0 | ARAH Harness (repo alvo) | Workspace |
 | CanonicalEvent | `canonical-event-1.0.0.schema.yaml` | 1.0.0 | qualquer plano | qualquer plano |
 
@@ -35,6 +35,7 @@ do programa; alternativa de repo dedicado de schemas rejeitada por ora.)
 | Data | Contrato | Versão | Mudança |
 |---|---|---|---|
 | 2026-08-11 | todos | inicial | Publicação inicial (ProjectManifest 2.0.0; ExecutionRequest, ExecutionEvidence, CanonicalEvent 1.0.0) |
+| 2026-09-03 | ExecutionRequest | 1.1.0 | Aditiva: `dispatched` no enum de `status` (transição `pending → dispatched`, só Control Plane com gate humano) + objeto opcional `dispatch` (issue URL/número, ator, timestamp). Motivada pelo dispatch fase 1 do Workspace (WS-16/ADR-0011). Decisão: ADR-004. 1.0.0 permanece válido |
 
 ## Validação
 
