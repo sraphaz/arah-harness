@@ -1,0 +1,26 @@
+# Stub — o `arah install` também instala este workflow.
+# Mantido no overlay para repos que ainda não rodaram install completo.
+name: agents-validate
+
+on:
+  pull_request:
+  push:
+    paths:
+      - ".agents/**"
+      - ".skills/**"
+      - "arah.config.yaml"
+      - "scripts/agents/**"
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate manifests
+        shell: pwsh
+        run: |
+          if (Test-Path .\scripts\agents\validate-manifests.ps1) {
+            .\scripts\agents\validate-manifests.ps1
+          } else {
+            Write-Host "validate-manifests.ps1 ausente — rode arah install no repo"
+          }

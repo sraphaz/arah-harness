@@ -1,0 +1,19 @@
+id: engine-cpp
+name: Engine C++ (server/client)
+mode: consult
+enrich: |
+  Build cliente só via build_otclient_release.bat (VS x64).
+  Build longo em background; higiene em coisas do codex.
+validate: |
+  Script bat usado; backup do exe; processos de build limpos se hung.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - canary-3.4.1/src/**
+    - client_run/src/**
+    - client_run/CMakeLists.txt
+    - canary-3.4.1/CMakeLists.txt
+guardrails:
+  no_merge: true
+  consult_only: true

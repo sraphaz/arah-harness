@@ -1,0 +1,15 @@
+---
+description: Builds C++ e reload — regras Alchemia
+globs:
+  - client_run/src/**
+  - canary-3.4.1/src/**
+  - "**/*.cpp"
+  - "**/*.h"
+alwaysApply: false
+---
+
+- Lua/OTUI/XML: só reload/restart — sem compile.
+- Cliente C++: `client_run/build_otclient_release.bat` (VS x64). Sem Ninja cru.
+- Build longo em background + log; avisar a cada 5 min.
+- Antes: `tasklist` para cmake/ninja/cl/link/msbuild/devenv/otclient.
+- Depois: copiar exe com backup; PDBs para `coisas do codex`.

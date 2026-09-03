@@ -1,0 +1,18 @@
+id: quests-npcs
+name: Quests & NPCs
+mode: consult
+enrich: |
+  Storages estáveis e documentados. Sem softlock.
+validate: |
+  Storage IDs não colidem; fluxo testável descrito no PR.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - canary-3.4.1/data/npc/**
+    - canary-3.4.1/data/scripts/actions/**
+    - canary-3.4.1/data/scripts/talkactions/**
+    - canary-3.4.1/data/**/quests/**
+guardrails:
+  no_merge: true
+  consult_only: true

@@ -1,0 +1,5 @@
+id: power-beast-touch
+description: Checklist Power Beasts / avatar (seleção vs ativação, field, dano duplicado).
+run:
+  script: scripts/agents/alchemia/power-beast-touch.ps1
+success: exit_code == 0

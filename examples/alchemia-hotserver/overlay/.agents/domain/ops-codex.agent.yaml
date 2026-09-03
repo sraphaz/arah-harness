@@ -1,0 +1,19 @@
+id: ops-codex
+name: Ops & Codex Knowledge
+mode: consult
+enrich: |
+  Handbook + Manual Mestre append-only.
+  Backups com manifesto em coisas do codex\backups.
+validate: |
+  Nenhum lixo Codex em canary-3.4.1 ou client_run.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - "coisas do codex/**"
+    - AGENTS.md
+    - BACKLOG.md
+    - canary-3.4.1/config.lua
+guardrails:
+  no_merge: true
+  consult_only: true

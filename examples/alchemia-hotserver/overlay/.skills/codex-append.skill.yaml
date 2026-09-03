@@ -1,0 +1,5 @@
+id: codex-append
+description: Template append-only para Handbook / Manual Mestre (sintoma, causa, validação).
+run:
+  script: scripts/agents/alchemia/codex-append.ps1
+success: exit_code == 0

@@ -1,0 +1,5 @@
+id: add-spell
+description: Checklist guiado para nova magia Alchemia (server Lua/XML + Magical Archive).
+run:
+  script: scripts/agents/alchemia/add-spell.ps1
+success: exit_code == 0

@@ -1,0 +1,179 @@
+# ARAH — Alchemia HotServer (Canary 3.4.1 + OTClient)
+# Edite paths se a pasta do servidor/cliente tiver outro nome.
+# Depois: arah domain sync
+
+version: 1
+harness:
+  source: sraphaz/arah-harness
+  version: "0.2.0"
+  repository: https://github.com/sraphaz/arah-harness
+  release: v0.2.0
+  path: D:/arah-harness
+
+project:
+  name: alchemia-hotserver
+  stack: fullstack
+
+tests:
+  # Sem build C++ aqui — só validação barata (Lua loadfile).
+  # Ajuste o caminho do LuaJIT se necessário.
+  backend: "powershell -File ./scripts/agents/alchemia/lua-validate.ps1 -Area server"
+  frontend: "powershell -File ./scripts/agents/alchemia/lua-validate.ps1 -Area client"
+  all: "powershell -File ./scripts/agents/alchemia/lua-validate.ps1 -Area all"
+
+domains:
+  - id: combat-magic
+    name: Combat & Magic
+    description: Spells, party buffs, mid bursts, attack scripts Alchemia
+    paths:
+      - canary-3.4.1/data/scripts/spells/**
+      - canary-3.4.1/data/spells/**
+      - canary-3.4.1/data/scripts/custom_skills.lua
+    enrich: |
+      Foco: servidor 2D inspirado em Tibia + magia (Alchemia).
+      Party buffs finais: data/scripts/spells/party/alchemia_party_buffs.lua
+      Atalhos antigos por vocação ainda existem em support/*.lua — preferir o arquivo final.
+      Bursts mid-game: alchemia_mid_bursts.lua — padrão 3 hits, efeito no último hit.
+      Toda magia custom importante exige override no Magical Archive (cliente).
+      Handbook-first antes de rebalancear dano/cooldowns.
+    validate: |
+      Lua loadfile nos scripts tocados.
+      Se spell mudou, Magical Archive (elemento, área, tipo, descrição, preview) atualizado no mesmo PR.
+      Sem softlock de party buff; status bar / custom_skills coerente.
+    references:
+      - coisas do codex/ALCHEMIA_ENGINEERING_HANDBOOK_V2_0.txt
+      - docs/arah/DOMAINS.md
+
+  - id: power-beasts
+    name: Avatar / Power Beasts
+    description: Instância de avatar, familiar, walking field, Animagis
+    paths:
+      - canary-3.4.1/data/scripts/creaturescripts/others/power_beasts.lua
+      - canary-3.4.1/data/scripts/**/*power*beast*
+      - canary-3.4.1/data/scripts/**/*avatar*
+    enrich: |
+      Seleção da Power Beast = instância global (sprite, familiar, walking effect).
+      Ativação real: Animagis / Fusio Bestialis / efeito de legs — NÃO ao selecionar.
+      USE_NATIVE_AVATAR_FIELD_ITEMS = false (default atual): dano/efeito por tile
+      temporário + VFX; sem item de field persistente no chão.
+      Para field visual persistente sem dano duplicado: criar itens visuais custom
+      sem dano nativo ANTES de ativar item no chão.
+    validate: |
+      Sem dano duplicado no walking field.
+      Sprite/familiar/walking effect coerentes com a beast selecionada.
+    references:
+      - docs/arah/DOMAINS.md
+
+  - id: items-economy
+    name: Items & Economy
+    description: items.xml, loots, preços, craft — balanceamento com planilha
+    paths:
+      - canary-3.4.1/data/items/**
+      - "**/items.xml"
+      - canary-3.4.1/data/lib/**/items/**
+    enrich: |
+      Cap. 19 do Handbook é o ponto de partida para balanceamento geral.
+      Gerar/consultar planilha técnica em coisas do codex ANTES de mexer em items.xml.
+      Decisão mais recente/específica no Manual Mestre/Handbook vence.
+    validate: |
+      PR cita planilha ou capítulo Handbook.
+      Sem regressão silenciosa de attack/armor/price sem nota.
+    references:
+      - coisas do codex/ALCHEMIA_ENGINEERING_HANDBOOK_V2_0.txt
+
+  - id: monsters-spawns
+    name: Monsters & Spawns
+    description: Monstros XML, loot, spawns no world
+    paths:
+      - canary-3.4.1/data/monster/**
+      - canary-3.4.1/data/world/**
+      - canary-3.4.1/data/scripts/creaturescripts/**
+    enrich: |
+      Loot/exp/skills alinhados à progressão Alchemia.
+      Spawns honestos — sem farm quebrado sem decisão documentada.
+    validate: |
+      XML bem formado; spawn referencia monster existente.
+    references:
+      - docs/arah/DOMAINS.md
+
+  - id: quests-npcs
+    name: Quests & NPCs
+    description: NPCs, actions, chests, doors, storages
+    paths:
+      - canary-3.4.1/data/npc/**
+      - canary-3.4.1/data/scripts/actions/**
+      - canary-3.4.1/data/scripts/talkactions/**
+      - canary-3.4.1/data/**/quests/**
+    enrich: |
+      Storages estáveis e documentados.
+      Sem softlock (door/chest sem saída).
+    validate: |
+      Storage IDs não colidem; fluxo testável descrito no PR.
+    references:
+      - docs/arah/DOMAINS.md
+
+  - id: client-ux
+    name: OTClient UX
+    description: Modules OTUI/Lua do cliente — Magical Archive, UI
+    paths:
+      - client_run/modules/**
+      - client_run/**/*.otui
+      - client_run/**/*.lua
+    enrich: |
+      Magical Archive:
+        client_run/modules/game_cyclopedia/tab/magicalArchives/magicalArchives.lua
+        client_run/modules/game_cyclopedia/tab/magicalArchives/magicalArchives.otui
+      Override explícito por magia custom importante: elemento, área, tipo, descrição, preview.
+      Mudanças só Lua/OTUI: reload/restart do cliente — NÃO rebuild C++.
+    validate: |
+      loadfile nos módulos tocados.
+      Sem artefactos Codex/build dentro de client_run.
+    references:
+      - docs/arah/DOMAINS.md
+
+  - id: engine-cpp
+    name: Engine C++ (server/client)
+    description: Fonte C++ Canary e OTClient — builds longos, VS SDK
+    paths:
+      - canary-3.4.1/src/**
+      - client_run/src/**
+      - client_run/CMakeLists.txt
+      - canary-3.4.1/CMakeLists.txt
+    enrich: |
+      NUNCA chamar Ninja direto em PowerShell cru para client_run (falta crypt32.lib etc.).
+      Build cliente: client_run\build_otclient_release.bat (carrega VS x64).
+      Antes de build: tasklist cmake/ninja/cl/link/msbuild/devenv/otclient.
+      Build longo em BACKGROUND com log; avisar a cada 5 min.
+      Após build OK: copiar binário usado pelo jogador, com backup.
+      Higiene: PDBs/logs/cache/relatórios só em coisas do codex — nunca em canary/client_run.
+    validate: |
+      Script bat usado; processos de build limpos se hung.
+      Backup do exe antes de sobrescrever.
+    references:
+      - AGENTS.md
+      - docs/arah/ALCHEMIA_ARAH.md
+
+  - id: ops-codex
+    name: Ops & Codex Knowledge
+    description: Handbook, Manual Mestre, backups, tools, configs
+    paths:
+      - "coisas do codex/**"
+      - AGENTS.md
+      - BACKLOG.md
+      - canary-3.4.1/config.lua
+      - "**/config.lua"
+    enrich: |
+      Porta de entrada: coisas do codex\ALCHEMIA_ENGINEERING_HANDBOOK_V2_0.txt
+      Manual histórico append-only: MANUAL MESTRE CODEX ALCHEMIA.txt
+      Atualizar Handbook/Manual sem apagar histórico; consolidação nova; decisão
+      mais recente/específica vence; registrar sintoma, causa, arquivos, validação,
+      pendências e comando de teste.
+      Backups: coisas do codex\backups com manifesto.
+    validate: |
+      Nenhum lixo Codex em canary-3.4.1 ou client_run.
+      Entradas de handbook com testes citados quando relevante.
+    references:
+      - coisas do codex/ALCHEMIA_ENGINEERING_HANDBOOK_V2_0.txt
+      - coisas do codex/MANUAL MESTRE CODEX ALCHEMIA.txt
+
+specialists: []

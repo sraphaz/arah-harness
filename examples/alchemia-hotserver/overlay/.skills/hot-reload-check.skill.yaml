@@ -1,0 +1,5 @@
+id: hot-reload-check
+description: Diz se a mudança exige só reload Lua/OTUI/XML ou build C++.
+run:
+  script: scripts/agents/alchemia/hot-reload-check.ps1
+success: exit_code == 0

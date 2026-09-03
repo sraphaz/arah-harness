@@ -1,0 +1,21 @@
+id: combat-magic
+name: Combat & Magic
+mode: consult
+enrich: |
+  Party buffs finais: alchemia_party_buffs.lua. Bursts mid: 3 hits, efeito no último.
+  Magias custom exigem override no Magical Archive (cliente) no mesmo PR.
+  Handbook-first antes de rebalancear dano/cooldowns.
+validate: |
+  Lua loadfile nos scripts tocados.
+  Magical Archive sincronizado quando spell muda.
+  Sem softlock de party buff; custom_skills coerente.
+autonomy:
+  - consult_post
+scope:
+  paths:
+    - canary-3.4.1/data/scripts/spells/**
+    - canary-3.4.1/data/spells/**
+    - canary-3.4.1/data/scripts/custom_skills.lua
+guardrails:
+  no_merge: true
+  consult_only: true

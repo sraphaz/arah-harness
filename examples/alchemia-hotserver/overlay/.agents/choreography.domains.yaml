@@ -1,0 +1,75 @@
+# Gerado/espelhado para o pack Alchemia — sincroniza com arah.config.yaml domains
+version: 1
+updated: 2026-07-15
+source: arah.config.yaml
+
+rules:
+  - id: domain-combat-magic
+    paths:
+      - canary-3.4.1/data/scripts/spells/**
+      - canary-3.4.1/data/spells/**
+      - canary-3.4.1/data/scripts/custom_skills.lua
+    agents:
+      - id: combat-magic
+        type: domain
+        autonomy: [consult_post]
+
+  - id: domain-power-beasts
+    paths:
+      - canary-3.4.1/data/scripts/creaturescripts/others/power_beasts.lua
+    agents:
+      - id: power-beasts
+        type: domain
+        autonomy: [consult_post]
+
+  - id: domain-items-economy
+    paths:
+      - canary-3.4.1/data/items/**
+    agents:
+      - id: items-economy
+        type: domain
+        autonomy: [consult_post]
+
+  - id: domain-monsters-spawns
+    paths:
+      - canary-3.4.1/data/monster/**
+      - canary-3.4.1/data/world/**
+    agents:
+      - id: monsters-spawns
+        type: domain
+        autonomy: [consult_post]
+
+  - id: domain-quests-npcs
+    paths:
+      - canary-3.4.1/data/npc/**
+      - canary-3.4.1/data/scripts/actions/**
+    agents:
+      - id: quests-npcs
+        type: domain
+        autonomy: [consult_post]
+
+  - id: domain-client-ux
+    paths:
+      - client_run/modules/**
+    agents:
+      - id: client-ux
+        type: domain
+        autonomy: [consult_post]
+
+  - id: domain-engine-cpp
+    paths:
+      - canary-3.4.1/src/**
+      - client_run/src/**
+    agents:
+      - id: engine-cpp
+        type: domain
+        autonomy: [consult_post]
+
+  - id: domain-ops-codex
+    paths:
+      - "coisas do codex/**"
+      - AGENTS.md
+    agents:
+      - id: ops-codex
+        type: domain
+        autonomy: [consult_post]

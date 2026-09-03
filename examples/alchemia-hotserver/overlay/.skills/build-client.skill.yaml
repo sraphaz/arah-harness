@@ -1,0 +1,5 @@
+id: build-client
+description: Lembra o fluxo correto de build OTClient (bat VS + background). Não dispara build sozinho por padrão.
+run:
+  script: scripts/agents/alchemia/build-client.ps1
+success: exit_code == 0
