@@ -2,7 +2,7 @@
 
 Guia premium para adicionar o kernel ARAH a **qualquer repositório** — greenfield ou brownfield — e ativar a dimensão TechOrganism.
 
-**Upstream:** [sraphaz/arah-harness](https://github.com/sraphaz/arah-harness) · **Release:** **v0.3.0**
+**Upstream:** [sraphaz/arah-harness](https://github.com/sraphaz/arah-harness) · **Release:** **v0.5.0**
 
 ---
 
@@ -35,7 +35,7 @@ powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 organism bootstrap -Target 
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 hooks install -Target .
 ```
 
-Ative o organismo (recomendado na v0.3):
+Ative o organismo (recomendado desde a v0.3):
 
 ```powershell
 $env:ARAH_HARNESS_PATH = "$env:USERPROFILE\arah-harness"
@@ -88,9 +88,9 @@ powershell -ExecutionPolicy Bypass -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 ins
 ```yaml
 harness:
   source: sraphaz/arah-harness
-  version: "0.3.0"
+  version: "0.5.0"
   repository: https://github.com/sraphaz/arah-harness
-  release: v0.3.0
+  release: v0.5.0
 
 project:
   name: meu-projeto
@@ -146,11 +146,48 @@ powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 doctor -Target .
 
 ---
 
+## Binários do release — verificar checksum, assinatura e provenance
+
+A partir da **v0.5.1**, cada Release publica binários do CLI `arah` para
+linux/darwin (amd64 + arm64) e windows (amd64), acompanhados de
+`SHA256SUMS.txt`, assinatura keyless (Cosign/Sigstore) e SBOM (CycloneDX).
+
+```bash
+# 1. Baixar binário + checksums + bundle de assinatura (exemplo: linux/amd64)
+gh release download vX.Y.Z --repo sraphaz/arah-harness \
+  --pattern 'arah-vX.Y.Z-linux-amd64' --pattern 'SHA256SUMS.txt*'
+
+# 2. Verificar o checksum
+sha256sum --check --ignore-missing SHA256SUMS.txt
+
+# 3. Verificar a assinatura keyless (identidade OIDC do workflow de release)
+cosign verify-blob SHA256SUMS.txt \
+  --bundle SHA256SUMS.txt.sigstore.json \
+  --certificate-identity-regexp '^https://github.com/sraphaz/arah-harness/\.github/workflows/release\.yml@' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+# 4. (Opcional) Verificar a provenance SLSA do binário
+gh attestation verify arah-vX.Y.Z-linux-amd64 --repo sraphaz/arah-harness
+```
+
+No Windows (PowerShell), o checksum pode ser conferido com:
+
+```powershell
+Get-FileHash .\arah-vX.Y.Z-windows-amd64.exe -Algorithm SHA256
+Select-String 'windows-amd64' .\SHA256SUMS.txt
+```
+
+Não há chave privada para gerenciar: a assinatura usa certificado efêmero
+(Fulcio) ligado à identidade do workflow `release.yml` deste repositório,
+com registro público de transparência (Rekor).
+
+---
+
 ## Primeiro commit no repo-alvo
 
 ```powershell
 git add .agents .skills scripts .cursor arah.config.yaml .arah-version .github AGENTS.md docs
-git commit -m "chore: bootstrap ARAH Harness v0.3.1"
+git commit -m "chore: bootstrap ARAH Harness v0.5.0"
 ```
 
 ---
@@ -169,7 +206,7 @@ git commit -m "chore: bootstrap ARAH Harness v0.3.1"
 | Instalar pre-commit hooks | `arah hooks install` |
 
 ```powershell
-# Receber v0.3+ em consumidor existente
+# Receber a versão atual em consumidor existente
 git -C $env:ARAH_HARNESS_PATH pull
 powershell -File $env:ARAH_HARNESS_PATH\cli\arah.ps1 regenerate `
   -Target . -UpdateKernel -Force

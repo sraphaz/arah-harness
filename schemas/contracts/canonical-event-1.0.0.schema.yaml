@@ -1,0 +1,55 @@
+# schema: contracts/canonical-event
+# version: 1.0.0
+# Contrato da federação Surya (doc I §5). Envelope comum que reconcilia os
+# vocabulários de evento dos três planos (kernel/workspace/shaping) na
+# EXPORTAÇÃO/troca — cada plano continua gravando seu formato nativo
+# (federação, não fusão).
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sraphaz.github.io/contracts/canonical-event/1.0.0"
+title: CanonicalEvent
+type: object
+# ---- núcleo mínimo obrigatório ----
+required: [schema_version, event_id, type, source, occurred_at, actor_id]
+additionalProperties: false
+properties:
+  schema_version: { const: "1.0.0" }
+  event_id:       { type: string, description: "ULID" }
+  type:           { type: string, pattern: "^(kernel|workspace|shaping|product)\\.[a-z0-9_.]+$" }
+  source:         { type: string, description: "arah-harness | workspace | sky-forge | <project_id>" }
+  occurred_at:    { type: string, format: date-time }
+  actor_id:       { type: string, description: "github:* | agent:* | system:*" }
+  # ---- correlação (opcionais, mas propagar sempre que existirem — I §1.2) ----
+  correlation_id: { type: [string, "null"] }
+  project_id:     { type: [string, "null"] }
+  demand_id:      { type: [string, "null"] }
+  spec_id:        { type: [string, "null"] }
+  task_id:        { type: [string, "null"] }
+  run_id:         { type: [string, "null"] }
+  trace_id:       { type: [string, "null"], description: "ID técnico do envelope do kernel / OTel" }
+  # ---- opcionais ----
+  severity:       { enum: [debug, info, warning, error, critical], default: info }
+  payload:
+    type: object
+    description: "Corpo nativo do vocabulário de origem (tolerant reader)"
+  economy:
+    type: object
+    properties:
+      tokens_in:  { type: [integer, "null"] }
+      tokens_out: { type: [integer, "null"] }
+      cost_usd:   { type: [number, "null"] }
+      latency_ms: { type: [integer, "null"] }
+  evidence_refs:
+    type: array
+    description: "Ponteiros para files/tests/evals/PR — nunca conteúdo embutido"
+    items:
+      type: object
+      required: [kind, ref]
+      properties:
+        kind: { enum: [file, test-report, eval-report, security-report, pr, commit, evidence-graph, artifact] }
+        ref:  { type: string }
+  integrity:
+    type: object
+    description: "Para fontes com hash chain (Workspace ADR-0008)"
+    properties:
+      prev_hash:  { type: [string, "null"] }
+      entry_hash: { type: [string, "null"] }

@@ -8,7 +8,7 @@ extends_schema: arah-harness/harness-model
 fields:
   harness:
     version:      {type: semver, required: true}
-    profile:      {type: enum[minimal, consulting, product, enterprise, open-source], required: true}
+    profile:      {type: "enum[minimal, consulting, product, enterprise, open-source]", required: true}
     installed_at: {type: datetime, required: true}
     installed_by: {type: string, required: true}
   project:
@@ -32,7 +32,7 @@ fields:
     type: list<string>
   doctor:
     last_run:     {type: datetime}
-    status:       {type: enum[ok, drift, failing]}
+    status:       {type: "enum[ok, drift, failing]"}
     report_ref:   {type: string}
 
 validations_expected:

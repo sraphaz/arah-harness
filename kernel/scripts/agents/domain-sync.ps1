@@ -24,6 +24,15 @@ if (-not $config) {
     exit 1
 }
 
+# UTF-8 SEM BOM: em Windows PowerShell 5.1, `Set-Content -Encoding UTF8` emite BOM,
+# que quebra leitores que operam sobre bytes crus (regex `^id:` no primeiro campo)
+# e torna a saída dependente do host (PS7 não emite BOM). WriteAllText garante
+# saída idêntica em qualquer host.
+function Write-Utf8NoBom {
+    param([string]$Path, [string]$Content)
+    [System.IO.File]::WriteAllText($Path, $Content, [System.Text.UTF8Encoding]::new($false))
+}
+
 $domainDir = Join-Path $Root '.agents/domain'
 $specDir = Join-Path $Root '.agents/specialists'
 $choreoDomains = Join-Path $Root '.agents/choreography.domains.yaml'
@@ -99,7 +108,7 @@ foreach ($d in @($config.domains)) {
     if ($DryRun) {
         Write-Host "[dry-run] would write $path"
     } else {
-        Set-Content -Path $path -Value $content.TrimEnd() -Encoding UTF8
+        Write-Utf8NoBom -Path $path -Content ($content.TrimEnd() + "`n")
         Write-Host "domain agent: $($d.id)"
     }
     $written += $path
@@ -112,7 +121,7 @@ foreach ($s in @($config.specialists)) {
     if ($DryRun) {
         Write-Host "[dry-run] would write $path"
     } else {
-        Set-Content -Path $path -Value $content.TrimEnd() -Encoding UTF8
+        Write-Utf8NoBom -Path $path -Content ($content.TrimEnd() + "`n")
         Write-Host "specialist: $($s.id)"
     }
     $written += $path
@@ -151,7 +160,7 @@ $choreoContent = ($rulesYaml -join "`n") + "`n"
 if ($DryRun) {
     Write-Host "[dry-run] would write $choreoDomains"
 } else {
-    Set-Content -Path $choreoDomains -Value $choreoContent -Encoding UTF8
+    Write-Utf8NoBom -Path $choreoDomains -Content $choreoContent
     $ruleCount = @($config.domains | Where-Object { $_.paths -and $_.paths.Count -gt 0 }).Count
     $ruleCount += @($config.specialists | Where-Object { $_.paths -and $_.paths.Count -gt 0 }).Count
     Write-Host "choreography: .agents/choreography.domains.yaml ($ruleCount rules: domains + specialists)"

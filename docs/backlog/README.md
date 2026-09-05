@@ -1,6 +1,13 @@
-# Backlog — ARAH Control Plane
+# Backlog — épicos W / C / H (handoff histórico "ARAH Control Plane")
 
 Fonte: handoff **ARAH Control Plane** (jul/2026). Três épicos paralelizáveis.
+
+> **Nota de escopo ([ADR-003](../adr/003-kernel-workspace-boundary.md)):** o nome
+> "Control Plane" neste handoff é legado histórico do épico site+console. Itens dos
+> épicos C/W que assumem **agregação multi-repo/org-level** estão fora do escopo do
+> kernel — se voltarem, voltam como features do Surya Labs Workspace. O console
+> `live/` permanece **single-repo** (visualização local read-only); AuthZ (C-10)
+> segue no backlog do console.
 
 | Épico | Escopo | Status neste PR |
 |-------|--------|-----------------|

@@ -4,7 +4,9 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.2.x   | ✅        |
+| 0.5.x   | ✅        |
+| 0.4.x   | ⚠️ correções críticas apenas |
+| < 0.4   | ❌        |
 
 ## Reporting
 

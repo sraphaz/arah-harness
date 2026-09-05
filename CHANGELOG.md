@@ -4,30 +4,69 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-01
+
+Release de hardening de governança + primeira publicação com o pipeline de
+supply chain (PRs [#39](https://github.com/sraphaz/arah-harness/pull/39) e
+[#41](https://github.com/sraphaz/arah-harness/pull/41)).
+
 ### Added
 
-- **H-16 StateStore schema migrations** — Up/Down versionados (`schema_meta`); v2 `idx_events_kind`; testes upgrade/rollback
-- **H-15 kernel gerado (fase 1)** — `internal/kernel` + CLI `arah kernel sync|verify`
-  - Fonte canônica na raiz → pacote `kernel/` + `kernel/manifest.json` (SHA-256)
-  - CI `kernel-integrity` executa verify; CONTRIBUTING proíbe edição manual de `kernel/`
-- **H-15 kernel embed install (fase 2)** — `go:embed` de `internal/kernel/payload/kernel.zip`; CLI `arah kernel install`
-- **H-14 mutation diff + idempotência** — `MutationResult.diff` / `idempotent` em create/complete/block (CLI + MCP)
-- **arah-core (0.5 foundation)** — runtime Go hexagonal inspirado em
-  [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern) (engenharia, não RAG)
+- **Supply chain do release** — `release.yml` ganha job `artifacts`: binários do CLI
+  `arah` para linux/darwin (amd64+arm64) e windows (amd64) com `CGO_ENABLED=0`,
+  `SHA256SUMS.txt`, assinatura keyless Cosign/Sigstore (OIDC, sem chave privada),
+  SBOM CycloneDX (Trivy) e attestation de provenance SLSA
+  (`actions/attest-build-provenance`) — tudo anexado ao GitHub Release; dry-run via
+  `workflow_dispatch` (builda + assina sem publicar); guia de verificação em
+  `docs/INSTALL.md` — PR #39
+- **Job de parse YAML dos schemas** — CI valida que todos os schemas publicados
+  (`schemas/arah-harness/` e `docs/schemas/`) parseiam como YAML — PR #41
+
+### Fixed
+
+- **Gate humano de release (fail-closed)** — `cut-release.ps1` só publica com
+  aprovação humana identificável: bypass explícito `-ApprovedVia ci-main-merge`
+  validado contra o contexto real do GitHub Actions (main/tag v*), ou gate
+  `release_approval` aprovado no ledger `.arah/approvals.yaml`; sem gate, recusa — PR #41
+- **invoke-skill com falhas visíveis** — chamada de skill alinhada, sem binding
+  error; falhas de invocação deixam de ser engolidas e aparecem no resultado — PR #41
+- **Schemas YAML válidos** — schemas publicados corrigidos para parsear como YAML
+  (port do fix Hawk#38) — PR #41
+- **export-agent-graph: domínios kind/type 0→6** — o grafo gerado volta a
+  classificar os 6 domínios de kind/type (antes exportava 0) — PR #41
+
+## [0.5.0] - 2026-08-11
+
+Release "Runtime Cohesion": runtime Go `arah-core` (PRs [#16](https://github.com/sraphaz/arah-harness/pull/16)–[#23](https://github.com/sraphaz/arah-harness/pull/23)).
+**Status honesto:** MCP server, Evidence Graph e conformance suite são **experimentais** —
+a estabilização (paridade CLI↔MCP completa, schema de edges, fixtures amplas) segue nas
+PRs [#24](https://github.com/sraphaz/arah-harness/pull/24)–[#26](https://github.com/sraphaz/arah-harness/pull/26).
+
+### Added
+
+- **arah-core (fundação 0.5)** — runtime Go hexagonal inspirado em
+  [rafaelnicolett/kern](https://github.com/rafaelnicolett/kern) (engenharia, não RAG) — PRs #16/#17
   - `internal/core` — Execution Control tipado (transitions, evidence, TaskService)
-  - `internal/adapters/sqlitestore` — StateStore SQLite WAL + EventStore + migração YAML
+  - `internal/adapters/sqlitestore` — StateStore SQLite WAL (`.arah/local/runtime.db`) + EventStore + mirror YAML best-effort
   - `internal/adapters/fsstore` — mirror/compatibilidade PS
   - `internal/envelope` — contrato JSON `ok/code/trace_id/remediation`
-  - `internal/evidence` — Evidence Graph determinístico
-  - `internal/conformance` — provas H-20 (dry-run, error codes, CLI≡MCP)
-  - CLI: `arah task *` (`--dry-run`), `arah task timeline`, `arah evidence graph`, `arah mcp serve`
-  - Contrato MCP: [`docs/architecture/mcp-tool-contract.md`](docs/architecture/mcp-tool-contract.md)
-  - Testes: `go test ./...`
+  - CLI: `arah task create|status|complete|block`, `arah task timeline`
+- **H-16 StateStore schema migrations** — Up/Down versionados (`schema_meta`); v2 `idx_events_kind`; testes upgrade v1→v2 e rollback v2→v1 preservando dados — PRs #17/#23
+- **H-14 dry-run + mutation diff + idempotência** — `--dry-run`/`dry_run` em create/complete/block (CLI + MCP) sem persistir/emitir; `MutationResult.diff` textual e `idempotent` ao repetir evidência/razão em estado terminal — PRs #18/#21
+- **H-15 kernel gerado** — `kernel/` deixa de ser segunda fonte editável — PRs #19/#22
+  - Fase 1: `internal/kernel` + CLI `arah kernel sync|verify`; `kernel/manifest.json` (SHA-256 por arquivo); CI `kernel-integrity`; CONTRIBUTING proíbe edição manual de `kernel/`
+  - Fase 2: `go:embed` de `internal/kernel/payload/kernel.zip` + CLI `arah kernel install` (proteção zip-slip/symlink, rollback com restauro de overwrites, payload determinístico)
+- **MCP server (experimental)** — `arah mcp serve`, 7 tools (capabilities, get/create/complete/block task, timeline, evidence graph); contrato em [`docs/architecture/mcp-tool-contract.md`](docs/architecture/mcp-tool-contract.md) — PR #16+; paridade complete/block em estabilização (PR #24)
+- **Evidence Graph determinístico (experimental)** — `arah evidence graph` (+ MCP) — PR #17; schema de edges em estabilização (PR #25)
+- **Conformance suite (experimental, parcial)** — `internal/conformance` (dry-run, error codes, paridade create CLI≡MCP; binário `.exe` no Windows — PR #20); fixtures amplas TBD (PR #26)
 - **Direção 0.5 — Runtime Cohesion** (docs)
   - ADR-002: [`docs/adr/002-runtime-cohesion-0.5.md`](docs/adr/002-runtime-cohesion-0.5.md)
   - Arquitetura: [`docs/architecture/RUNTIME_COHESION.md`](docs/architecture/RUNTIME_COHESION.md)
   - Spec draft: `arah-runtime-cohesion`
-  - Roadmap Next realinhado; capabilities planned para core/MCP/StateStore/Evidence Graph
+
+### Changed
+
+- **Consolidação de versões internas** — `VERSION` é a fonte única, embutida no binário Go via `go:embed` (fim do hardcode em `cmd/arah`); `harness/VERSION`, `.arah-version` e `arah.config.yaml` self-hosted alinhados; `templates/arah.config.yaml` usa placeholder `{{HARNESS_VERSION}}` resolvido pelo `init`; `docs/INSTALL.md` (citava v0.3.0), `SECURITY.md` (declarava 0.2.x) e `capabilities.yaml` (kernel install constava como planned) atualizados
 
 ## [0.4.4] - 2026-07-28
 
