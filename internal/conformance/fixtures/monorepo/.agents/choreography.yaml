@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - id: craft-frontend
+    paths: ["apps/web/**"]
+    execution:
+      primary_executor: frontend
+    agents:
+      - id: frontend
+        type: operational
+        role: executor
+  - id: craft-backend
+    paths: ["services/**"]
+    execution:
+      primary_executor: backend
+    agents:
+      - id: backend
+        type: operational
+        role: executor

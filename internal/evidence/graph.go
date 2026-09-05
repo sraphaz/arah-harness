@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -42,8 +43,21 @@ type Builder struct {
 	Events   core.EventStore
 }
 
+// BuildOptions tunes Build. Zero value loads events for every task.
+type BuildOptions struct {
+	// EventTaskIDs, when non-empty, limits ListByTask to these IDs only.
+	EventTaskIDs []string
+}
+
 // Build derives nodes and edges exclusively from Arah schemas and runtime state.
-func (b *Builder) Build() (*Graph, error) {
+func (b *Builder) Build(opts ...BuildOptions) (*Graph, error) {
+	var eventFilter map[string]bool
+	if len(opts) > 0 && len(opts[0].EventTaskIDs) > 0 {
+		eventFilter = make(map[string]bool, len(opts[0].EventTaskIDs))
+		for _, id := range opts[0].EventTaskIDs {
+			eventFilter[id] = true
+		}
+	}
 	g := &Graph{Version: "1"}
 	idx := map[string]bool{}
 	add := func(n Node) {
@@ -113,6 +127,7 @@ func (b *Builder) Build() (*Graph, error) {
 	if b.Store == nil {
 		return g, nil
 	}
+	taskIDs := make([]string, 0)
 	for _, bucket := range []string{"active", "completed", "blocked"} {
 		list, err := b.Store.List(bucket)
 		if err != nil {
@@ -121,6 +136,7 @@ func (b *Builder) Build() (*Graph, error) {
 		for _, c := range list {
 			tid := "task:" + c.TaskID
 			add(Node{ID: tid, Type: "task", Label: c.Objective})
+			taskIDs = append(taskIDs, c.TaskID)
 			if c.PrimaryExecutor != "" {
 				aid := "agent:" + c.PrimaryExecutor
 				add(Node{ID: aid, Type: "agent", Label: c.PrimaryExecutor})
@@ -151,16 +167,97 @@ func (b *Builder) Build() (*Graph, error) {
 				if n.Type != "spec" {
 					continue
 				}
-				// link if objective or evidence mentions spec id
 				specID := strings.TrimPrefix(n.ID, "spec:")
 				blob := strings.ToLower(c.Objective + " " + strings.Join(c.Execution.CompletionEvidence, " "))
-				if strings.Contains(blob, strings.ToLower(specID)) || strings.Contains(blob, "runtime-cohesion") && specID == "arah-runtime-cohesion" {
+				if strings.Contains(blob, strings.ToLower(specID)) || (strings.Contains(blob, "runtime-cohesion") && specID == "arah-runtime-cohesion") {
 					link(tid, n.ID, "implements")
 				}
 			}
 		}
 	}
+
+	// Runtime events → validated_by edges (full per-task history)
+	if b.Events != nil {
+		seenEv := map[string]bool{}
+		for _, taskID := range taskIDs {
+			if eventFilter != nil && !eventFilter[taskID] {
+				continue
+			}
+			evs, err := b.Events.ListByTask(taskID)
+			if err != nil {
+				continue
+			}
+			tid := "task:" + taskID
+			for _, ev := range evs {
+				if ev.ID == "" || seenEv[ev.ID] {
+					continue
+				}
+				seenEv[ev.ID] = true
+				eid := "event:" + ev.ID
+				label := ev.Kind
+				if ev.CorrelationID != "" {
+					label = ev.Kind + " @" + ev.CorrelationID
+				}
+				add(Node{ID: eid, Type: "event", Label: label})
+				link(tid, eid, "validated_by")
+				if ev.AgentID != "" {
+					aid := "agent:" + ev.AgentID
+					add(Node{ID: aid, Type: "agent", Label: ev.AgentID})
+					link(eid, aid, "invokes")
+				}
+			}
+		}
+	}
 	return g, nil
+}
+
+// Explain returns a human-readable slice of the graph for one task (H-18 evidence explain).
+func (b *Builder) Explain(taskID string) (map[string]any, error) {
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.TASK_ID_REQUIRED",
+			Message: "task_id is required",
+		}
+	}
+	g, err := b.Build(BuildOptions{EventTaskIDs: []string{taskID}})
+	if err != nil {
+		return nil, err
+	}
+	tid := "task:" + taskID
+	nodes := map[string]Node{}
+	for _, n := range g.Nodes {
+		nodes[n.ID] = n
+	}
+	if _, ok := nodes[tid]; !ok {
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.TASK_NOT_FOUND",
+			Message: "task not found: " + taskID,
+			Details: map[string]any{"task_id": taskID},
+		}
+	}
+	var edges []Edge
+	related := map[string]bool{tid: true}
+	for _, e := range g.Edges {
+		if e.From == tid || e.To == tid {
+			edges = append(edges, e)
+			related[e.From] = true
+			related[e.To] = true
+		}
+	}
+	var outNodes []Node
+	for id := range related {
+		if n, ok := nodes[id]; ok {
+			outNodes = append(outNodes, n)
+		}
+	}
+	sort.Slice(outNodes, func(i, j int) bool { return outNodes[i].ID < outNodes[j].ID })
+	return map[string]any{
+		"task_id": taskID,
+		"nodes":   outNodes,
+		"edges":   edges,
+		"version": g.Version,
+	}, nil
 }
 
 // stableID returns a collision-resistant id fragment for free-form strings.

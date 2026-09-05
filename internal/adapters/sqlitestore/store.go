@@ -3,6 +3,7 @@
 package sqlitestore
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/json"
@@ -314,6 +315,175 @@ func (s *Store) List(bucket string) ([]*core.Contract, error) {
 	return merged, nil
 }
 
+// Delete removes filesystem mirrors/artifacts and SQLite rows.
+// Filesystem is cleared first; if the DB transaction fails afterward, the
+// contract snapshot is restored to the mirror so Get/List do not leave a
+// SQLite-only zombie without YAML (and abort paths stay consistent).
+func (s *Store) Delete(taskID string) error {
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return fmt.Errorf("task_id required")
+	}
+	if err := s.EnsureLayout(); err != nil {
+		return err
+	}
+
+	var snapshot *core.Contract
+	var yamlBody string
+	err := s.db.QueryRow(`SELECT contract_yaml FROM tasks WHERE task_id = ?`, taskID).Scan(&yamlBody)
+	switch {
+	case err == nil:
+		var c core.Contract
+		if uerr := yaml.Unmarshal([]byte(yamlBody), &c); uerr != nil {
+			return uerr
+		}
+		snapshot = &c
+	case err == sql.ErrNoRows:
+		if fsC, _, fsErr := s.fs.Get(taskID); fsErr == nil {
+			snapshot = fsC
+		}
+	default:
+		return err
+	}
+
+	if err := s.fs.Delete(taskID); err != nil {
+		return err
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		s.restoreFSMirror(snapshot)
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	if _, err := tx.Exec(`DELETE FROM task_events WHERE task_id = ?`, taskID); err != nil {
+		s.restoreFSMirror(snapshot)
+		return err
+	}
+	if _, err := tx.Exec(`DELETE FROM tasks WHERE task_id = ?`, taskID); err != nil {
+		s.restoreFSMirror(snapshot)
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		s.restoreFSMirror(snapshot)
+		return err
+	}
+	return nil
+}
+
+func (s *Store) restoreFSMirror(c *core.Contract) {
+	if c == nil {
+		return
+	}
+	_, _ = s.fs.Save(c)
+}
+
+// ReserveConsultationSlot atomically increments Counters.Consultations under a write lock.
+// Cross-process safe (CLI vs MCP) via BEGIN IMMEDIATE.
+func (s *Store) ReserveConsultationSlot(taskID string, max int) (*core.Contract, error) {
+	return s.mutateContractLocked(taskID, func(c *core.Contract) error {
+		if core.IsTerminal(c.State) {
+			return &core.DomainError{
+				Code:    "EXECUTION.TERMINAL_STATE_IMMUTABLE",
+				Message: fmt.Sprintf("task is terminal (%s)", c.State),
+				Details: map[string]any{"task_id": c.TaskID},
+			}
+		}
+		if max == 0 || c.Counters.Consultations >= max {
+			return &core.DomainError{
+				Code:    "EXECUTION.CONSULTATION_LIMIT_REACHED",
+				Message: "max_consultations reached for this work class",
+				Details: map[string]any{"task_id": c.TaskID, "max": max},
+			}
+		}
+		c.Counters.Consultations++
+		return nil
+	})
+}
+
+// ReleaseConsultationSlot decrements Counters.Consultations under BEGIN IMMEDIATE.
+// Used to undo ReserveConsultationSlot when WriteConsultation / event emit fails.
+func (s *Store) ReleaseConsultationSlot(taskID string) (*core.Contract, error) {
+	return s.mutateContractLocked(taskID, func(c *core.Contract) error {
+		if c.Counters.Consultations > 0 {
+			c.Counters.Consultations--
+		}
+		return nil
+	})
+}
+
+const consultationLockTimeout = 5 * time.Second
+
+// mutateContractLocked loads a contract under BEGIN IMMEDIATE, applies a mutation,
+// and commits with a best-effort filesystem mirror.
+func (s *Store) mutateContractLocked(taskID string, apply func(*core.Contract) error) (*core.Contract, error) {
+	taskID = strings.TrimSpace(taskID)
+	if taskID == "" {
+		return nil, fmt.Errorf("task_id required")
+	}
+	if err := s.EnsureLayout(); err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), consultationLockTimeout)
+	defer cancel()
+	conn, err := s.db.Conn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = conn.Close() }()
+
+	if _, err := conn.ExecContext(ctx, `BEGIN IMMEDIATE`); err != nil {
+		return nil, err
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_, _ = conn.ExecContext(ctx, `ROLLBACK`)
+		}
+	}()
+
+	var yamlBody string
+	err = conn.QueryRowContext(ctx, `SELECT contract_yaml FROM tasks WHERE task_id=?`, taskID).Scan(&yamlBody)
+	if err == sql.ErrNoRows {
+		return nil, &core.DomainError{
+			Code:    "EXECUTION.TASK_NOT_FOUND",
+			Message: "task not found: " + taskID,
+			Details: map[string]any{"task_id": taskID},
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	var c core.Contract
+	if err := yaml.Unmarshal([]byte(yamlBody), &c); err != nil {
+		return nil, err
+	}
+	if err := apply(&c); err != nil {
+		return nil, err
+	}
+	raw, err := yaml.Marshal(&c)
+	if err != nil {
+		return nil, err
+	}
+	bucket := bucketOf(c.State)
+	_, err = conn.ExecContext(ctx, `
+UPDATE tasks SET
+  state=?, bucket=?, primary_executor=?, objective=?, work_class=?, intent_type=?,
+  choreography_rule=?, contract_yaml=?, updated_at=?
+WHERE task_id=?`,
+		string(c.State), bucket, c.PrimaryExecutor, c.Objective, string(c.WorkClass), string(c.IntentType),
+		c.ChoreographyRule, string(raw), time.Now().UTC().Format(time.RFC3339Nano), c.TaskID)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := conn.ExecContext(ctx, `COMMIT`); err != nil {
+		return nil, err
+	}
+	committed = true
+	_, _ = s.fs.Save(&c) // best-effort mirror
+	return &c, nil
+}
+
 // Append implements EventStore. Duplicate event_id is a no-op (idempotent retries).
 func (s *Store) Append(ev core.Event) error {
 	if err := s.EnsureLayout(); err != nil {
@@ -332,8 +502,10 @@ func (s *Store) Append(ev core.Event) error {
 		payload = []byte("{}")
 	}
 	_, err := s.db.Exec(`
-INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json)
-VALUES(?,?,?,?,?,?)`, ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload))
+INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json, run_id, correlation_id, agent_id, session_id)
+VALUES(?,?,?,?,?,?,?,?,?,?)`,
+		ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload),
+		nullStr(ev.RunID), nullStr(ev.CorrelationID), nullStr(ev.AgentID), nullStr(ev.SessionID))
 	return err
 }
 
@@ -384,8 +556,10 @@ ON CONFLICT(task_id) DO UPDATE SET
 		return "", err
 	}
 	_, err = tx.Exec(`
-INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json)
-VALUES(?,?,?,?,?,?)`, ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload))
+INSERT OR IGNORE INTO task_events(event_id, task_id, kind, at, trace_id, payload_json, run_id, correlation_id, agent_id, session_id)
+VALUES(?,?,?,?,?,?,?,?,?,?)`,
+		ev.ID, nullStr(ev.TaskID), ev.Kind, ev.At, nullStr(ev.TraceID), string(payload),
+		nullStr(ev.RunID), nullStr(ev.CorrelationID), nullStr(ev.AgentID), nullStr(ev.SessionID))
 	if err != nil {
 		return "", err
 	}
@@ -404,7 +578,8 @@ func (s *Store) ListByTask(taskID string) ([]core.Event, error) {
 		return nil, err
 	}
 	rows, err := s.db.Query(`
-SELECT event_id, task_id, kind, at, COALESCE(trace_id,''), payload_json
+SELECT event_id, task_id, kind, at, COALESCE(trace_id,''), payload_json,
+  COALESCE(run_id,''), COALESCE(correlation_id,''), COALESCE(agent_id,''), COALESCE(session_id,'')
 FROM task_events WHERE task_id = ? ORDER BY id ASC`, taskID)
 	if err != nil {
 		return nil, err
@@ -421,7 +596,8 @@ func (s *Store) ListRecent(limit int) ([]core.Event, error) {
 		limit = 50
 	}
 	rows, err := s.db.Query(`
-SELECT event_id, task_id, kind, at, COALESCE(trace_id,''), payload_json
+SELECT event_id, task_id, kind, at, COALESCE(trace_id,''), payload_json,
+  COALESCE(run_id,''), COALESCE(correlation_id,''), COALESCE(agent_id,''), COALESCE(session_id,'')
 FROM task_events ORDER BY id DESC LIMIT ?`, limit)
 	if err != nil {
 		return nil, err
@@ -436,7 +612,8 @@ func scanEvents(rows *sql.Rows) ([]core.Event, error) {
 		var ev core.Event
 		var taskID sql.NullString
 		var payload string
-		if err := rows.Scan(&ev.ID, &taskID, &ev.Kind, &ev.At, &ev.TraceID, &payload); err != nil {
+		if err := rows.Scan(&ev.ID, &taskID, &ev.Kind, &ev.At, &ev.TraceID, &payload,
+			&ev.RunID, &ev.CorrelationID, &ev.AgentID, &ev.SessionID); err != nil {
 			return nil, err
 		}
 		if taskID.Valid {

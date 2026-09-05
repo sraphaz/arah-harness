@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - id: craft-backend
+    paths: ["backend/**", "cmd/**", "internal/**"]
+    execution:
+      primary_executor: backend
+    agents:
+      - id: backend
+        type: operational
+        role: executor
+      - id: solutions-architect
+        type: operational
+        role: consultant

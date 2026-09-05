@@ -1,0 +1,21 @@
+{
+  "after": {
+    "full": 301,
+    "minimal": 26,
+    "standard": 44
+  },
+  "before": {
+    "estimated_tokens": 3020,
+    "includes": [
+      "AGENTS.md",
+      "docs/EXECUTION_CONTROL.md",
+      "full_contract_yaml",
+      "briefing"
+    ],
+    "mode": "legacy_dump"
+  },
+  "note": "Deterministic token proxy for harness context budget (Economy M2-compatible).",
+  "proxy": "chars/4",
+  "savings_pct_standard_vs_before": 98.54304635761589,
+  "task_id": "task-20260810-174147787-36a518"
+}

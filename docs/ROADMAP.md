@@ -12,24 +12,27 @@
 **Norte da minor:** coesão do runtime, não mais features agentic.  
 ADR: [`docs/adr/002-runtime-cohesion-0.5.md`](adr/002-runtime-cohesion-0.5.md) ·  
 Arquitetura: [`docs/architecture/RUNTIME_COHESION.md`](architecture/RUNTIME_COHESION.md) ·  
-Spec: `arah-runtime-cohesion`
+Spec: `arah-runtime-cohesion` (**AC-10 covered**)
 
-### P0
+### P0 — done
 
-- **H-13** `arah-core` (Go) — modelo tipado Task/Run/Policy/Evidence/ExecutionContract
-- **H-14** Pipeline único `plan → validate → apply` + dry-run + diff + idempotência
+- **H-13** `arah-core` (Go) — Task/Policy/Evidence/ExecutionContract + briefing + context budget
+- **H-14** Pipeline `plan → validate → apply` + dry-run + diff + idempotência
 - **H-15** Kernel gerado — sync/verify + go:embed zip + `arah kernel install`
-- **H-16** StateStore (SQLite WAL) + migração — **done**
+- **H-16** StateStore (SQLite WAL) + migração schema v3
 
-### P1
+### P1 — done (base 0.5)
 
-- **H-17** MCP serve sobre os mesmos casos de uso da CLI
-- **H-18** Evidence Graph determinístico
-- **H-19** Timeline unificada por task/run + correlacionadores
-- **H-20** Conformance suite + repositórios-fixture
+- **H-17** MCP serve + progressive disclosure (`arah_get_task_context`)
+- **H-18** Evidence Graph + `evidence explain`
+- **H-19** Timeline com correlação (`run_id` / `correlation_id` / `agent_id`)
+- **H-20** Conformance suite + fixtures
 
-Compat / estrangulamento: PowerShell como wrapper; priorizar no Go
-`install` · `update` · `task *` · `policy check` · `graph export` · `evidence explain` · `mcp serve`.
+### Pós-close 0.5 (polish)
+
+- Context budget medido (`arah economy context-compare`)
+- OTel adapter opcional; `arahd` (H-08)
+- PS strangulation restante (`install` / `update` / organism writes)
 
 ## Later · v0.5.x → v1.0
 
