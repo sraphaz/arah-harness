@@ -10,7 +10,7 @@ fields:
   blocks:       {type: string, required: true}         # o que fica travado sem o gate
   required_doc: {type: string, required: true}         # documento que precisa existir/estar assinado
   approver:     {type: string, required: true}         # papel humano genérico
-  evidence:     {type: enum[file_present, signed_record, checklist_complete], required: true}
+  evidence:     {type: "enum[file_present, signed_record, checklist_complete]", required: true}
   record_to:    {type: string, required: true}         # onde o aceite é registrado (ledger, arquivo)
   waivable:     {type: bool, default: false}           # pode ser dispensado?
   waiver_rule:  {type: string, required_if: waivable}  # quem pode dispensar e como fica registrado
