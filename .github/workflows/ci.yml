@@ -53,3 +53,17 @@ jobs:
             test -f "$example" || { echo "missing example for $name"; exit 1; }
             check-jsonschema --schemafile "$schema" "$example"
           done
+      - name: Invalid examples MUST be rejected by their schemas
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for bad in schemas/contracts/examples/invalid/*.example.yaml; do
+            base=$(basename "$bad")
+            name=${base%%.invalid-*}                  # ex.: execution-request-1.1.0
+            schema="schemas/contracts/${name}.schema.yaml"
+            test -f "$schema" || { echo "missing schema for $bad"; exit 1; }
+            if check-jsonschema --schemafile "$schema" "$bad" >/dev/null 2>&1; then
+              echo "FAIL: expected $bad to be REJECTED by $schema"; exit 1
+            fi
+            echo "ok -- $bad rejected as expected"
+          done
