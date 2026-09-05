@@ -10,8 +10,10 @@
 #     pelo Control Plane (Surya Labs Workspace) após gate humano assinado
 #     (`execution_request_approved`, Workspace ADR-0011/WS-16). Os demais
 #     status (accepted → in_progress → …) seguem pertencendo ao executor.
-#   - objeto opcional `dispatch`: referência ao sinal publicado (issue no
-#     repo alvo) e metadados mínimos de auditoria do transporte.
+#   - objeto `dispatch`: referência ao sinal publicado (issue no repo alvo) e
+#     metadados mínimos de auditoria do transporte. Condicional: obrigatório
+#     quando status=dispatched; proibido em pending; permitido nos estados
+#     posteriores do executor (registro histórico do transporte).
 # Documentos 1.0.0 continuam válidos contra o schema 1.0.0 (imutável).
 $schema: "https://json-schema.org/draft/2020-12/schema"
 $id: "https://sraphaz.github.io/contracts/execution-request/1.1.0"
@@ -78,9 +80,11 @@ properties:
   dispatch:
     type: object
     description: >-
-      Registro do sinal de transporte (novo em 1.1.0; opcional — presente
-      quando status=dispatched). Espelha o essencial do registro de dispatch
-      do Workspace (ADR-0011): fase 1 = issue no repo alvo.
+      Registro do sinal de transporte (novo em 1.1.0). Obrigatório quando
+      status=dispatched; proibido em pending (explícito ou por omissão);
+      permitido nos estados posteriores do executor, que preservam o registro
+      histórico — ver allOf abaixo. Espelha o essencial do registro de
+      dispatch do Workspace (ADR-0011): fase 1 = issue no repo alvo.
     required: [issue_url, dispatched_at]
     properties:
       issue_url:     { type: string, description: "URL da issue de dispatch no repo alvo" }
@@ -88,3 +92,23 @@ properties:
       dispatched_by: { type: string, description: "actor_id que executou o dispatch (github:* — gate humano)" }
       dispatched_at: { type: string, format: date-time }
   created_at: { type: string, format: date-time }
+# ---- validação condicional status × dispatch (1.1.0) ----
+allOf:
+  # status=dispatched EXIGE o registro do sinal de transporte — um documento
+  # despachado sem issue_url/timestamp seria um sinal validado porém incompleto.
+  - if:
+      required: [status]
+      properties:
+        status: { const: dispatched }
+    then:
+      required: [dispatch]
+  # dispatch só existe após a transição pending → dispatched: proibido em
+  # pending (explícito ou por omissão — pending é o default de status);
+  # permitido nos estados posteriores do executor (accepted → …), que
+  # preservam o registro histórico do transporte.
+  - if:
+      required: [dispatch]
+    then:
+      required: [status]
+      properties:
+        status: { enum: [dispatched, accepted, in_progress, completed, failed, cancelled] }

@@ -22,8 +22,24 @@ do programa; alternativa de repo dedicado de schemas rejeitada por ora.)
 ## Regras de versionamento
 
 - **SemVer por schema**; a versão faz parte do nome do arquivo e do `$id`.
-- **Minor** = apenas campos novos opcionais. **Major** = remoção/renomeio, com
-  migração documentada e período de convivência.
+- **Imutabilidade por versão**: cada versão é um arquivo próprio, publicado ao
+  lado das anteriores; uma versão publicada nunca muda.
+- **Validação pela versão declarada**: todo documento declara `schema_version`
+  (const no schema) e é validado **somente** contra o schema daquela versão —
+  é assim que o `contracts-validate` opera (exemplo casado ao schema pelo nome)
+  e é assim que consumidores DEVEM operar. Validar um documento contra outra
+  versão já falha no `schema_version`, antes de qualquer outro campo.
+- **Adoção por vendorização explícita**: consumidores fixam a versão que
+  vendorizam; uma versão nova só circula quando emissor e consumidores a
+  adotarem deliberadamente. Não existe "upgrade implícito".
+- **Minor** = mudanças aditivas que mantêm todo documento existente válido sob
+  a versão que ele declara: campos novos **opcionais** e **ampliação de enums**
+  na versão nova. Neste regime, ampliar um enum é minor: um documento `1.0.0`
+  nunca contém o valor novo (o schema 1.0.0 é imutável e o rejeita), e um
+  documento `1.1.0` nunca é validado contra o 1.0.0 (falharia no
+  `schema_version` const) — logo nenhum consumidor corretamente versionado
+  quebra. **Major** = remoção/renomeio/restrição que invalidaria documentos
+  existentes, com migração documentada e período de convivência.
 - **Tolerant reader**: consumidores DEVEM ignorar campos desconhecidos.
 - IDs e regras de propagação (`correlation_id`, `project_id`, `demand_id`,
   `spec_id`, `task_id`, `run_id`, `actor_id`): doc I §1 do programa.
@@ -35,7 +51,7 @@ do programa; alternativa de repo dedicado de schemas rejeitada por ora.)
 | Data | Contrato | Versão | Mudança |
 |---|---|---|---|
 | 2026-08-11 | todos | inicial | Publicação inicial (ProjectManifest 2.0.0; ExecutionRequest, ExecutionEvidence, CanonicalEvent 1.0.0) |
-| 2026-09-03 | ExecutionRequest | 1.1.0 | Aditiva: `dispatched` no enum de `status` (transição `pending → dispatched`, só Control Plane com gate humano) + objeto opcional `dispatch` (issue URL/número, ator, timestamp). Motivada pelo dispatch fase 1 do Workspace (WS-16/ADR-0011). Decisão: ADR-004. 1.0.0 permanece válido |
+| 2026-09-03 | ExecutionRequest | 1.1.0 | Aditiva: `dispatched` no enum de `status` (transição `pending → dispatched`, só Control Plane com gate humano) + objeto `dispatch` (issue URL/número, ator, timestamp) com validação condicional (obrigatório em `dispatched`, proibido em `pending`). Motivada pelo dispatch fase 1 do Workspace (WS-16/ADR-0011). Decisão: ADR-004. 1.0.0 permanece válido |
 
 ## Validação
 

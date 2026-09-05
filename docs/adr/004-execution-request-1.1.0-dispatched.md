@@ -45,15 +45,33 @@ Adotar a **opção A** — publicar **ExecutionRequest 1.1.0**, evolução ADITI
    (`execution_request_approved` — Workspace ADR-0011). As transições
    seguintes (`accepted → in_progress → …`) permanecem do executor
    (ARAH Harness no repo alvo).
-2. **Objeto opcional `dispatch`** com o essencial que o registro do Workspace
+2. **Objeto `dispatch`** com o essencial que o registro do Workspace
    já grava: `issue_url` (obrigatório dentro do objeto), `issue_number`
    (nullable), `dispatched_by` (actor_id) e `dispatched_at` (obrigatório).
    Nada especulativo: campos de fase 2 do transporte
    (`repository_dispatch`/MCP) só quando a fase 2 existir.
+   **Validação condicional** (review do PR #47): `status: dispatched` **exige**
+   `dispatch` (um documento despachado sem issue/timestamp seria um sinal
+   validado porém incompleto — exatamente o que se quer aposentar do sidecar);
+   `dispatch` é **proibido em `pending`** (explícito ou por omissão — pending é
+   o default) e **permitido nos estados posteriores do executor**
+   (`accepted → …`), que preservam o registro histórico do transporte.
+   Exemplos inválidos dos dois lados são exercitados pelo `contracts-validate`
+   (passo de rejeição em `examples/invalid/`).
 3. **Imutabilidade por versão** (regra existente do diretório): arquivo novo
    `execution-request-1.1.0.schema.yaml` ao lado do 1.0.0, com `$id` e
    `schema_version` próprios; exemplo novo em `examples/`, validado pelo job
    `contracts-validate`.
+   **Por que ampliar o enum é minor neste regime** (questão levantada no
+   review do PR #47): documentos são validados **somente contra a versão que
+   declaram** (`schema_version` é const em cada schema; o CI casa exemplo e
+   schema pelo nome) e consumidores adotam versões por **vendorização
+   explícita**. Um documento 1.0.0 nunca contém `dispatched` (o schema 1.0.0
+   é imutável e o rejeita); um documento 1.1.0 validado por engano contra o
+   1.0.0 falha primeiro no `schema_version` — o enum não tem efeito marginal.
+   Logo nenhum consumidor corretamente versionado quebra. A política está
+   agora escrita em `schemas/contracts/README.md` (Regras de versionamento);
+   se o regime fosse de arquivo único mutável, a mesma mudança exigiria major.
 4. **CanonicalEvent 1.0.0 não muda**: o evento `execution_request.dispatched`
    já cabe no envelope existente (`type` casa com o padrão
    `^(kernel|workspace|shaping|product)\.[a-z0-9_.]+$`, ex.
