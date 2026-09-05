@@ -1,0 +1,31 @@
+# Exemplo INVÁLIDO de contracts/execution-request 1.1.0 — DEVE falhar a
+# validação: status=pending com objeto `dispatch` (o registro do sinal só
+# existe após a transição pending → dispatched; allOf condicional).
+# Exercitado em CI pelo job contracts-validate (passo de exemplos inválidos).
+schema_version: "1.1.0"
+request_id: 01J4YAZ0FJ8Q4V9WYD3S6BTPZ7
+correlation_id: 01J4YAY7Q2M3N4P5R6S7T8V9W0
+project_id: iautos
+demand_id: dmd-2026-iautos-llm-real
+spec_id: null
+requested_by: "agent:task-router@0.3.0"
+approved_by:
+  actor_id: "github:sraphaz"
+  decision_ref: data/decisions/2026/dec-0142.yaml
+  decided_at: "2026-08-11T14:30:00Z"
+target:
+  repository: sraphaz/iautos
+intent:
+  summary: Exemplo inválido — pending carregando registro de dispatch.
+  acceptance_criteria:
+    - n/a
+constraints:
+  risk_tier: baixo
+  autonomy_ceiling: plan-only
+status: pending
+dispatch:
+  issue_url: https://github.com/sraphaz/iautos/issues/87
+  issue_number: 87
+  dispatched_by: "github:sraphaz"
+  dispatched_at: "2026-08-11T15:02:44Z"
+created_at: "2026-08-11T14:31:05Z"
