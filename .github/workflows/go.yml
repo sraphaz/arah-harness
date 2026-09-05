@@ -29,10 +29,10 @@ jobs:
   live:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.22"
+          go-version-file: live/go.mod
           cache-dependency-path: live/go.sum
       - name: Test live service
         working-directory: live
@@ -44,10 +44,10 @@ jobs:
   portable-cli:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
       - name: Test arah-core + portable CLI
         run: |
           go test ./...

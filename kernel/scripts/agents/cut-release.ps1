@@ -6,7 +6,15 @@
   Padrão: humano mergeia o bump de VERSION/CHANGELOG em main;
   a automação publica vX.Y.Z + Release. Reentrante: se já existir, exit 0.
 
-  Exit: 0 ok/already · 1 error · 2 skipped (prerelease/invalid) · 10 usage
+  Publicar exige aprovação humana identificável (fail-closed):
+  - CI legítimo: release.yml roda após merge humano em main (refs/heads/main)
+    ou push humano de tag v*.*.* (refs/tags/v*) e passa -ApprovedVia
+    ci-main-merge explicitamente; a flag é validada contra o contexto real
+    do GitHub Actions (recusada fora dele).
+  - Sem essa flag (mesmo dentro do CI): o gate release_approval de
+    check-autonomy.ps1 (.arah/approvals.yaml) precisa estar aprovado.
+
+  Exit: 0 ok/already · 1 error/blocked · 2 skipped (prerelease/invalid) · 10 usage
 .EXAMPLE
   ./cut-release.ps1
   ./cut-release.ps1 -DryRun
@@ -17,6 +25,8 @@ param(
     [string]$Repository = '',
     [string]$Version = '',
     [string]$GithubApi = 'https://api.github.com',
+    [ValidateSet('', 'ci-main-merge')]
+    [string]$ApprovedVia = '',
     [switch]$DryRun,
     [switch]$FailIfChangelogMissing,
     [switch]$Json
@@ -167,12 +177,13 @@ if (-not $notes) {
 }
 
 $result = [ordered]@{
-    version    = $ver
-    tag        = $tag
-    repository = $repo
-    status     = 'pending'
-    url        = $null
-    dry_run    = [bool]$DryRun
+    version      = $ver
+    tag          = $tag
+    repository   = $repo
+    status       = 'pending'
+    url          = $null
+    dry_run      = [bool]$DryRun
+    approved_via = $null
 }
 
 if ($DryRun) {
@@ -183,6 +194,46 @@ if ($DryRun) {
         Write-Host "  notes: $($notes.Substring(0, [Math]::Min(120, $notes.Length)))..."
     }
     exit 0
+}
+
+# --- gate de aprovação humana (fail-closed) ---
+# Único bypass legítimo: workflow de release no GitHub Actions em main
+# (merge humano) ou em tag v* (push humano de tag) — os gatilhos do release.yml —
+# E pedindo o bypass explicitamente via -ApprovedVia ci-main-merge. Contexto CI
+# SEM a flag não é aprovação: qualquer outro workflow de main/tag com token
+# poderia publicar por acidente — segue exigindo release_approval do ledger.
+$ciReleaseContext = ($env:GITHUB_ACTIONS -eq 'true' -and
+    ($env:GITHUB_REF -eq 'refs/heads/main' -or $env:GITHUB_REF -like 'refs/tags/v*'))
+if ($ApprovedVia -eq 'ci-main-merge') {
+    if (-not $ciReleaseContext) {
+        Write-Error 'cut-release: -ApprovedVia ci-main-merge is only valid inside GitHub Actions on refs/heads/main or refs/tags/v*'
+        exit 1
+    }
+    $result.approved_via = 'ci-main-merge'
+} else {
+    $gateScript = Join-Path $PSScriptRoot 'check-autonomy.ps1'
+    if (-not (Test-Path -LiteralPath $gateScript)) {
+        Write-Error 'cut-release: check-autonomy.ps1 not found — refusing to publish without an approval gate (fail-closed)'
+        exit 1
+    }
+    # -Json parseado (não $LASTEXITCODE): check-autonomy só chama exit quando bloqueia.
+    $gate = $null
+    try {
+        $gate = (& $gateScript -AgentId release -Action release.cut -Json | Out-String) | ConvertFrom-Json
+    } catch {
+        Write-Error "cut-release: approval gate check failed ($($_.Exception.Message)) — refusing to publish (fail-closed)"
+        exit 1
+    }
+    if (-not $gate -or -not $gate.allowed) {
+        $result.status = 'blocked'
+        if ($Json) { $result | ConvertTo-Json -Depth 4 }
+        else {
+            Write-Host "cut-release: BLOCKED — human release approval is pending for $tag."
+            Write-Host '  Approve release_approval in .arah/approvals.yaml, or publish via release.yml (human merge to main or manual v* tag push).'
+        }
+        exit 1
+    }
+    $result.approved_via = 'approvals-ledger'
 }
 
 $headers = Get-AuthHeaders

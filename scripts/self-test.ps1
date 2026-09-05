@@ -133,6 +133,13 @@ try {
         if (-not (Test-Path (Join-Path (Join-Path $TmpMin '.git') (Join-Path 'hooks' 'pre-commit')))) {
             throw "pre-commit hook missing"
         }
+        # Regressão: arah update não pode reescrever mode: minimal como full no pin
+        $pinRaw = Get-Content (Join-Path $TmpMin '.arah-version') -Raw
+        if ($pinRaw -notmatch '(?m)^mode:\s*minimal') { throw ".arah-version missing mode: minimal after install -Minimal" }
+        & $PwshExe -NoProfile -ExecutionPolicy Bypass -File $Cli update -Target $TmpMin -Force
+        if ($LASTEXITCODE -ne 0) { throw "update after minimal install failed" }
+        $pinRaw = Get-Content (Join-Path $TmpMin '.arah-version') -Raw
+        if ($pinRaw -notmatch '(?m)^mode:\s*minimal') { throw "arah update rewrote mode: minimal as full in .arah-version" }
     } finally {
         Remove-Item $TmpMin -Recurse -Force -ErrorAction SilentlyContinue
     }
