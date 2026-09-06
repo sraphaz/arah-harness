@@ -8,7 +8,7 @@ Formato: **JSON Schema draft 2020-12 escrito em YAML** (doc I do programa de evo
 |---|---|---|---|---|
 | ProjectManifest | `project-manifest-2.0.0.schema.yaml` | 2.0.0 | Surya Labs Workspace | todos |
 | ExecutionRequest | `execution-request-1.1.0.schema.yaml` | 1.1.0 (1.0.0 vigente) | Workspace | ARAH Harness (repo alvo) |
-| ExecutionEvidence | `execution-evidence-1.0.0.schema.yaml` | 1.0.0 | ARAH Harness (repo alvo) | Workspace |
+| ExecutionEvidence | `execution-evidence-1.0.0.schema.yaml` | 1.0.0 | ARAH Harness (repo alvo) via skill `emit-execution-evidence` | Workspace |
 | CanonicalEvent | `canonical-event-1.0.0.schema.yaml` | 1.0.0 | qualquer plano | qualquer plano |
 
 Exemplos válidos (validados em CI pelo job `contracts-validate`): [`examples/`](./examples/).

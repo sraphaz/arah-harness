@@ -26,5 +26,6 @@ Comandos de teste são resolvidos via `arah.config.yaml` quando aplicável.
 | discover-repo | Observa stack/domínio e propõe células |
 | evolve-harness | Self-learning → propostas de evolução |
 | regenerate-harness | Homeostase completa no consumidor |
+| emit-execution-evidence | Emite ExecutionEvidence v1 (contrato da federação) |
 
 Execução: `./scripts/agents/invoke-skill.ps1 -Skill run-tests -Area backend`

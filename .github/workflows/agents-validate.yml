@@ -40,6 +40,16 @@ jobs:
       - name: Validate agent & skill manifests
         shell: pwsh
         run: ./scripts/agents/validate-manifests.ps1
+      - name: Dry-run emit-execution-evidence (contrato v1)
+        shell: pwsh
+        run: |
+          ./scripts/agents/emit-execution-evidence.ps1 -DryRun `
+            -RequestId 01J4YAZ0FJ8Q4V9WYD3S6BTPZ7 `
+            -CorrelationId 01J4YAY7Q2M3N4P5R6S7T8V9W0 `
+            -Outcome completed `
+            -ProjectId iautos `
+            -PrUrl https://github.com/sraphaz/iautos/pull/210 `
+            -PrNumber 210
 
   validate-agent-graph:
     runs-on: ubuntu-latest
