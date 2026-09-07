@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-09-06T14:21:06Z",
+  "generated_at": "2026-09-07T00:26:11Z",
   "files": {
     ".agents/README.md": "6df58203d110cbd417d87c081161329584168da526d9959a901e0992f591bbab",
     ".agents/agent-graph.schema.yaml": "ee506d1f877693c7dfcdbe26f3d284facc0446f1b84bc0eb65f7f18d29427c24",
@@ -79,7 +79,7 @@
     "scripts/agents/discover-repo.ps1": "4810b1caffaf2396e9fdbb3b92879a8e0ebef218434aed6ab226f6daa39a1ad5",
     "scripts/agents/domain-autoreview.ps1": "e644843c2460b1cbe839c8a02574987bb15bc327d46273351e387029e1488631",
     "scripts/agents/domain-sync.ps1": "65fea9ecf7a11953864fa6b4d753e8a87435a6d296836fbaf4d50bce1794c414",
-    "scripts/agents/emit-execution-evidence.ps1": "1908e9ab265c0b5054f642e5fbd2267b10d98685e255d2ed1cb08146df0eadb5",
+    "scripts/agents/emit-execution-evidence.ps1": "11d49df4db7f4f0a0c599c711303c70988156ae3565c83549c91895d2a08343d",
     "scripts/agents/evolve-harness.ps1": "d94d77086e227303380ab8930abe87a7cddaf3ce70ba7d4a06a2ef0b2b9e303d",
     "scripts/agents/execute-task.ps1": "6afed7f3e5f10777c8f46f58539e265977bf17e6436995f52a9336a89fdee41e",
     "scripts/agents/execution-lib.ps1": "ffe3e24f4d8495e8ef743361dd8a386def38f4ef02d36169a786630d28810c48",
