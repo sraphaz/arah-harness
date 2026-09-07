@@ -48,8 +48,24 @@ jobs:
             -CorrelationId 01J4YAY7Q2M3N4P5R6S7T8V9W0 `
             -Outcome completed `
             -ProjectId iautos `
+            -TaskId task-20260811-174210000-iautos `
+            -RunId run-20260811-174210000-iautos `
             -PrUrl https://github.com/sraphaz/iautos/pull/210 `
             -PrNumber 210
+      - name: Dry-run via env (skill runner)
+        shell: pwsh
+        env:
+          ARAH_EVIDENCE_REQUEST_ID: 01J4YAZ0FJ8Q4V9WYD3S6BTPZ7
+          ARAH_EVIDENCE_CORRELATION_ID: 01J4YAY7Q2M3N4P5R6S7T8V9W0
+          ARAH_EVIDENCE_OUTCOME: completed
+          ARAH_EVIDENCE_PROJECT_ID: iautos
+          ARAH_EVIDENCE_TASK_ID: task-20260811-174210000-iautos
+          ARAH_EVIDENCE_RUN_ID: run-20260811-174210000-iautos
+          ARAH_EVIDENCE_PR_URL: https://github.com/sraphaz/iautos/pull/210
+          ARAH_EVIDENCE_PR_NUMBER: "210"
+          ARAH_EVIDENCE_PR_STATE: open
+          ARAH_EVIDENCE_DRY_RUN: "true"
+        run: ./scripts/agents/invoke-skill.ps1 -Skill emit-execution-evidence
 
   validate-agent-graph:
     runs-on: ubuntu-latest
