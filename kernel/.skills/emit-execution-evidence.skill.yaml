@@ -1,0 +1,5 @@
+id: emit-execution-evidence
+description: Emite ExecutionEvidence v1 (contrato da federação) a partir de request_id + correlation_id + outcome. Consumidores (Hawk, etc.) não devem ser snowflakes — usam este skill.
+run:
+  script: scripts/agents/emit-execution-evidence.ps1
+success: exit_code == 0
