@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-09-05T21:57:37Z",
+  "generated_at": "2026-09-07T00:26:11Z",
   "files": {
     ".agents/README.md": "6df58203d110cbd417d87c081161329584168da526d9959a901e0992f591bbab",
     ".agents/agent-graph.schema.yaml": "ee506d1f877693c7dfcdbe26f3d284facc0446f1b84bc0eb65f7f18d29427c24",
@@ -35,7 +35,7 @@
     ".cursor/hooks/domain-review.ps1": "af023c1d4a2373c92e97d4669f52560537d959d865264dbee2ac8ff67231d3c6",
     ".cursor/hooks/live-session.ps1": "8f8c3e7ac79a59d6341d9ca7d641694bc0725d08f627175eb5fd474e6eec2b3d",
     ".cursor/rules/arah-execution-control.mdc": "24fc560375bb31895221ac52057c52a8c8e92cad14b7a1e9b6fb7900dd0676b3",
-    ".skills/README.md": "d009653d20f7e7fd8dd07ade50144084c93bbfabb5df0d57fa8f52dc50b1cff9",
+    ".skills/README.md": "c2dba3ffd44fc73321a98747f12bef77268a342532bb3d95a612e624cdc1f0f3",
     ".skills/address-bot-review.skill.yaml": "a6be59b22991ece53af90a0dc29d9454507b1ab092389d988796d3d5120a403b",
     ".skills/architecture-review.skill.yaml": "3733e9af1bdfc1d72b5cf358103dc909190b8b917cf557a9ac0a7b7f15d6613f",
     ".skills/backlog-to-issue.skill.yaml": "867b09e2d15e8e1d50b7168024edf11738d32772a33cbe97e8365e7bef4d09b2",
@@ -44,6 +44,7 @@
     ".skills/dep-audit.skill.yaml": "03724d42ca2167033a4a545091f8b741207703b1cae56360ee1ebc360759f42d",
     ".skills/discover-repo.skill.yaml": "1e22fff8f865dfccf5382664ba638f4e272fd9ceb085f93fe299d7baed89367a",
     ".skills/doc-taxonomy.skill.yaml": "46f0320118b262dcc49a37d9095617a9ce8cf138e8734e5324c3d49108cf6166",
+    ".skills/emit-execution-evidence.skill.yaml": "238423c461b9819ca3d9d2c9185c86440a762e748892f9b33c3222e46e6b8c2c",
     ".skills/evolve-harness.skill.yaml": "2f7a18744f4b1e85c7e8cde542d1c1b4d29488a968180edf042a669386deff7c",
     ".skills/graphify-knowledge-graph.skill.yaml": "7cb580450a82f70a08a3fa2d9ea6e88fe0c143d50832b1e9817e653630253f0c",
     ".skills/harness-run.skill.yaml": "d0ea86ce81342d1dd50632c48008cdd53dff801b9cae8a99bb2f642c496e96fb",
@@ -78,6 +79,7 @@
     "scripts/agents/discover-repo.ps1": "4810b1caffaf2396e9fdbb3b92879a8e0ebef218434aed6ab226f6daa39a1ad5",
     "scripts/agents/domain-autoreview.ps1": "e644843c2460b1cbe839c8a02574987bb15bc327d46273351e387029e1488631",
     "scripts/agents/domain-sync.ps1": "65fea9ecf7a11953864fa6b4d753e8a87435a6d296836fbaf4d50bce1794c414",
+    "scripts/agents/emit-execution-evidence.ps1": "11d49df4db7f4f0a0c599c711303c70988156ae3565c83549c91895d2a08343d",
     "scripts/agents/evolve-harness.ps1": "d94d77086e227303380ab8930abe87a7cddaf3ce70ba7d4a06a2ef0b2b9e303d",
     "scripts/agents/execute-task.ps1": "6afed7f3e5f10777c8f46f58539e265977bf17e6436995f52a9336a89fdee41e",
     "scripts/agents/execution-lib.ps1": "ffe3e24f4d8495e8ef743361dd8a386def38f4ef02d36169a786630d28810c48",
